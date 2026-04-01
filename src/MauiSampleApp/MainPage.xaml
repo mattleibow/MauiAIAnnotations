@@ -184,22 +184,42 @@
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="vm:ChatMessage">
                                 <Grid Padding="0,4">
-                                    <Border Padding="12,10"
+                                    <Border x:Name="MessageBubble"
+                                            Padding="12,10"
                                             MaximumWidthRequest="340"
                                             HorizontalOptions="Start"
                                             BackgroundColor="{AppThemeBinding Light=#F0EBE3, Dark=#33302A}"
                                             StrokeThickness="0">
                                         <Border.StrokeShape>
-                                            <RoundRectangle CornerRadius="16,16,16,4" />
+                                            <RoundRectangle x:Name="BubbleShape" CornerRadius="16,16,16,4" />
                                         </Border.StrokeShape>
+                                        <Border.Triggers>
+                                            <DataTrigger TargetType="Border" Binding="{Binding Role}" Value="User">
+                                                <Setter Property="HorizontalOptions" Value="End" />
+                                                <Setter Property="BackgroundColor" Value="{StaticResource ChatUser}" />
+                                            </DataTrigger>
+                                        </Border.Triggers>
                                         <VerticalStackLayout Spacing="2">
-                                            <Label Text="{Binding Role}"
+                                            <Label x:Name="RoleLabel"
+                                                   Text="{Binding Role}"
                                                    FontSize="11"
                                                    FontAttributes="Bold"
-                                                   TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                                                   TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}">
+                                                <Label.Triggers>
+                                                    <DataTrigger TargetType="Label" Binding="{Binding Role}" Value="User">
+                                                        <Setter Property="TextColor" Value="#D4E8D4" />
+                                                    </DataTrigger>
+                                                </Label.Triggers>
+                                            </Label>
                                             <Label Text="{Binding Content}"
                                                    FontSize="14"
-                                                   TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
+                                                   TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}">
+                                                <Label.Triggers>
+                                                    <DataTrigger TargetType="Label" Binding="{Binding Role}" Value="User">
+                                                        <Setter Property="TextColor" Value="White" />
+                                                    </DataTrigger>
+                                                </Label.Triggers>
+                                            </Label>
                                         </VerticalStackLayout>
                                     </Border>
                                 </Grid>
