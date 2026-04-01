@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MauiSampleApp.ViewModels"
+             xmlns:controls="clr-namespace:MauiSampleApp.Controls"
+             xmlns:local="clr-namespace:MauiSampleApp.Controls"
+             x:Class="MauiSampleApp.MainPage">
+
+    <ContentPage.Resources>
+        <local:BoolToAlignmentConverter x:Key="BoolToAlignmentConverter" />
+        <local:InvertBoolConverter x:Key="InvertBoolConverter" />
+    </ContentPage.Resources>
+
+    <Grid>
+        <!-- Main content -->
+        <Grid RowDefinitions="Auto,Auto,*,Auto" Padding="16">
+
+            <!-- Title -->
+            <Label Grid.Row="0"
+                   Text="🌤️ Weather Forecast"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   Margin="0,8,0,16" />
+
+            <!-- Search bar -->
+            <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="8" Margin="0,0,0,12">
+                <Entry Placeholder="Enter a city or location..."
+                       Text="{Binding Weather.LocationText}"
+                       ReturnCommand="{Binding Weather.SearchCommand}"
+                       AutomationId="LocationEntry" />
+                <Button Grid.Column="1"
+                        Text="Search"
+                        Command="{Binding Weather.SearchCommand}"
+                        AutomationId="SearchButton"
+                        Padding="16,8" />
+            </Grid>
+
+            <!-- Weather results -->
+            <Grid Grid.Row="2">
+                <VerticalStackLayout IsVisible="{Binding Weather.IsLoading}" VerticalOptions="Center" HorizontalOptions="Center">
+                    <ActivityIndicator IsRunning="{Binding Weather.IsLoading}" />
+                    <Label Text="Loading..." HorizontalOptions="Center" Margin="0,8,0,0" />
+                </VerticalStackLayout>
+
+                <CollectionView ItemsSource="{Binding Weather.WeatherDays}"
+                                IsVisible="{Binding Weather.IsLoading, Converter={StaticResource InvertBoolConverter}}"
+                                AutomationId="WeatherList">
+                    <CollectionView.Header>
+                        <Label Text="{Binding Weather.StatusMessage}"
+                               FontSize="14"
+                               TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}"
+                               Margin="4,0,4,8" />
+                    </CollectionView.Header>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <controls:WeatherControl />
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                    <CollectionView.EmptyView>
+                        <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8" Padding="20">
+                            <Label Text="🔍" FontSize="48" HorizontalOptions="Center" />
+                            <Label Text="Search for a location to see the 7-day forecast"
+                                   FontSize="16"
+                                   HorizontalOptions="Center"
+                                   TextColor="{AppThemeBinding Light=#888888, Dark=#999999}" />
+                        </VerticalStackLayout>
+                    </CollectionView.EmptyView>
+                </CollectionView>
+            </Grid>
+
+            <!-- Chat toggle button -->
+            <Button Grid.Row="3"
+                    Text="💬 AI Chat"
+                    Command="{Binding Chat.ToggleChatCommand}"
+                    AutomationId="ChatToggleButton"
+                    HorizontalOptions="End"
+                    Margin="0,8"
+                    Padding="16,8"
+                    BackgroundColor="#512BD4"
+                    TextColor="White" />
+        </Grid>
+
+        <!-- Chat popup overlay -->
+        <controls:ChatPopup BindingContext="{Binding Chat}" />
+    </Grid>
+
+</ContentPage>
