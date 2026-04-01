@@ -59,7 +59,22 @@ public class MainPageViewModel : INotifyPropertyChanged
 
         try
         {
-            var items = await _weatherService.GetWeatherForecastAsync(LocationQuery);
+            // Use MAUI Essentials Geocoding to convert location string to coordinates
+            var locations = await Microsoft.Maui.Devices.Sensors.Geocoding.Default.GetLocationsAsync(LocationQuery);
+            var location = locations?.FirstOrDefault();
+
+            List<DailyWeatherItem> items;
+            if (location is not null)
+            {
+                // Use coordinate-based method with MAUI Essentials geocoded result
+                items = await _weatherService.GetWeatherForecastAsync(location.Latitude, location.Longitude);
+            }
+            else
+            {
+                // Fallback to service's location-based method (uses open-meteo geocoding)
+                items = await _weatherService.GetWeatherForecastAsync(LocationQuery);
+            }
+
             if (items.Count == 0)
             {
                 StatusMessage = "No weather data found for this location.";

@@ -74,7 +74,8 @@ public static class MauiProgram
 
         if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(endpoint) || string.IsNullOrEmpty(deploymentName))
         {
-            // AI not configured — register a null/stub so app still starts
+            // AI not configured — register a no-op stub so app still starts
+            builder.Services.AddSingleton<IChatClient>(new NoOpChatClient());
             return builder;
         }
 
