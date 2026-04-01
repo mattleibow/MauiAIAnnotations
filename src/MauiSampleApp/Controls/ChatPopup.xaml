@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MauiSampleApp.ViewModels"
+             xmlns:local="clr-namespace:MauiSampleApp.Controls"
+             x:Class="MauiSampleApp.Controls.ChatPopup"
+             x:DataType="vm:ChatViewModel">
+
+    <Border IsVisible="{Binding IsChatVisible}"
+            StrokeShape="RoundRectangle 12"
+            Stroke="{AppThemeBinding Light=#CCCCCC, Dark=#555555}"
+            BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}"
+            Padding="0"
+            Margin="16"
+            MaximumWidthRequest="400"
+            MaximumHeightRequest="500"
+            HorizontalOptions="End"
+            VerticalOptions="End">
+        <Grid RowDefinitions="Auto,*,Auto">
+            <!-- Header -->
+            <Border Grid.Row="0"
+                    BackgroundColor="{AppThemeBinding Light=#512BD4, Dark=#7B5EA7}"
+                    StrokeThickness="0"
+                    Padding="12,8">
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Text="🤖 AI Weather Chat"
+                           TextColor="White"
+                           FontAttributes="Bold"
+                           FontSize="16"
+                           VerticalOptions="Center" />
+                    <Button Grid.Column="1"
+                            Text="✕"
+                            TextColor="White"
+                            BackgroundColor="Transparent"
+                            FontSize="16"
+                            Command="{Binding ToggleChatCommand}"
+                            Padding="4"
+                            WidthRequest="32"
+                            HeightRequest="32" />
+                </Grid>
+            </Border>
+
+            <!-- Messages -->
+            <CollectionView Grid.Row="1"
+                            ItemsSource="{Binding Messages}"
+                            Margin="8"
+                            AutomationId="ChatMessages">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ChatMessageDisplay">
+                        <Grid Margin="4,2" Padding="0">
+                            <Border Padding="10,6"
+                                    StrokeShape="RoundRectangle 8"
+                                    StrokeThickness="0"
+                                    HorizontalOptions="{Binding IsUser, Converter={StaticResource BoolToAlignmentConverter}}"
+                                    MaximumWidthRequest="300">
+                                <Border.BackgroundColor>
+                                    <Binding Path="IsUser">
+                                        <Binding.Converter>
+                                            <local:BoolToColorConverter TrueColor="#512BD4" FalseColor="#E8E8E8" />
+                                        </Binding.Converter>
+                                    </Binding>
+                                </Border.BackgroundColor>
+                                <Label Text="{Binding Text}"
+                                       FontSize="14"
+                                       LineBreakMode="WordWrap">
+                                    <Label.TextColor>
+                                        <Binding Path="IsUser">
+                                            <Binding.Converter>
+                                                <local:BoolToColorConverter TrueColor="White" FalseColor="Black" />
+                                            </Binding.Converter>
+                                        </Binding>
+                                    </Label.TextColor>
+                                </Label>
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Input -->
+            <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Padding="8" ColumnSpacing="4">
+                <Entry Placeholder="Ask about weather..."
+                       Text="{Binding UserInput}"
+                       ReturnCommand="{Binding SendCommand}"
+                       IsEnabled="{Binding IsSending, Converter={StaticResource InvertBoolConverter}}"
+                       AutomationId="ChatInput" />
+                <Button Grid.Column="1"
+                        Text="Send"
+                        Command="{Binding SendCommand}"
+                        AutomationId="ChatSendButton"
+                        Padding="12,8" />
+            </Grid>
+        </Grid>
+    </Border>
+
+</ContentView>
