@@ -8,11 +8,11 @@ using MauiSampleApp.Core.Services;
 
 namespace MauiSampleApp.ViewModels;
 
-public record ChatMessage(string Role, string Content);
+public record ConversationEntry(string Role, string Content);
 
 public class ChatViewModel : INotifyPropertyChanged
 {
-    private readonly IChatClient _chatClient;
+    private readonly IChatClient? _chatClient;
     private readonly SpeciesService _speciesService;
     private readonly PlantDataService _plantDataService;
     private string _userInput = string.Empty;
@@ -25,7 +25,7 @@ public class ChatViewModel : INotifyPropertyChanged
         Be conversational and helpful. Use emoji occasionally to be friendly 🌱
         """;
 
-    public ChatViewModel(IChatClient chatClient, SpeciesService speciesService, PlantDataService plantDataService)
+    public ChatViewModel(SpeciesService speciesService, PlantDataService plantDataService, IChatClient? chatClient = null)
     {
         _chatClient = chatClient;
         _speciesService = speciesService;
@@ -35,7 +35,7 @@ public class ChatViewModel : INotifyPropertyChanged
         SetupAIFunctions();
     }
 
-    public ObservableCollection<ChatMessage> Messages { get; }
+    public ObservableCollection<ConversationEntry> Messages { get; }
 
     public string UserInput
     {
@@ -130,39 +130,54 @@ public class ChatViewModel : INotifyPropertyChanged
 
     private async Task SendMessageAsync()
     {
-        if (string.IsNullOrWhiteSpace(UserInput))
+        if (string.IsNullOrWhiteSpace(UserInput) || _chatClient is null)
+        {
+            if (_chatClient is null && !string.IsNullOrWhiteSpace(UserInput))
+            {
+                UserInput = string.Empty;
+                Messages.Add(new ConversationEntry("Assistant", "AI is not configured. Please set up user secrets with AI:ApiKey, AI:Endpoint, and AI:DeploymentName."));
+            }
             return;
+        }
 
         var userMessage = UserInput;
         UserInput = string.Empty;
-        Messages.Add(new ChatMessage("User", userMessage));
+        Messages.Add(new ConversationEntry("User", userMessage));
         IsBusy = true;
 
         try
         {
-            var history = new List<Microsoft.Extensions.AI.ChatMessage>
-            {
-                new(ChatRole.System, SystemPrompt)
-            };
+            var history = new List<ChatMessage> { new(ChatRole.System, SystemPrompt) };
 
             foreach (var m in Messages)
             {
                 history.Add(m.Role == "User"
-                    ? new Microsoft.Extensions.AI.ChatMessage(ChatRole.User, m.Content)
-                    : new Microsoft.Extensions.AI.ChatMessage(ChatRole.Assistant, m.Content));
+                    ? new ChatMessage(ChatRole.User, m.Content)
+                    : new ChatMessage(ChatRole.Assistant, m.Content));
             }
 
-            var options = new ChatOptions
-            {
-                Tools = _aiTools
-            };
+            var options = new ChatOptions { Tools = _aiTools };
 
-            var response = await _chatClient.GetResponseAsync(history, options);
-            Messages.Add(new ChatMessage("Assistant", response.Text ?? "(no response)"));
+            // Streaming response
+            var index = Messages.Count;
+            Messages.Add(new ConversationEntry("Assistant", ""));
+            var responseText = "";
+
+            await foreach (var update in _chatClient.GetStreamingResponseAsync(history, options))
+            {
+                if (update.Text is { } text)
+                {
+                    responseText += text;
+                    Messages[index] = new ConversationEntry("Assistant", responseText);
+                }
+            }
+
+            if (string.IsNullOrEmpty(responseText))
+                Messages[index] = new ConversationEntry("Assistant", "(no response)");
         }
         catch (Exception ex)
         {
-            Messages.Add(new ChatMessage("Assistant", $"Error: {ex.Message}"));
+            Messages.Add(new ConversationEntry("Assistant", $"Error: {ex.Message}"));
         }
         finally
         {

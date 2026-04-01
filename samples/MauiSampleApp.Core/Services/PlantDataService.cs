@@ -3,32 +3,23 @@ using Shiny.DocumentDb;
 
 namespace MauiSampleApp.Core.Services;
 
-public class PlantDataService
+public class PlantDataService(IDocumentStore store, SpeciesService speciesService)
 {
-    private readonly IDocumentStore _store;
-    private readonly SpeciesService _speciesService;
-
-    public PlantDataService(IDocumentStore store, SpeciesService speciesService)
-    {
-        _store = store;
-        _speciesService = speciesService;
-    }
-
     public async Task<List<Plant>> GetPlantsAsync()
     {
-        var result = await _store.Query<Plant>().ToList();
+        var result = await store.Query<Plant>().ToList();
         return result.ToList();
     }
 
     public async Task<Plant?> GetPlantAsync(string nickname)
     {
-        var all = await _store.Query<Plant>().ToList();
+        var all = await store.Query<Plant>().ToList();
         return all.FirstOrDefault(p => p.Nickname.Equals(nickname.Trim(), StringComparison.OrdinalIgnoreCase));
     }
 
     public async Task<Plant> AddPlantAsync(string nickname, string species, string location, bool isIndoor)
     {
-        var speciesProfile = await _speciesService.GetSpeciesAsync(species);
+        var speciesProfile = await speciesService.GetSpeciesAsync(species);
 
         var plant = new Plant
         {
@@ -40,7 +31,7 @@ public class PlantDataService
             DateAdded = DateTime.UtcNow
         };
 
-        await _store.Insert(plant);
+        await store.Insert(plant);
         return plant;
     }
 
@@ -49,7 +40,7 @@ public class PlantDataService
         var plant = await GetPlantAsync(nickname);
         if (plant is not null)
         {
-            await _store.Remove<Plant>(plant.Id);
+            await store.Remove<Plant>(plant.Id);
         }
     }
 
@@ -67,7 +58,7 @@ public class PlantDataService
             Notes = notes
         };
 
-        await _store.Insert(careEvent);
+        await store.Insert(careEvent);
         return careEvent;
     }
 
@@ -77,7 +68,7 @@ public class PlantDataService
         if (plant is null)
             return [];
 
-        var all = await _store.Query<CareEvent>().ToList();
+        var all = await store.Query<CareEvent>().ToList();
         return all.Where(e => e.PlantId == plant.Id)
                   .OrderByDescending(e => e.Timestamp)
                   .ToList();

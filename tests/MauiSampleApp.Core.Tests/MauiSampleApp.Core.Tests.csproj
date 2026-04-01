@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\MauiSampleApp.Core\MauiSampleApp.Core.csproj" />
+    <ProjectReference Include="..\..\samples\MauiSampleApp.Core\MauiSampleApp.Core.csproj" />
   </ItemGroup>
 
 </Project>

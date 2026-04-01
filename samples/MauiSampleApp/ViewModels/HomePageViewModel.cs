@@ -7,18 +7,9 @@ using MauiSampleApp.Core.Services;
 
 namespace MauiSampleApp.ViewModels;
 
-public class MainPageViewModel : INotifyPropertyChanged
+public class HomePageViewModel(PlantDataService plantDataService) : INotifyPropertyChanged
 {
-    private readonly PlantDataService _plantDataService;
-
-    public MainPageViewModel(PlantDataService plantDataService)
-    {
-        _plantDataService = plantDataService;
-        Plants = [];
-        RefreshCommand = new Command(async () => await RefreshPlantsAsync());
-    }
-
-    public ObservableCollection<Plant> Plants { get; }
+    public ObservableCollection<Plant> Plants { get; } = [];
 
     private ChatViewModel? _chatViewModel;
     public ChatViewModel? ChatViewModel
@@ -34,14 +25,14 @@ public class MainPageViewModel : INotifyPropertyChanged
         set { _isLoading = value; OnPropertyChanged(); }
     }
 
-    public ICommand RefreshCommand { get; }
+    public ICommand RefreshCommand { get; } = new Command(async () => { });
 
     public async Task RefreshPlantsAsync()
     {
         IsLoading = true;
         try
         {
-            var plants = await _plantDataService.GetPlantsAsync();
+            var plants = await plantDataService.GetPlantsAsync();
             Plants.Clear();
             foreach (var plant in plants)
                 Plants.Add(plant);

@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MauiSampleApp.ViewModels"
+             xmlns:models="clr-namespace:MauiSampleApp.Core.Models;assembly=MauiSampleApp.Core"
+             x:Class="MauiSampleApp.Pages.PlantDetailPage"
+             Title="Plant Details"
+             BackgroundColor="{AppThemeBinding Light={StaticResource PageBg}, Dark={StaticResource PageBgDark}}"
+             Shell.BackgroundColor="{StaticResource AccentGreen}">
+
+    <Grid>
+        <ScrollView>
+            <VerticalStackLayout Spacing="0">
+
+                <!-- Hero Header -->
+                <Border BackgroundColor="{StaticResource AccentGreen}"
+                        Padding="24,16,24,28"
+                        StrokeThickness="0">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="0,0,28,28" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                        <Label Text="&#x1FAB4;" FontSize="56" HorizontalOptions="Center" />
+                        <Label Text="{Binding Plant.Nickname}"
+                               FontSize="28" FontAttributes="Bold"
+                               TextColor="White"
+                               HorizontalOptions="Center" />
+                        <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
+                            <Label Text="{Binding Plant.Location, StringFormat='&#x1F4CD; {0}'}"
+                                   FontSize="14" TextColor="#D4E8D4" />
+                            <Label Text="{Binding Plant.DateAdded, StringFormat='&#x1F4C5; {0:MMM d, yyyy}'}"
+                                   FontSize="14" TextColor="#D4E8D4" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <VerticalStackLayout Spacing="16" Padding="20,20,20,24">
+
+                    <!-- Species Info Card -->
+                    <Border Padding="20"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource CardBg}, Dark={StaticResource CardBgDark}}"
+                            Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
+                            StrokeThickness="1">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="16" />
+                        </Border.StrokeShape>
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Species Info" FontSize="18" FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
+                            <Label Text="{Binding Species.ScientificName}"
+                                   FontSize="14" FontAttributes="Italic"
+                                   TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+
+                            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10" Margin="0,8,0,0">
+                                <!-- Water -->
+                                <Border Padding="10" BackgroundColor="{AppThemeBinding Light=#EDF6FC, Dark=#1A2530}"
+                                        StrokeThickness="0">
+                                    <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
+                                    <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                                        <Label Text="&#x1F4A7;" FontSize="22" HorizontalOptions="Center" />
+                                        <Label Text="{Binding Species.WateringFrequencyDays, StringFormat='Every {0}d'}"
+                                               FontSize="13" FontAttributes="Bold" HorizontalOptions="Center"
+                                               TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
+                                        <Label Text="Water" FontSize="11" HorizontalOptions="Center"
+                                               TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                                    </VerticalStackLayout>
+                                </Border>
+                                <!-- Sun -->
+                                <Border Padding="10" BackgroundColor="{AppThemeBinding Light=#FFF8E1, Dark=#302A18}"
+                                        StrokeThickness="0">
+                                    <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
+                                    <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                                        <Label Text="&#x2600;&#xFE0F;" FontSize="22" HorizontalOptions="Center" />
+                                        <Label Text="{Binding Species.SunlightNeeds}"
+                                               FontSize="13" FontAttributes="Bold" HorizontalOptions="Center"
+                                               TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
+                                        <Label Text="Sunlight" FontSize="11" HorizontalOptions="Center"
+                                               TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                                    </VerticalStackLayout>
+                                </Border>
+                                <!-- Frost -->
+                                <Border Padding="10" BackgroundColor="{AppThemeBinding Light=#F0F4FF, Dark=#181C2A}"
+                                        StrokeThickness="0">
+                                    <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
+                                    <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                                        <Label Text="&#x2744;&#xFE0F;" FontSize="22" HorizontalOptions="Center" />
+                                        <Label Text="Yes" FontSize="13" FontAttributes="Bold" HorizontalOptions="Center"
+                                               TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}">
+                                            <Label.Triggers>
+                                                <DataTrigger TargetType="Label" Binding="{Binding Species.FrostTolerant}" Value="False">
+                                                    <Setter Property="Text" Value="No" />
+                                                </DataTrigger>
+                                            </Label.Triggers>
+                                        </Label>
+                                        <Label Text="Frost OK" FontSize="11" HorizontalOptions="Center"
+                                               TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                                    </VerticalStackLayout>
+                                </Border>
+                            </Grid>
+
+                            <Label Text="{Binding Species.Notes}"
+                                   FontSize="13" Margin="0,6,0,0"
+                                   TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Tab Selector -->
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <Button x:Name="ActionsTab"
+                                Text="Quick Actions"
+                                Clicked="OnActionsTabClicked"
+                                BackgroundColor="{StaticResource AccentGreen}"
+                                TextColor="White"
+                                FontSize="14" FontAttributes="Bold"
+                                CornerRadius="12" HeightRequest="40" />
+                        <Button x:Name="HistoryTab"
+                                Grid.Column="1"
+                                Text="Care History"
+                                Clicked="OnHistoryTabClicked"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray600}}"
+                                TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"
+                                FontSize="14" FontAttributes="Bold"
+                                CornerRadius="12" HeightRequest="40" />
+                    </Grid>
+
+                    <!-- Actions Content -->
+                    <VerticalStackLayout x:Name="ActionsContent" IsVisible="True" Spacing="8">
+                        <FlexLayout Wrap="Wrap" JustifyContent="Start" AlignItems="Start">
+                            <Button Text="&#x1F4A7; Water" Command="{Binding LogCareCommand}" CommandParameter="Watered"
+                                    Margin="0,0,8,8" BackgroundColor="#4A90D9" TextColor="White" CornerRadius="12" Padding="14,10" FontSize="13" />
+                            <Button Text="&#x1F33F; Fertilize" Command="{Binding LogCareCommand}" CommandParameter="Fertilized"
+                                    Margin="0,0,8,8" BackgroundColor="{StaticResource AccentGreen}" TextColor="White" CornerRadius="12" Padding="14,10" FontSize="13" />
+                            <Button Text="&#x2702;&#xFE0F; Prune" Command="{Binding LogCareCommand}" CommandParameter="Pruned"
+                                    Margin="0,0,8,8" BackgroundColor="{StaticResource AccentOchre}" TextColor="White" CornerRadius="12" Padding="14,10" FontSize="13" />
+                            <Button Text="&#x1FAB4; Repot" Command="{Binding LogCareCommand}" CommandParameter="Repotted"
+                                    Margin="0,0,8,8" BackgroundColor="#8B6F47" TextColor="White" CornerRadius="12" Padding="14,10" FontSize="13" />
+                            <Button Text="&#x1F41B; Treat" Command="{Binding LogCareCommand}" CommandParameter="TreatedForPest"
+                                    Margin="0,0,8,8" BackgroundColor="{StaticResource Danger}" TextColor="White" CornerRadius="12" Padding="14,10" FontSize="13" />
+                            <Button Text="&#x1F440; Observe" Command="{Binding LogCareCommand}" CommandParameter="Observed"
+                                    Margin="0,0,8,8" BackgroundColor="{StaticResource Gray400}" TextColor="White" CornerRadius="12" Padding="14,10" FontSize="13" />
+                        </FlexLayout>
+                    </VerticalStackLayout>
+
+                    <!-- History Content -->
+                    <VerticalStackLayout x:Name="HistoryContent" IsVisible="False" Spacing="8">
+                        <CollectionView ItemsSource="{Binding CareHistory}"
+                                        AutomationId="CareHistoryList"
+                                        EmptyView="No care events yet. Use the Quick Actions tab!">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="models:CareEvent">
+                                    <Border Padding="14" Margin="0,0,0,8"
+                                            BackgroundColor="{AppThemeBinding Light={StaticResource CardBg}, Dark={StaticResource CardBgDark}}"
+                                            Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
+                                            StrokeThickness="1">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="12" />
+                                        </Border.StrokeShape>
+                                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                            <Label Text="{Binding EventType}" FontSize="14" FontAttributes="Bold"
+                                                   VerticalOptions="Center"
+                                                   TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
+                                            <Label Grid.Column="1" Text="{Binding Notes}" FontSize="12"
+                                                   VerticalOptions="Center"
+                                                   TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                                            <Label Grid.Column="2" Text="{Binding Timestamp, StringFormat='{0:MMM d, h:mm tt}'}" FontSize="11"
+                                                   VerticalOptions="Center"
+                                                   TextColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray500}}" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </VerticalStackLayout>
+
+                    <!-- Delete -->
+                    <Button Text="Remove Plant"
+                            Command="{Binding DeletePlantCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource Danger}"
+                            FontSize="14"
+                            Margin="0,8,0,0"
+                            AutomationId="DeletePlantButton" />
+
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- FAB Chat Button -->
+        <Button Text="💬"
+                Clicked="OnOpenChatClicked"
+                AutomationId="DetailChatButton"
+                BackgroundColor="{StaticResource AccentGreen}"
+                TextColor="White"
+                FontSize="24"
+                WidthRequest="56"
+                HeightRequest="56"
+                CornerRadius="28"
+                HorizontalOptions="End"
+                VerticalOptions="End"
+                Margin="0,0,20,20" />
+    </Grid>
+
+</ContentPage>

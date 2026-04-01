@@ -5,28 +5,22 @@ using MauiSampleApp.Core.Services;
 
 namespace MauiSampleApp.ViewModels;
 
-public class AddPlantViewModel : INotifyPropertyChanged
+public class AddPlantViewModel(PlantDataService plantDataService) : INotifyPropertyChanged
 {
-    private readonly PlantDataService _plantDataService;
-
-    public AddPlantViewModel(PlantDataService plantDataService)
-    {
-        _plantDataService = plantDataService;
-        SaveCommand = new Command(async () => await SaveAsync(), () => !IsBusy && !string.IsNullOrWhiteSpace(Nickname) && !string.IsNullOrWhiteSpace(Species));
-    }
+    private Command? _saveCommand;
 
     private string _nickname = string.Empty;
     public string Nickname
     {
         get => _nickname;
-        set { _nickname = value; OnPropertyChanged(); ((Command)SaveCommand).ChangeCanExecute(); }
+        set { _nickname = value; OnPropertyChanged(); SaveCmd.ChangeCanExecute(); }
     }
 
     private string _species = string.Empty;
     public string Species
     {
         get => _species;
-        set { _species = value; OnPropertyChanged(); ((Command)SaveCommand).ChangeCanExecute(); }
+        set { _species = value; OnPropertyChanged(); SaveCmd.ChangeCanExecute(); }
     }
 
     private string _location = string.Empty;
@@ -47,7 +41,7 @@ public class AddPlantViewModel : INotifyPropertyChanged
     public bool IsBusy
     {
         get => _isBusy;
-        set { _isBusy = value; OnPropertyChanged(); ((Command)SaveCommand).ChangeCanExecute(); }
+        set { _isBusy = value; OnPropertyChanged(); SaveCmd.ChangeCanExecute(); }
     }
 
     private string _statusMessage = string.Empty;
@@ -57,7 +51,8 @@ public class AddPlantViewModel : INotifyPropertyChanged
         set { _statusMessage = value; OnPropertyChanged(); }
     }
 
-    public ICommand SaveCommand { get; }
+    private Command SaveCmd => _saveCommand ??= new Command(async () => await SaveAsync(), () => !IsBusy && !string.IsNullOrWhiteSpace(Nickname) && !string.IsNullOrWhiteSpace(Species));
+    public ICommand SaveCommand => SaveCmd;
 
     private async Task SaveAsync()
     {
@@ -65,7 +60,7 @@ public class AddPlantViewModel : INotifyPropertyChanged
         StatusMessage = "Adding plant and looking up species info...";
         try
         {
-            await _plantDataService.AddPlantAsync(Nickname, Species, Location, IsIndoor);
+            await plantDataService.AddPlantAsync(Nickname, Species, Location, IsIndoor);
             await Shell.Current.GoToAsync("..");
         }
         catch (Exception ex)

@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:MauiSampleApp.ViewModels"
              xmlns:models="clr-namespace:MauiSampleApp.Core.Models;assembly=MauiSampleApp.Core"
-             x:Class="MauiSampleApp.MainPage"
+             x:Class="MauiSampleApp.Pages.HomePage"
              Title="My Garden"
              Shell.NavBarIsVisible="False"
              BackgroundColor="{AppThemeBinding Light={StaticResource PageBg}, Dark={StaticResource PageBgDark}}"
@@ -11,7 +11,7 @@
 
     <Grid>
         <!-- Main Content -->
-        <Grid RowDefinitions="Auto,*,Auto" RowSpacing="0">
+        <Grid RowDefinitions="Auto,*" RowSpacing="0">
 
             <!-- Hero Header -->
             <Border Grid.Row="0"
@@ -21,16 +21,31 @@
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="0,0,24,24" />
                 </Border.StrokeShape>
-                <VerticalStackLayout Spacing="6">
-                    <Label Text="My Garden"
-                           FontSize="32"
-                           FontAttributes="Bold"
-                           TextColor="White"
-                           AutomationId="PageTitle" />
-                    <Label Text="Your plants, your way. Tap a plant or chat with your AI assistant."
-                           FontSize="14"
-                           TextColor="#D4E8D4" />
-                </VerticalStackLayout>
+                <Grid ColumnDefinitions="*,Auto">
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="My Garden"
+                               FontSize="32"
+                               FontAttributes="Bold"
+                               TextColor="White"
+                               AutomationId="PageTitle" />
+                        <Label Text="Your plants, your way. Tap a plant or chat with your AI assistant."
+                               FontSize="14"
+                               TextColor="#D4E8D4" />
+                    </VerticalStackLayout>
+                    <Button Grid.Column="1"
+                            Text="+"
+                            Clicked="OnAddPlantClicked"
+                            AutomationId="AddPlantButton"
+                            BackgroundColor="{StaticResource AccentOchre}"
+                            TextColor="White"
+                            FontSize="24"
+                            FontAttributes="Bold"
+                            WidthRequest="46"
+                            HeightRequest="46"
+                            CornerRadius="23"
+                            VerticalOptions="Start"
+                            Padding="0" />
+                </Grid>
             </Border>
 
             <!-- Plant List -->
@@ -97,33 +112,21 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
-            <!-- Bottom Bar -->
-            <Grid Grid.Row="2" ColumnDefinitions="*,Auto"
-                  Padding="16,12,16,16" ColumnSpacing="12"
-                  BackgroundColor="{AppThemeBinding Light={StaticResource PageBg}, Dark={StaticResource PageBgDark}}">
-                <Button Text="&#x1F4AC;  Chat with Assistant"
-                        Clicked="OnOpenChatClicked"
-                        AutomationId="OpenChatButton"
-                        BackgroundColor="{StaticResource AccentGreen}"
-                        TextColor="White"
-                        FontSize="15"
-                        FontAttributes="Bold"
-                        CornerRadius="14"
-                        HeightRequest="50"
-                        HorizontalOptions="Fill" />
-                <Button Grid.Column="1"
-                        Text="+"
-                        Clicked="OnAddPlantClicked"
-                        AutomationId="AddPlantButton"
-                        BackgroundColor="{StaticResource AccentOchre}"
-                        TextColor="White"
-                        FontSize="24"
-                        FontAttributes="Bold"
-                        WidthRequest="50"
-                        HeightRequest="50"
-                        CornerRadius="14" />
-            </Grid>
         </Grid>
+
+        <!-- FAB Chat Button -->
+        <Button Text="💬"
+                Clicked="OnOpenChatClicked"
+                AutomationId="OpenChatButton"
+                BackgroundColor="{StaticResource AccentGreen}"
+                TextColor="White"
+                FontSize="24"
+                WidthRequest="56"
+                HeightRequest="56"
+                CornerRadius="28"
+                HorizontalOptions="End"
+                VerticalOptions="End"
+                Margin="0,0,20,20" />
 
         <!-- Chat Popup Overlay -->
         <Grid x:Name="ChatOverlay"
@@ -182,7 +185,7 @@
                                     AutomationId="ChatMessages"
                                     Margin="12,8,12,0">
                         <CollectionView.ItemTemplate>
-                            <DataTemplate x:DataType="vm:ChatMessage">
+                            <DataTemplate x:DataType="vm:ConversationEntry">
                                 <Grid Padding="0,4">
                                     <Border x:Name="MessageBubble"
                                             Padding="12,10"

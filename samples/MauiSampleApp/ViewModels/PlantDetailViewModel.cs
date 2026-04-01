@@ -7,19 +7,15 @@ using MauiSampleApp.Core.Services;
 
 namespace MauiSampleApp.ViewModels;
 
-public class PlantDetailViewModel : INotifyPropertyChanged, IQueryAttributable
+public class PlantDetailViewModel(PlantDataService plantDataService, SpeciesService speciesService) : INotifyPropertyChanged, IQueryAttributable
 {
-    private readonly PlantDataService _plantDataService;
-    private readonly SpeciesService _speciesService;
+    public ObservableCollection<CareEvent> CareHistory { get; } = [];
 
-    public PlantDetailViewModel(PlantDataService plantDataService, SpeciesService speciesService)
-    {
-        _plantDataService = plantDataService;
-        _speciesService = speciesService;
-        CareHistory = [];
-        LogCareCommand = new Command<string>(async (eventType) => await LogCareAsync(eventType));
-        DeletePlantCommand = new Command(async () => await DeletePlantAsync());
-    }
+    private Command<string>? _logCareCommand;
+    public ICommand LogCareCommand => _logCareCommand ??= new Command<string>(async eventType => await LogCareAsync(eventType));
+
+    private Command? _deletePlantCommand;
+    public ICommand DeletePlantCommand => _deletePlantCommand ??= new Command(async () => await DeletePlantAsync());
 
     private Plant? _plant;
     public Plant? Plant
@@ -35,17 +31,12 @@ public class PlantDetailViewModel : INotifyPropertyChanged, IQueryAttributable
         set { _species = value; OnPropertyChanged(); }
     }
 
-    public ObservableCollection<CareEvent> CareHistory { get; }
-
     private bool _isLoading;
     public bool IsLoading
     {
         get => _isLoading;
         set { _isLoading = value; OnPropertyChanged(); }
     }
-
-    public ICommand LogCareCommand { get; }
-    public ICommand DeletePlantCommand { get; }
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
@@ -60,12 +51,12 @@ public class PlantDetailViewModel : INotifyPropertyChanged, IQueryAttributable
         IsLoading = true;
         try
         {
-            Plant = await _plantDataService.GetPlantAsync(nickname);
+            Plant = await plantDataService.GetPlantAsync(nickname);
             if (Plant is not null)
             {
-                Species = await _speciesService.GetSpeciesByIdAsync(Plant.SpeciesId);
+                Species = await speciesService.GetSpeciesByIdAsync(Plant.SpeciesId);
 
-                var history = await _plantDataService.GetCareHistoryAsync(nickname);
+                var history = await plantDataService.GetCareHistoryAsync(nickname);
                 CareHistory.Clear();
                 foreach (var e in history)
                     CareHistory.Add(e);
@@ -80,9 +71,9 @@ public class PlantDetailViewModel : INotifyPropertyChanged, IQueryAttributable
     private async Task LogCareAsync(string eventType)
     {
         if (Plant is null) return;
-        await _plantDataService.LogCareEventAsync(Plant.Nickname, eventType, "");
+        await plantDataService.LogCareEventAsync(Plant.Nickname, eventType, "");
 
-        var history = await _plantDataService.GetCareHistoryAsync(Plant.Nickname);
+        var history = await plantDataService.GetCareHistoryAsync(Plant.Nickname);
         CareHistory.Clear();
         foreach (var e in history)
             CareHistory.Add(e);
@@ -91,7 +82,7 @@ public class PlantDetailViewModel : INotifyPropertyChanged, IQueryAttributable
     private async Task DeletePlantAsync()
     {
         if (Plant is null) return;
-        await _plantDataService.RemovePlantAsync(Plant.Nickname);
+        await plantDataService.RemovePlantAsync(Plant.Nickname);
         await Shell.Current.GoToAsync("..");
     }
 

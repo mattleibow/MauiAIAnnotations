@@ -1,13 +1,13 @@
 ﻿using MauiSampleApp.Core.Models;
 using MauiSampleApp.ViewModels;
 
-namespace MauiSampleApp;
+namespace MauiSampleApp.Pages;
 
-public partial class MainPage : ContentPage
+public partial class HomePage : ContentPage
 {
-    private readonly MainPageViewModel _viewModel;
+    private readonly HomePageViewModel _viewModel;
 
-    public MainPage(MainPageViewModel viewModel, ChatViewModel chatViewModel)
+    public HomePage(HomePageViewModel viewModel, ChatViewModel chatViewModel)
     {
         _viewModel = viewModel;
         viewModel.ChatViewModel = chatViewModel;

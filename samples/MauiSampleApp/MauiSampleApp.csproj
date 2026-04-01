@@ -78,6 +78,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\MauiSampleApp.Core\MauiSampleApp.Core.csproj" />
+	
 	</ItemGroup>
 
 	<Target Name="AddUserSecrets" BeforeTargets="PrepareForBuild" Condition=" '$(UserSecretsId)' != '' ">
