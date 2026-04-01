@@ -5,6 +5,7 @@
              xmlns:models="clr-namespace:MauiSampleApp.Core.Models;assembly=MauiSampleApp.Core"
              x:Class="MauiSampleApp.Pages.PlantDetailPage"
              Title="Plant Details"
+             Shell.NavBarIsVisible="False"
              BackgroundColor="{AppThemeBinding Light={StaticResource PageBg}, Dark={StaticResource PageBgDark}}"
              Shell.BackgroundColor="{StaticResource AccentGreen}">
 
@@ -12,26 +13,37 @@
         <ScrollView>
             <VerticalStackLayout Spacing="0">
 
-                <!-- Hero Header -->
+                <!-- Hero Header with back button -->
                 <Border BackgroundColor="{StaticResource AccentGreen}"
                         Padding="24,16,24,28"
                         StrokeThickness="0">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="0,0,28,28" />
                     </Border.StrokeShape>
-                    <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
-                        <Label Text="&#x1FAB4;" FontSize="56" HorizontalOptions="Center" />
-                        <Label Text="{Binding Plant.Nickname}"
-                               FontSize="28" FontAttributes="Bold"
-                               TextColor="White"
-                               HorizontalOptions="Center" />
-                        <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
-                            <Label Text="{Binding Plant.Location, StringFormat='&#x1F4CD; {0}'}"
-                                   FontSize="14" TextColor="#D4E8D4" />
-                            <Label Text="{Binding Plant.DateAdded, StringFormat='&#x1F4C5; {0:MMM d, yyyy}'}"
-                                   FontSize="14" TextColor="#D4E8D4" />
-                        </HorizontalStackLayout>
-                    </VerticalStackLayout>
+                    <Grid RowDefinitions="Auto,*">
+                        <!-- Back button row -->
+                        <Button Text="&#x2039; Back"
+                                Clicked="OnBackClicked"
+                                BackgroundColor="Transparent"
+                                TextColor="#D4E8D4"
+                                FontSize="15"
+                                HorizontalOptions="Start"
+                                Padding="0,4" />
+                        <!-- Plant info -->
+                        <VerticalStackLayout Grid.Row="1" Spacing="8" HorizontalOptions="Center">
+                            <Label Text="&#x1FAB4;" FontSize="56" HorizontalOptions="Center" />
+                            <Label Text="{Binding Plant.Nickname}"
+                                   FontSize="28" FontAttributes="Bold"
+                                   TextColor="White"
+                                   HorizontalOptions="Center" />
+                            <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
+                                <Label Text="{Binding Plant.Location, StringFormat='&#x1F4CD; {0}'}"
+                                       FontSize="14" TextColor="#D4E8D4" />
+                                <Label Text="{Binding Plant.DateAdded, StringFormat='&#x1F4C5; {0:MMM d, yyyy}'}"
+                                       FontSize="14" TextColor="#D4E8D4" />
+                            </HorizontalStackLayout>
+                        </VerticalStackLayout>
+                    </Grid>
                 </Border>
 
                 <VerticalStackLayout Spacing="16" Padding="20,20,20,24">
@@ -198,6 +210,144 @@
                 HorizontalOptions="End"
                 VerticalOptions="End"
                 Margin="0,0,20,20" />
+
+        <!-- Chat Popup Overlay -->
+        <Grid x:Name="ChatOverlay"
+              IsVisible="False"
+              AutomationId="DetailChatOverlay"
+              BackgroundColor="#66000000">
+
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnChatBackdropTapped" />
+            </Grid.GestureRecognizers>
+
+            <Border VerticalOptions="End"
+                    HorizontalOptions="Fill"
+                    HeightRequest="500"
+                    Margin="12,0,12,12"
+                    Padding="0"
+                    InputTransparent="False"
+                    Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
+                    StrokeThickness="1"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource CardBg}, Dark={StaticResource CardBgDark}}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="20,20,12,12" />
+                </Border.StrokeShape>
+
+                <Grid RowDefinitions="Auto,*,Auto,Auto" RowSpacing="0">
+
+                    <!-- Chat Header -->
+                    <Border Grid.Row="0"
+                            BackgroundColor="{StaticResource AccentGreen}"
+                            Padding="16,14"
+                            StrokeThickness="0">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="20,20,0,0" />
+                        </Border.StrokeShape>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="&#x1F33F; Garden Assistant"
+                                   FontSize="17"
+                                   FontAttributes="Bold"
+                                   TextColor="White"
+                                   VerticalOptions="Center" />
+                            <Button Grid.Column="1"
+                                    Text="&#x2715;"
+                                    FontSize="16"
+                                    BackgroundColor="Transparent"
+                                    TextColor="#D4E8D4"
+                                    Clicked="OnCloseChatClicked"
+                                    AutomationId="DetailCloseChatButton"
+                                    Padding="8,4"
+                                    MinimumWidthRequest="40" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Messages -->
+                    <CollectionView Grid.Row="1"
+                                    ItemsSource="{Binding ChatViewModel.Messages}"
+                                    AutomationId="DetailChatMessages"
+                                    Margin="12,8,12,0">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ConversationEntry">
+                                <Grid Padding="0,4">
+                                    <Border Padding="12,10"
+                                            MaximumWidthRequest="340"
+                                            HorizontalOptions="Start"
+                                            BackgroundColor="{AppThemeBinding Light=#F0EBE3, Dark=#33302A}"
+                                            StrokeThickness="0">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="16,16,16,4" />
+                                        </Border.StrokeShape>
+                                        <Border.Triggers>
+                                            <DataTrigger TargetType="Border" Binding="{Binding Role}" Value="User">
+                                                <Setter Property="HorizontalOptions" Value="End" />
+                                                <Setter Property="BackgroundColor" Value="{StaticResource ChatUser}" />
+                                            </DataTrigger>
+                                        </Border.Triggers>
+                                        <VerticalStackLayout Spacing="2">
+                                            <Label Text="{Binding Role}"
+                                                   FontSize="11"
+                                                   FontAttributes="Bold"
+                                                   TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}">
+                                                <Label.Triggers>
+                                                    <DataTrigger TargetType="Label" Binding="{Binding Role}" Value="User">
+                                                        <Setter Property="TextColor" Value="#D4E8D4" />
+                                                    </DataTrigger>
+                                                </Label.Triggers>
+                                            </Label>
+                                            <Label Text="{Binding Content}"
+                                                   FontSize="14"
+                                                   TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}">
+                                                <Label.Triggers>
+                                                    <DataTrigger TargetType="Label" Binding="{Binding Role}" Value="User">
+                                                        <Setter Property="TextColor" Value="White" />
+                                                    </DataTrigger>
+                                                </Label.Triggers>
+                                            </Label>
+                                        </VerticalStackLayout>
+                                    </Border>
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                    <!-- Busy indicator -->
+                    <ActivityIndicator Grid.Row="2"
+                                       IsRunning="{Binding ChatViewModel.IsBusy}"
+                                       IsVisible="{Binding ChatViewModel.IsBusy}"
+                                       Color="{StaticResource AccentGreen}"
+                                       Margin="0,6" />
+
+                    <!-- Input Area -->
+                    <Border Grid.Row="3" Margin="12,8,12,12" Padding="6"
+                            BackgroundColor="{AppThemeBinding Light=#F0EBE3, Dark=#33302A}"
+                            StrokeThickness="0">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="14" />
+                        </Border.StrokeShape>
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                            <Entry Placeholder="Ask about your plants..."
+                                   Text="{Binding ChatViewModel.UserInput}"
+                                   ReturnCommand="{Binding ChatViewModel.SendCommand}"
+                                   AutomationId="DetailChatInput"
+                                   FontSize="14"
+                                   BackgroundColor="Transparent" />
+                            <Button Grid.Column="1"
+                                    Text="&#x27A4;"
+                                    Command="{Binding ChatViewModel.SendCommand}"
+                                    AutomationId="DetailSendButton"
+                                    BackgroundColor="{StaticResource AccentGreen}"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    WidthRequest="42"
+                                    HeightRequest="42"
+                                    CornerRadius="12"
+                                    Padding="0" />
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 
 </ContentPage>

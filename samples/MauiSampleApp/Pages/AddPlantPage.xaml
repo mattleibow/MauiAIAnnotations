@@ -3,27 +3,39 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="MauiSampleApp.Pages.AddPlantPage"
              Title="Add Plant"
+             Shell.NavBarIsVisible="False"
              BackgroundColor="{AppThemeBinding Light={StaticResource PageBg}, Dark={StaticResource PageBgDark}}"
              Shell.BackgroundColor="{StaticResource AccentGreen}">
 
     <ScrollView>
         <VerticalStackLayout Spacing="0">
 
-            <!-- Hero -->
+            <!-- Hero with back button -->
             <Border BackgroundColor="{StaticResource AccentGreen}"
                     Padding="24,16,24,28"
                     StrokeThickness="0">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="0,0,28,28" />
                 </Border.StrokeShape>
-                <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
-                    <Label Text="&#x1F331;" FontSize="44" HorizontalOptions="Center" />
-                    <Label Text="New Plant"
-                           FontSize="26" FontAttributes="Bold"
-                           TextColor="White" HorizontalOptions="Center" />
-                    <Label Text="Tell us about your green friend"
-                           FontSize="14" TextColor="#D4E8D4" HorizontalOptions="Center" />
-                </VerticalStackLayout>
+                <Grid RowDefinitions="Auto,*">
+                    <!-- Back button row -->
+                    <Button Text="&#x2039; Back"
+                            Clicked="OnBackClicked"
+                            BackgroundColor="Transparent"
+                            TextColor="#D4E8D4"
+                            FontSize="15"
+                            HorizontalOptions="Start"
+                            Padding="0,4" />
+                    <!-- Page info -->
+                    <VerticalStackLayout Grid.Row="1" Spacing="4" HorizontalOptions="Center">
+                        <Label Text="&#x1F331;" FontSize="44" HorizontalOptions="Center" />
+                        <Label Text="New Plant"
+                               FontSize="26" FontAttributes="Bold"
+                               TextColor="White" HorizontalOptions="Center" />
+                        <Label Text="Tell us about your green friend"
+                               FontSize="14" TextColor="#D4E8D4" HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </Grid>
             </Border>
 
             <VerticalStackLayout Spacing="16" Padding="20,24,20,24">

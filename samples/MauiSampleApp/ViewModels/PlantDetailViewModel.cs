@@ -11,6 +11,13 @@ public class PlantDetailViewModel(PlantDataService plantDataService, SpeciesServ
 {
     public ObservableCollection<CareEvent> CareHistory { get; } = [];
 
+    private ChatViewModel? _chatViewModel;
+    public ChatViewModel? ChatViewModel
+    {
+        get => _chatViewModel;
+        set { _chatViewModel = value; OnPropertyChanged(); }
+    }
+
     private Command<string>? _logCareCommand;
     public ICommand LogCareCommand => _logCareCommand ??= new Command<string>(async eventType => await LogCareAsync(eventType));
 

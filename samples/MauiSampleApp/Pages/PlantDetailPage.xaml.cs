@@ -4,8 +4,9 @@ namespace MauiSampleApp.Pages;
 
 public partial class PlantDetailPage : ContentPage
 {
-    public PlantDetailPage(PlantDetailViewModel viewModel)
+    public PlantDetailPage(PlantDetailViewModel viewModel, ChatViewModel chatViewModel)
     {
+        viewModel.ChatViewModel = chatViewModel;
         BindingContext = viewModel;
         InitializeComponent();
     }
@@ -30,8 +31,23 @@ public partial class PlantDetailPage : ContentPage
         ActionsTab.TextColor = Color.FromArgb("#2C2416");
     }
 
-    private async void OnOpenChatClicked(object? sender, EventArgs e)
+    private async void OnBackClicked(object? sender, EventArgs e)
     {
-        await Shell.Current.GoToAsync("//HomePage");
+        await Shell.Current.GoToAsync("..");
+    }
+
+    private void OnOpenChatClicked(object? sender, EventArgs e)
+    {
+        ChatOverlay.IsVisible = true;
+    }
+
+    private void OnCloseChatClicked(object? sender, EventArgs e)
+    {
+        ChatOverlay.IsVisible = false;
+    }
+
+    private void OnChatBackdropTapped(object? sender, TappedEventArgs e)
+    {
+        ChatOverlay.IsVisible = false;
     }
 }
