@@ -6,7 +6,10 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MauiSampleApp.Core.Services;
+using MauiSampleApp.Pages;
 using MauiSampleApp.ViewModels;
+using Shiny.DocumentDb;
+using Shiny.DocumentDb.Sqlite;
 
 namespace MauiSampleApp;
 
@@ -48,8 +51,13 @@ public static class MauiProgram
         builder.AddMauiDevFlowAgent();
 #endif
 
+        // Register SQLite document store
+        var dbPath = Path.Combine(FileSystem.AppDataDirectory, "garden.db");
+        builder.Services.AddSqliteDocumentStore($"Data Source={dbPath}");
+
         // Register services
-        builder.Services.AddHttpClient<WeatherService>();
+        builder.Services.AddSingleton<SpeciesService>();
+        builder.Services.AddSingleton<PlantDataService>();
 
         // Register AI
         builder.AddOpenAIServices();
@@ -57,7 +65,11 @@ public static class MauiProgram
         // Register ViewModels and Pages
         builder.Services.AddSingleton<MainPageViewModel>();
         builder.Services.AddSingleton<ChatViewModel>();
+        builder.Services.AddTransient<PlantDetailViewModel>();
+        builder.Services.AddTransient<AddPlantViewModel>();
         builder.Services.AddTransient<MainPage>();
+        builder.Services.AddTransient<PlantDetailPage>();
+        builder.Services.AddTransient<AddPlantPage>();
 
 #if DEBUG
         builder.Logging.AddDebug();

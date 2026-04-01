@@ -1,66 +1,79 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:controls="clr-namespace:MauiSampleApp.Controls"
-             xmlns:converters="clr-namespace:MauiSampleApp.Converters"
              xmlns:vm="clr-namespace:MauiSampleApp.ViewModels"
+             xmlns:models="clr-namespace:MauiSampleApp.Core.Models;assembly=MauiSampleApp.Core"
              x:Class="MauiSampleApp.MainPage"
-             Title="Weather App">
+             Title="🌱 Garden Helper">
 
     <ContentPage.Resources>
-        <converters:StringToBoolConverter x:Key="StringToBoolConverter" />
     </ContentPage.Resources>
 
     <Grid>
         <!-- Main Content -->
         <Grid RowDefinitions="Auto,*,Auto" Padding="16" RowSpacing="12">
 
-            <!-- Search Section -->
-            <VerticalStackLayout Grid.Row="0" Spacing="8">
-                <Label Text="Weather Forecast" FontSize="24" FontAttributes="Bold" />
-                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                    <Entry x:Name="LocationEntry"
-                           Grid.Column="0"
-                           Placeholder="Enter city or location..."
-                           Text="{Binding LocationQuery}"
-                           ReturnCommand="{Binding SearchCommand}"
-                           AutomationId="LocationEntry" />
-                    <Button Grid.Column="1"
-                            Text="Search"
-                            Command="{Binding SearchCommand}"
-                            AutomationId="SearchButton" />
-                </Grid>
-                <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" />
-                <Label Text="{Binding StatusMessage}"
-                       IsVisible="{Binding StatusMessage, Converter={StaticResource StringToBoolConverter}}"
-                       TextColor="OrangeRed" />
+            <!-- Header -->
+            <VerticalStackLayout Grid.Row="0" Spacing="4">
+                <Label Text="🌱 My Garden"
+                       FontSize="28"
+                       FontAttributes="Bold"
+                       AutomationId="PageTitle" />
+                <Label Text="Chat with your AI gardening assistant to add plants and track care."
+                       FontSize="14"
+                       TextColor="{AppThemeBinding Light='#666', Dark='#AAA'}" />
             </VerticalStackLayout>
 
-            <!-- Weather Results -->
+            <!-- Plant List -->
             <CollectionView Grid.Row="1"
-                            ItemsSource="{Binding WeatherItems}"
-                            AutomationId="WeatherResults">
-                <CollectionView.ItemsLayout>
-                    <LinearItemsLayout Orientation="Horizontal" />
-                </CollectionView.ItemsLayout>
+                            ItemsSource="{Binding Plants}"
+                            AutomationId="PlantList"
+                            SelectionMode="Single"
+                            SelectionChanged="OnPlantSelected"
+                            EmptyView="No plants yet. Tap + to add one or chat with the AI assistant! 🌿">
                 <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <controls:WeatherControl
-                            Date="{Binding Date}"
-                            Emoji="{Binding Emoji}"
-                            Temperature="{Binding Temperature}"
-                            Description="{Binding Description}"
-                            WidthRequest="110" />
+                    <DataTemplate x:DataType="models:Plant">
+                        <Border Padding="12" Margin="0,4"
+                                Stroke="{AppThemeBinding Light='#C8E6C9', Dark='#2E7D32'}"
+                                StrokeThickness="1"
+                                BackgroundColor="{AppThemeBinding Light='#F1F8E9', Dark='#1B3A1B'}">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="10" />
+                            </Border.StrokeShape>
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                <Label Text="🪴" FontSize="32" VerticalOptions="Center" />
+                                <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                    <Label Text="{Binding Nickname}"
+                                           FontSize="16"
+                                           FontAttributes="Bold" />
+                                    <Label Text="{Binding Location, StringFormat='📍 {0}'}"
+                                           FontSize="13"
+                                           TextColor="{AppThemeBinding Light='#555', Dark='#BBB'}" />
+                                </VerticalStackLayout>
+                                <Label Grid.Column="2" Text="›" FontSize="24"
+                                       VerticalOptions="Center"
+                                       TextColor="{AppThemeBinding Light='#999', Dark='#666'}" />
+                            </Grid>
+                        </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
-            <!-- Open Chat Button -->
-            <Button Grid.Row="2"
-                    Text="💬 Open AI Chat"
-                    Clicked="OnOpenChatClicked"
-                    AutomationId="OpenChatButton"
-                    HorizontalOptions="Fill" />
+            <!-- Bottom buttons -->
+            <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <Button Text="💬 Chat with Garden Assistant"
+                        Clicked="OnOpenChatClicked"
+                        AutomationId="OpenChatButton"
+                        HorizontalOptions="Fill" />
+                <Button Grid.Column="1" Text="➕"
+                        Clicked="OnAddPlantClicked"
+                        AutomationId="AddPlantButton"
+                        BackgroundColor="#2E7D32"
+                        TextColor="White"
+                        FontSize="20"
+                        WidthRequest="50"
+                        CornerRadius="25" />
+            </Grid>
         </Grid>
 
         <!-- Chat Popup Overlay -->
@@ -92,7 +105,7 @@
 
                     <!-- Header with close button -->
                     <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
-                        <Label Text="💬 AI Chat"
+                        <Label Text="🌱 Garden Assistant"
                                FontSize="18"
                                FontAttributes="Bold"
                                VerticalOptions="Center" />
@@ -135,7 +148,7 @@
                     <!-- Input Area -->
                     <Grid Grid.Row="3" ColumnDefinitions="*,Auto" ColumnSpacing="8">
                         <Entry Grid.Column="0"
-                               Placeholder="Ask about weather..."
+                               Placeholder="Tell me about your plants..."
                                Text="{Binding ChatViewModel.UserInput}"
                                ReturnCommand="{Binding ChatViewModel.SendCommand}"
                                AutomationId="ChatInput" />

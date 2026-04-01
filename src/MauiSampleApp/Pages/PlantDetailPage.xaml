@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MauiSampleApp.ViewModels"
+             xmlns:models="clr-namespace:MauiSampleApp.Core.Models;assembly=MauiSampleApp.Core"
+             x:Class="MauiSampleApp.Pages.PlantDetailPage"
+             Title="Plant Details">
+
+    <ScrollView Padding="16">
+        <VerticalStackLayout Spacing="16">
+
+            <!-- Plant header card -->
+            <Border Padding="20"
+                    BackgroundColor="{AppThemeBinding Light='#E8F5E9', Dark='#1B5E20'}"
+                    Stroke="{AppThemeBinding Light='#A5D6A7', Dark='#2E7D32'}"
+                    StrokeThickness="1">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12" />
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                    <Label Text="🪴" FontSize="48" HorizontalOptions="Center" />
+                    <Label Text="{Binding Plant.Nickname}"
+                           FontSize="24" FontAttributes="Bold"
+                           HorizontalOptions="Center" />
+                    <Label Text="{Binding Plant.Location, StringFormat='📍 {0}'}"
+                           FontSize="14"
+                           HorizontalOptions="Center"
+                           TextColor="{AppThemeBinding Light='#555', Dark='#CCC'}" />
+                    <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
+                        <Label Text="{Binding Plant.IsIndoor, StringFormat='🏠 Indoor: {0}'}"
+                               FontSize="13" />
+                        <Label Text="{Binding Plant.DateAdded, StringFormat='📅 Added: {0:d}'}"
+                               FontSize="13" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Species info card -->
+            <Border Padding="16"
+                    Stroke="{AppThemeBinding Light='#E0E0E0', Dark='#404040'}"
+                    StrokeThickness="1"
+                    BackgroundColor="{AppThemeBinding Light='#FFF8E1', Dark='#33291A'}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="10" />
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="🌿 Species Info" FontSize="18" FontAttributes="Bold" />
+                    <Label Text="{Binding Species.ScientificName, StringFormat='Scientific: {0}'}"
+                           FontSize="13" FontAttributes="Italic"
+                           TextColor="{AppThemeBinding Light='#666', Dark='#AAA'}" />
+                    <Label Text="{Binding Species.WateringFrequencyDays, StringFormat='💧 Water every {0} days'}" FontSize="14" />
+                    <Label Text="{Binding Species.SunlightNeeds, StringFormat='☀️ Sunlight: {0}'}" FontSize="14" />
+                    <Label Text="{Binding Species.FrostTolerant, StringFormat='❄️ Frost tolerant: {0}'}" FontSize="14" />
+                    <Label Text="{Binding Species.Notes}"
+                           FontSize="13"
+                           TextColor="{AppThemeBinding Light='#555', Dark='#BBB'}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Quick care actions -->
+            <Label Text="⚡ Quick Actions" FontSize="18" FontAttributes="Bold" />
+            <FlexLayout Wrap="Wrap" JustifyContent="Start" AlignItems="Start">
+                <Button Text="💧 Water" Command="{Binding LogCareCommand}" CommandParameter="Watered"
+                        Margin="4" BackgroundColor="#2196F3" TextColor="White" CornerRadius="20" Padding="12,8" FontSize="13" />
+                <Button Text="🌱 Fertilize" Command="{Binding LogCareCommand}" CommandParameter="Fertilized"
+                        Margin="4" BackgroundColor="#4CAF50" TextColor="White" CornerRadius="20" Padding="12,8" FontSize="13" />
+                <Button Text="✂️ Prune" Command="{Binding LogCareCommand}" CommandParameter="Pruned"
+                        Margin="4" BackgroundColor="#FF9800" TextColor="White" CornerRadius="20" Padding="12,8" FontSize="13" />
+                <Button Text="🪴 Repot" Command="{Binding LogCareCommand}" CommandParameter="Repotted"
+                        Margin="4" BackgroundColor="#795548" TextColor="White" CornerRadius="20" Padding="12,8" FontSize="13" />
+                <Button Text="🐛 Treat Pest" Command="{Binding LogCareCommand}" CommandParameter="TreatedForPest"
+                        Margin="4" BackgroundColor="#F44336" TextColor="White" CornerRadius="20" Padding="12,8" FontSize="13" />
+                <Button Text="👀 Observe" Command="{Binding LogCareCommand}" CommandParameter="Observed"
+                        Margin="4" BackgroundColor="#9E9E9E" TextColor="White" CornerRadius="20" Padding="12,8" FontSize="13" />
+            </FlexLayout>
+
+            <!-- Care history -->
+            <Label Text="📋 Care History" FontSize="18" FontAttributes="Bold" />
+            <CollectionView ItemsSource="{Binding CareHistory}"
+                            AutomationId="CareHistoryList"
+                            EmptyView="No care events logged yet.">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:CareEvent">
+                        <Border Padding="10" Margin="0,2"
+                                Stroke="{AppThemeBinding Light='#E0E0E0', Dark='#404040'}"
+                                StrokeThickness="1">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="6" />
+                            </Border.StrokeShape>
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                <Label Text="{Binding EventType}" FontSize="14" FontAttributes="Bold"
+                                       VerticalOptions="Center" />
+                                <Label Grid.Column="1" Text="{Binding Notes}" FontSize="12"
+                                       VerticalOptions="Center"
+                                       TextColor="{AppThemeBinding Light='#666', Dark='#AAA'}" />
+                                <Label Grid.Column="2" Text="{Binding Timestamp, StringFormat='{0:g}'}" FontSize="11"
+                                       VerticalOptions="Center"
+                                       TextColor="{AppThemeBinding Light='#999', Dark='#777'}" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Delete button -->
+            <Button Text="🗑️ Remove Plant"
+                    Command="{Binding DeletePlantCommand}"
+                    BackgroundColor="#D32F2F"
+                    TextColor="White"
+                    Margin="0,16,0,0"
+                    AutomationId="DeletePlantButton" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

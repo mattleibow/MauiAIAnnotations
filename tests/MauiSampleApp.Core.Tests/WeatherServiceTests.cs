@@ -1,176 +1,257 @@
-using System.Net;
-using System.Net.Http;
 using MauiSampleApp.Core.Models;
 using MauiSampleApp.Core.Services;
+using Microsoft.Extensions.AI;
+using Shiny.DocumentDb;
+using Shiny.DocumentDb.Sqlite;
 
 namespace MauiSampleApp.Core.Tests;
 
-public class WeatherServiceTests
+/// <summary>
+/// A simple IChatClient for testing that returns a valid species profile JSON.
+/// </summary>
+public sealed class FakeSpeciesChatClient : IChatClient
 {
-    private static HttpClient CreateHttpClient(string responseContent, HttpStatusCode statusCode = HttpStatusCode.OK)
-    {
-        var handler = new MockHttpMessageHandler(responseContent, statusCode);
-        return new HttpClient(handler);
-    }
+    public ChatClientMetadata Metadata { get; } = new("FakeSpecies");
 
-    [Fact]
-    public async Task GetWeatherForecastAsync_WithCoordinates_ReturnsItems()
+    public Task<ChatResponse> GetResponseAsync(
+        IEnumerable<ChatMessage> messages,
+        ChatOptions? options = null,
+        CancellationToken cancellationToken = default)
     {
-        var json = """
+        // Extract species name from the prompt
+        var lastMessage = messages.LastOrDefault()?.Text ?? "";
+        var name = "Unknown";
+        var startIdx = lastMessage.IndexOf('"');
+        var endIdx = lastMessage.IndexOf('"', startIdx + 1);
+        if (startIdx >= 0 && endIdx > startIdx)
+            name = lastMessage[(startIdx + 1)..endIdx];
+
+        var capitalName = char.ToUpper(name[0]) + name[1..];
+        var json = $$"""
             {
-                "latitude": 51.5074,
-                "longitude": -0.1278,
-                "daily": {
-                    "time": ["2024-01-01", "2024-01-02", "2024-01-03"],
-                    "temperature_2m_mean": [5.2, 6.1, 4.8],
-                    "weather_code": [0, 3, 61]
-                }
+                "CommonName": "{{capitalName}}",
+                "ScientificName": "{{capitalName}} testicus",
+                "WateringFrequencyDays": 5,
+                "SunlightNeeds": "Full",
+                "FrostTolerant": false,
+                "Notes": "Test notes for {{name}}."
             }
             """;
 
-        var service = new WeatherService(CreateHttpClient(json));
-        var items = await service.GetWeatherForecastAsync(51.5074, -0.1278);
-
-        Assert.Equal(3, items.Count);
-        Assert.Equal("2024-01-01", items[0].Date);
-        Assert.Equal(5.2, items[0].Temperature);
-        Assert.Equal(0, items[0].WeatherCode);
-    }
-
-    [Fact]
-    public async Task GetWeatherForecastAsync_WithEmptyDaily_ReturnsEmptyList()
-    {
-        var json = """
-            {
-                "latitude": 0.0,
-                "longitude": 0.0,
-                "daily": {
-                    "time": [],
-                    "temperature_2m_mean": [],
-                    "weather_code": []
-                }
-            }
-            """;
-
-        var service = new WeatherService(CreateHttpClient(json));
-        var items = await service.GetWeatherForecastAsync(0.0, 0.0);
-
-        Assert.Empty(items);
-    }
-
-    [Fact]
-    public async Task GetWeatherForecastAsync_WithLocation_CallsGeocodingAndWeather()
-    {
-        var geocodingJson = """
-            {
-                "results": [
-                    { "latitude": 51.5074, "longitude": -0.1278, "name": "London", "country": "United Kingdom" }
-                ]
-            }
-            """;
-        var weatherJson = """
-            {
-                "latitude": 51.5074,
-                "longitude": -0.1278,
-                "daily": {
-                    "time": ["2024-01-01"],
-                    "temperature_2m_mean": [8.0],
-                    "weather_code": [1]
-                }
-            }
-            """;
-
-        var handler = new SequentialMockHttpMessageHandler([geocodingJson, weatherJson]);
-        var service = new WeatherService(new HttpClient(handler));
-
-        var items = await service.GetWeatherForecastAsync("London");
-
-        Assert.Single(items);
-        Assert.Equal("2024-01-01", items[0].Date);
-    }
-
-    [Fact]
-    public async Task GetWeatherForecastAsync_WithLocationNoResults_ReturnsEmptyList()
-    {
-        var geocodingJson = """{ "results": [] }""";
-
-        var service = new WeatherService(CreateHttpClient(geocodingJson));
-        var items = await service.GetWeatherForecastAsync("NonExistentPlace12345");
-
-        Assert.Empty(items);
-    }
-
-    [Fact]
-    public void DailyWeatherItem_Emoji_ReturnsCorrectEmoji()
-    {
-        var item = new DailyWeatherItem("2024-01-01", 10.0, 0);
-        Assert.Equal("☀️", item.Emoji);
-    }
-
-    [Fact]
-    public void DailyWeatherItem_Description_ReturnsCorrectDescription()
-    {
-        var item = new DailyWeatherItem("2024-01-01", 10.0, 0);
-        Assert.Equal("Clear sky", item.Description);
-    }
-}
-
-public class WeatherCodeExtensionsTests
-{
-    [Theory]
-    [InlineData(0, "☀️")]
-    [InlineData(1, "🌤️")]
-    [InlineData(2, "🌤️")]
-    [InlineData(3, "☁️")]
-    [InlineData(45, "🌫️")]
-    [InlineData(61, "🌧️")]
-    [InlineData(71, "❄️")]
-    [InlineData(95, "⛈️")]
-    [InlineData(999, "☁️")]
-    public void GetWeatherEmoji_ReturnsExpectedEmoji(int code, string expectedEmoji)
-    {
-        Assert.Equal(expectedEmoji, WeatherCodeExtensions.GetWeatherEmoji(code));
-    }
-
-    [Theory]
-    [InlineData(0, "Clear sky")]
-    [InlineData(1, "Mainly clear")]
-    [InlineData(2, "Partly cloudy")]
-    [InlineData(3, "Overcast")]
-    [InlineData(45, "Fog")]
-    [InlineData(61, "Slight rain")]
-    [InlineData(95, "Thunderstorm")]
-    [InlineData(999, "Unknown")]
-    public void GetWeatherDescription_ReturnsExpectedDescription(int code, string expectedDescription)
-    {
-        Assert.Equal(expectedDescription, WeatherCodeExtensions.GetWeatherDescription(code));
-    }
-}
-
-// Test helpers
-public class MockHttpMessageHandler(string responseContent, HttpStatusCode statusCode = HttpStatusCode.OK) : HttpMessageHandler
-{
-    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-    {
-        var response = new HttpResponseMessage(statusCode)
-        {
-            Content = new StringContent(responseContent)
-        };
+        var response = new ChatResponse([new ChatMessage(ChatRole.Assistant, json)]);
         return Task.FromResult(response);
     }
+
+    public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+        IEnumerable<ChatMessage> messages,
+        ChatOptions? options = null,
+        CancellationToken cancellationToken = default)
+        => throw new NotImplementedException();
+
+    public object? GetService(Type serviceType, object? serviceKey = null) => null;
+    public void Dispose() { }
 }
 
-public class SequentialMockHttpMessageHandler(IEnumerable<string> responses) : HttpMessageHandler
+public class SpeciesServiceTests : IDisposable
 {
-    private readonly Queue<string> _responses = new(responses);
+    private readonly IDocumentStore _store;
+    private readonly SpeciesService _service;
 
-    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    public SpeciesServiceTests()
     {
-        var content = _responses.Count > 0 ? _responses.Dequeue() : "{}";
-        var response = new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = new StringContent(content)
-        };
-        return Task.FromResult(response);
+        _store = new SqliteDocumentStore("Data Source=:memory:");
+        _service = new SpeciesService(_store, new FakeSpeciesChatClient());
+    }
+
+    public void Dispose() => (_store as IDisposable)?.Dispose();
+
+    [Fact]
+    public async Task GetSpecies_ReturnsProfile()
+    {
+        var profile = await _service.GetSpeciesAsync("tomato");
+
+        Assert.NotNull(profile);
+        Assert.Equal("Tomato", profile.CommonName);
+        Assert.NotEmpty(profile.Id);
+    }
+
+    [Fact]
+    public async Task GetSpecies_ReturnsCachedOnSecondCall()
+    {
+        var first = await _service.GetSpeciesAsync("basil");
+        var second = await _service.GetSpeciesAsync("basil");
+
+        Assert.Equal(first.Id, second.Id);
+        Assert.Equal(first.CommonName, second.CommonName);
+    }
+
+    [Fact]
+    public async Task GetSpecies_CaseInsensitive()
+    {
+        var lower = await _service.GetSpeciesAsync("mint");
+        var upper = await _service.GetSpeciesAsync("MINT");
+        var mixed = await _service.GetSpeciesAsync("Mint");
+
+        Assert.Equal(lower.Id, upper.Id);
+        Assert.Equal(lower.Id, mixed.Id);
+    }
+
+    [Fact]
+    public async Task GetSpecies_TrimsWhitespace()
+    {
+        var first = await _service.GetSpeciesAsync("rosemary");
+        var padded = await _service.GetSpeciesAsync("  rosemary  ");
+
+        Assert.Equal(first.Id, padded.Id);
+    }
+
+    [Fact]
+    public async Task GetSpecies_SetsDefaultFields()
+    {
+        var profile = await _service.GetSpeciesAsync("lavender");
+
+        Assert.True(profile.WateringFrequencyDays > 0);
+        Assert.NotEmpty(profile.SunlightNeeds);
+        Assert.NotEmpty(profile.Notes);
+        Assert.NotEmpty(profile.ScientificName);
+    }
+}
+
+public class PlantDataServiceTests : IDisposable
+{
+    private readonly IDocumentStore _store;
+    private readonly PlantDataService _service;
+    private readonly SpeciesService _speciesService;
+
+    public PlantDataServiceTests()
+    {
+        _store = new SqliteDocumentStore("Data Source=:memory:");
+        _speciesService = new SpeciesService(_store, new FakeSpeciesChatClient());
+        _service = new PlantDataService(_store, _speciesService);
+    }
+
+    public void Dispose() => (_store as IDisposable)?.Dispose();
+
+    [Fact]
+    public async Task GetPlants_EmptyByDefault()
+    {
+        var plants = await _service.GetPlantsAsync();
+        Assert.Empty(plants);
+    }
+
+    [Fact]
+    public async Task AddPlant_CreatesPlantAndSpecies()
+    {
+        var plant = await _service.AddPlantAsync("My Tomato", "tomato", "Back garden", false);
+
+        Assert.NotNull(plant);
+        Assert.Equal("My Tomato", plant.Nickname);
+        Assert.Equal("Back garden", plant.Location);
+        Assert.False(plant.IsIndoor);
+        Assert.NotEmpty(plant.SpeciesId);
+    }
+
+    [Fact]
+    public async Task AddPlant_AppearsInGetPlants()
+    {
+        await _service.AddPlantAsync("Basil Buddy", "basil", "Kitchen windowsill", true);
+
+        var plants = await _service.GetPlantsAsync();
+        Assert.Single(plants);
+        Assert.Equal("Basil Buddy", plants[0].Nickname);
+    }
+
+    [Fact]
+    public async Task GetPlant_FindsByNickname()
+    {
+        await _service.AddPlantAsync("Rosie", "rose", "Front garden", false);
+
+        var plant = await _service.GetPlantAsync("Rosie");
+        Assert.NotNull(plant);
+        Assert.Equal("Rosie", plant.Nickname);
+    }
+
+    [Fact]
+    public async Task GetPlant_CaseInsensitive()
+    {
+        await _service.AddPlantAsync("Minty", "mint", "Balcony", false);
+
+        var plant = await _service.GetPlantAsync("minty");
+        Assert.NotNull(plant);
+        Assert.Equal("Minty", plant.Nickname);
+    }
+
+    [Fact]
+    public async Task GetPlant_ReturnsNullForMissing()
+    {
+        var plant = await _service.GetPlantAsync("nonexistent");
+        Assert.Null(plant);
+    }
+
+    [Fact]
+    public async Task RemovePlant_RemovesFromStore()
+    {
+        await _service.AddPlantAsync("Temporary", "fern", "Office", true);
+        Assert.Single(await _service.GetPlantsAsync());
+
+        await _service.RemovePlantAsync("Temporary");
+        Assert.Empty(await _service.GetPlantsAsync());
+    }
+
+    [Fact]
+    public async Task RemovePlant_NoOpIfNotFound()
+    {
+        await _service.RemovePlantAsync("nonexistent"); // should not throw
+    }
+
+    [Fact]
+    public async Task LogCareEvent_CreatesEvent()
+    {
+        await _service.AddPlantAsync("Tomatoes", "tomato", "Garden", false);
+
+        var careEvent = await _service.LogCareEventAsync("Tomatoes", "Watered", "Gave a good soak");
+
+        Assert.NotNull(careEvent);
+        Assert.Equal("Watered", careEvent.EventType);
+        Assert.Equal("Gave a good soak", careEvent.Notes);
+    }
+
+    [Fact]
+    public async Task LogCareEvent_ThrowsForMissingPlant()
+    {
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => _service.LogCareEventAsync("nonexistent", "Watered", ""));
+    }
+
+    [Fact]
+    public async Task GetCareHistory_ReturnsEventsInOrder()
+    {
+        await _service.AddPlantAsync("Herb", "basil", "Kitchen", true);
+
+        await _service.LogCareEventAsync("Herb", "Watered", "Morning water");
+        await Task.Delay(10); // ensure different timestamps
+        await _service.LogCareEventAsync("Herb", "Fertilized", "Monthly feed");
+
+        var history = await _service.GetCareHistoryAsync("Herb");
+
+        Assert.Equal(2, history.Count);
+        Assert.Equal("Fertilized", history[0].EventType); // most recent first
+        Assert.Equal("Watered", history[1].EventType);
+    }
+
+    [Fact]
+    public async Task GetCareHistory_ReturnsEmptyForMissingPlant()
+    {
+        var history = await _service.GetCareHistoryAsync("nonexistent");
+        Assert.Empty(history);
+    }
+
+    [Fact]
+    public async Task AddPlant_MultiplePlantsShareSpecies()
+    {
+        var plant1 = await _service.AddPlantAsync("Tom 1", "tomato", "Garden", false);
+        var plant2 = await _service.AddPlantAsync("Tom 2", "tomato", "Greenhouse", true);
+
+        Assert.Equal(plant1.SpeciesId, plant2.SpeciesId);
     }
 }
