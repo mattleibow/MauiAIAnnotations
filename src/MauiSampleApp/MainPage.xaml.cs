@@ -4,17 +4,25 @@ namespace MauiSampleApp;
 
 public partial class MainPage : ContentPage
 {
-    private readonly ChatPage _chatPage;
-
-    public MainPage(MainPageViewModel viewModel, ChatPage chatPage)
+    public MainPage(MainPageViewModel viewModel, ChatViewModel chatViewModel)
     {
-        InitializeComponent();
+        viewModel.ChatViewModel = chatViewModel;
         BindingContext = viewModel;
-        _chatPage = chatPage;
+        InitializeComponent();
     }
 
-    private async void OnOpenChatClicked(object? sender, EventArgs e)
+    private void OnOpenChatClicked(object? sender, EventArgs e)
     {
-        await Navigation.PushAsync(_chatPage);
+        ChatOverlay.IsVisible = true;
+    }
+
+    private void OnCloseChatClicked(object? sender, EventArgs e)
+    {
+        ChatOverlay.IsVisible = false;
+    }
+
+    private void OnChatBackdropTapped(object? sender, TappedEventArgs e)
+    {
+        ChatOverlay.IsVisible = false;
     }
 }

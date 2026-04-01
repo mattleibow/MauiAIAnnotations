@@ -23,6 +23,13 @@ public class MainPageViewModel : INotifyPropertyChanged
 
     public ObservableCollection<DailyWeatherItem> WeatherItems { get; }
 
+    private ChatViewModel? _chatViewModel;
+    public ChatViewModel? ChatViewModel
+    {
+        get => _chatViewModel;
+        set { _chatViewModel = value; OnPropertyChanged(); }
+    }
+
     public string LocationQuery
     {
         get => _locationQuery;

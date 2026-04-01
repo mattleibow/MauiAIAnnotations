@@ -57,8 +57,7 @@ public static class MauiProgram
         // Register ViewModels and Pages
         builder.Services.AddSingleton<MainPageViewModel>();
         builder.Services.AddSingleton<ChatViewModel>();
-        builder.Services.AddSingleton<ChatPage>();
-        builder.Services.AddSingleton<MainPage>();
+        builder.Services.AddTransient<MainPage>();
 
 #if DEBUG
         builder.Logging.AddDebug();

@@ -11,54 +11,142 @@
         <converters:StringToBoolConverter x:Key="StringToBoolConverter" />
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="Auto,*,Auto" Padding="16" RowSpacing="12">
+    <Grid>
+        <!-- Main Content -->
+        <Grid RowDefinitions="Auto,*,Auto" Padding="16" RowSpacing="12">
 
-        <!-- Search Section -->
-        <VerticalStackLayout Grid.Row="0" Spacing="8">
-            <Label Text="Weather Forecast" FontSize="24" FontAttributes="Bold" />
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                <Entry x:Name="LocationEntry"
-                       Grid.Column="0"
-                       Placeholder="Enter city or location..."
-                       Text="{Binding LocationQuery}"
-                       ReturnCommand="{Binding SearchCommand}"
-                       AutomationId="LocationEntry" />
-                <Button Grid.Column="1"
-                        Text="Search"
-                        Command="{Binding SearchCommand}"
-                        AutomationId="SearchButton" />
-            </Grid>
-            <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" />
-            <Label Text="{Binding StatusMessage}"
-                   IsVisible="{Binding StatusMessage, Converter={StaticResource StringToBoolConverter}}"
-                   TextColor="OrangeRed" />
-        </VerticalStackLayout>
+            <!-- Search Section -->
+            <VerticalStackLayout Grid.Row="0" Spacing="8">
+                <Label Text="Weather Forecast" FontSize="24" FontAttributes="Bold" />
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <Entry x:Name="LocationEntry"
+                           Grid.Column="0"
+                           Placeholder="Enter city or location..."
+                           Text="{Binding LocationQuery}"
+                           ReturnCommand="{Binding SearchCommand}"
+                           AutomationId="LocationEntry" />
+                    <Button Grid.Column="1"
+                            Text="Search"
+                            Command="{Binding SearchCommand}"
+                            AutomationId="SearchButton" />
+                </Grid>
+                <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" />
+                <Label Text="{Binding StatusMessage}"
+                       IsVisible="{Binding StatusMessage, Converter={StaticResource StringToBoolConverter}}"
+                       TextColor="OrangeRed" />
+            </VerticalStackLayout>
 
-        <!-- Weather Results -->
-        <CollectionView Grid.Row="1"
-                        ItemsSource="{Binding WeatherItems}"
-                        AutomationId="WeatherResults">
-            <CollectionView.ItemsLayout>
-                <LinearItemsLayout Orientation="Horizontal" />
-            </CollectionView.ItemsLayout>
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <controls:WeatherControl
-                        Date="{Binding Date}"
-                        Emoji="{Binding Emoji}"
-                        Temperature="{Binding Temperature}"
-                        Description="{Binding Description}"
-                        WidthRequest="110" />
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
+            <!-- Weather Results -->
+            <CollectionView Grid.Row="1"
+                            ItemsSource="{Binding WeatherItems}"
+                            AutomationId="WeatherResults">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Horizontal" />
+                </CollectionView.ItemsLayout>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <controls:WeatherControl
+                            Date="{Binding Date}"
+                            Emoji="{Binding Emoji}"
+                            Temperature="{Binding Temperature}"
+                            Description="{Binding Description}"
+                            WidthRequest="110" />
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
 
-        <!-- Open Chat Button -->
-        <Button Grid.Row="2"
-                Text="💬 Open AI Chat"
-                Clicked="OnOpenChatClicked"
-                AutomationId="OpenChatButton"
-                HorizontalOptions="Fill" />
+            <!-- Open Chat Button -->
+            <Button Grid.Row="2"
+                    Text="💬 Open AI Chat"
+                    Clicked="OnOpenChatClicked"
+                    AutomationId="OpenChatButton"
+                    HorizontalOptions="Fill" />
+        </Grid>
+
+        <!-- Chat Popup Overlay -->
+        <Grid x:Name="ChatOverlay"
+              IsVisible="False"
+              AutomationId="ChatOverlay"
+              BackgroundColor="#80000000">
+
+            <!-- Dismiss tapping on backdrop -->
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnChatBackdropTapped" />
+            </Grid.GestureRecognizers>
+
+            <!-- Chat Panel -->
+            <Border x:Name="ChatPanel"
+                    VerticalOptions="End"
+                    HorizontalOptions="Fill"
+                    HeightRequest="450"
+                    Margin="12,0,12,12"
+                    Padding="0"
+                    Stroke="{AppThemeBinding Light='#C0C0C0', Dark='#555'}"
+                    StrokeThickness="1"
+                    BackgroundColor="{AppThemeBinding Light='White', Dark='#1E1E1E'}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16,16,8,8" />
+                </Border.StrokeShape>
+
+                <Grid RowDefinitions="Auto,*,Auto,Auto" Padding="12" RowSpacing="8">
+
+                    <!-- Header with close button -->
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                        <Label Text="💬 AI Chat"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               VerticalOptions="Center" />
+                        <Button Grid.Column="1"
+                                Text="✕"
+                                FontSize="16"
+                                BackgroundColor="Transparent"
+                                TextColor="{AppThemeBinding Light='#333', Dark='#CCC'}"
+                                Clicked="OnCloseChatClicked"
+                                AutomationId="CloseChatButton"
+                                Padding="8,4"
+                                MinimumWidthRequest="40" />
+                    </Grid>
+
+                    <!-- Messages -->
+                    <CollectionView Grid.Row="1"
+                                    ItemsSource="{Binding ChatViewModel.Messages}"
+                                    AutomationId="ChatMessages"
+                                    VerticalOptions="Fill">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ChatMessage">
+                                <VerticalStackLayout Padding="4,2">
+                                    <Label Text="{Binding Role, StringFormat='[{0}]'}"
+                                           FontSize="10"
+                                           FontAttributes="Bold"
+                                           TextColor="Gray" />
+                                    <Label Text="{Binding Content}"
+                                           FontSize="14"
+                                           Margin="0,0,0,6" />
+                                </VerticalStackLayout>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                    <!-- Busy indicator -->
+                    <ActivityIndicator Grid.Row="2"
+                                       IsRunning="{Binding ChatViewModel.IsBusy}"
+                                       IsVisible="{Binding ChatViewModel.IsBusy}" />
+
+                    <!-- Input Area -->
+                    <Grid Grid.Row="3" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <Entry Grid.Column="0"
+                               Placeholder="Ask about weather..."
+                               Text="{Binding ChatViewModel.UserInput}"
+                               ReturnCommand="{Binding ChatViewModel.SendCommand}"
+                               AutomationId="ChatInput" />
+                        <Button Grid.Column="1"
+                                Text="Send"
+                                Command="{Binding ChatViewModel.SendCommand}"
+                                AutomationId="SendButton" />
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 
 </ContentPage>
