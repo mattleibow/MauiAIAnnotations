@@ -63,8 +63,7 @@ public class PlantDetailViewModel : INotifyPropertyChanged, IQueryAttributable
             Plant = await _plantDataService.GetPlantAsync(nickname);
             if (Plant is not null)
             {
-                var allSpecies = await _speciesService.GetSpeciesAsync(Plant.SpeciesId);
-                Species = allSpecies;
+                Species = await _speciesService.GetSpeciesByIdAsync(Plant.SpeciesId);
 
                 var history = await _plantDataService.GetCareHistoryAsync(nickname);
                 CareHistory.Clear();

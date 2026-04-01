@@ -33,6 +33,11 @@ public class SpeciesService
         return profile;
     }
 
+    public async Task<SpeciesProfile?> GetSpeciesByIdAsync(string id)
+    {
+        return await _store.Get<SpeciesProfile>(id);
+    }
+
     private async Task<SpeciesProfile> GenerateSpeciesProfileAsync(string name)
     {
         var prompt = $$"""
