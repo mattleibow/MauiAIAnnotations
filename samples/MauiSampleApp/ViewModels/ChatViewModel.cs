@@ -12,7 +12,7 @@ public record ConversationEntry(string Role, string Content);
 
 public class ChatViewModel : INotifyPropertyChanged
 {
-    private readonly IChatClient? _chatClient;
+    private readonly IChatClient _chatClient;
     private readonly SpeciesService _speciesService;
     private readonly PlantDataService _plantDataService;
     private string _userInput = string.Empty;
@@ -25,7 +25,7 @@ public class ChatViewModel : INotifyPropertyChanged
         Be conversational and helpful. Use emoji occasionally to be friendly 🌱
         """;
 
-    public ChatViewModel(SpeciesService speciesService, PlantDataService plantDataService, IChatClient? chatClient = null)
+    public ChatViewModel(IChatClient chatClient, SpeciesService speciesService, PlantDataService plantDataService)
     {
         _chatClient = chatClient;
         _speciesService = speciesService;
@@ -130,15 +130,8 @@ public class ChatViewModel : INotifyPropertyChanged
 
     private async Task SendMessageAsync()
     {
-        if (string.IsNullOrWhiteSpace(UserInput) || _chatClient is null)
-        {
-            if (_chatClient is null && !string.IsNullOrWhiteSpace(UserInput))
-            {
-                UserInput = string.Empty;
-                Messages.Add(new ConversationEntry("Assistant", "AI is not configured. Please set up user secrets with AI:ApiKey, AI:Endpoint, and AI:DeploymentName."));
-            }
+        if (string.IsNullOrWhiteSpace(UserInput))
             return;
-        }
 
         var userMessage = UserInput;
         UserInput = string.Empty;

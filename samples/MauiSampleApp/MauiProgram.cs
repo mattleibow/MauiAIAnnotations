@@ -104,8 +104,17 @@ public static class MauiProgram
 
         if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(endpoint) || string.IsNullOrEmpty(deploymentName))
         {
-            // AI not configured — services will use fallback behavior
-            return builder;
+            throw new InvalidOperationException(
+                """
+                AI services are not configured. Please set up user secrets by running these commands from the MauiSampleApp project directory:
+
+                  cd samples/MauiSampleApp
+                  dotnet user-secrets set "AI:ApiKey" "<your-azure-openai-api-key>"
+                  dotnet user-secrets set "AI:Endpoint" "<your-azure-openai-endpoint>"
+                  dotnet user-secrets set "AI:DeploymentName" "<your-deployment-name>"
+
+                For more info, see the README.md.
+                """);
         }
 
         var azureClient = new AzureOpenAIClient(

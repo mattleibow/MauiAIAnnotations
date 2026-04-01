@@ -4,7 +4,7 @@ using Shiny.DocumentDb;
 
 namespace MauiSampleApp.Core.Services;
 
-public class SpeciesService(IDocumentStore store, IChatClient? chatClient = null)
+public class SpeciesService(IDocumentStore store, IChatClient chatClient)
 {
     public async Task<SpeciesProfile> GetSpeciesAsync(string name)
     {
@@ -30,9 +30,6 @@ public class SpeciesService(IDocumentStore store, IChatClient? chatClient = null
 
     private async Task<SpeciesProfile> GenerateSpeciesProfileAsync(string name)
     {
-        if (chatClient is null)
-            return CreateFallbackProfile(name);
-
         try
         {
             var prompt = $"Generate a species profile for the plant \"{name}\". Include common name, scientific name, watering frequency in days, sunlight needs (Low/Medium/Full), frost tolerance, and care tips.";
@@ -46,7 +43,7 @@ public class SpeciesService(IDocumentStore store, IChatClient? chatClient = null
         }
         catch
         {
-            // Fall through to fallback
+            // Fall through to fallback if AI parsing fails
         }
 
         return CreateFallbackProfile(name);
