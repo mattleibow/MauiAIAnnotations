@@ -5,6 +5,7 @@
              xmlns:models="clr-namespace:MauiSampleApp.Core.Models;assembly=MauiSampleApp.Core"
              x:Class="MauiSampleApp.MainPage"
              Title="My Garden"
+             Shell.NavBarIsVisible="False"
              BackgroundColor="{AppThemeBinding Light={StaticResource PageBg}, Dark={StaticResource PageBgDark}}"
              Shell.BackgroundColor="{StaticResource AccentGreen}">
 
@@ -139,6 +140,7 @@
                     HeightRequest="500"
                     Margin="12,0,12,12"
                     Padding="0"
+                    InputTransparent="False"
                     Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
                     StrokeThickness="1"
                     BackgroundColor="{AppThemeBinding Light={StaticResource CardBg}, Dark={StaticResource CardBgDark}}">
@@ -183,9 +185,9 @@
                             <DataTemplate x:DataType="vm:ChatMessage">
                                 <Grid Padding="0,4">
                                     <Border Padding="12,10"
-                                            Margin="{Binding Role, Converter={x:Null}}"
                                             MaximumWidthRequest="340"
                                             HorizontalOptions="Start"
+                                            BackgroundColor="{AppThemeBinding Light=#F0EBE3, Dark=#33302A}"
                                             StrokeThickness="0">
                                         <Border.StrokeShape>
                                             <RoundRectangle CornerRadius="16,16,16,4" />

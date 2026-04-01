@@ -9,6 +9,14 @@ public partial class App : Application
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
-        return new Window(new AppShell());
+        var window = new Window(new AppShell());
+
+        // Make titlebar transparent — content extends into titlebar area
+        window.TitleBar = new TitleBar
+        {
+            IsVisible = false
+        };
+
+        return window;
     }
 }

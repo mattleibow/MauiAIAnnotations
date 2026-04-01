@@ -17,7 +17,7 @@ public partial class App : MauiWinUIApplication
 			"maui_crash.log");
 		System.IO.File.AppendAllText(logPath,
 			$"[{System.DateTime.Now}] UNHANDLED: {e.Exception}\n{e.Exception?.StackTrace}\n\n");
-		e.Handled = true;
+		// Do NOT set e.Handled = true — let the exception propagate
 	}
 
 	protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
