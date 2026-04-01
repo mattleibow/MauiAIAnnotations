@@ -2,73 +2,123 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="MauiSampleApp.Pages.AddPlantPage"
-             Title="Add Plant">
+             Title="Add Plant"
+             BackgroundColor="{AppThemeBinding Light={StaticResource PageBg}, Dark={StaticResource PageBgDark}}"
+             Shell.BackgroundColor="{StaticResource AccentGreen}">
 
-    <ScrollView Padding="16">
-        <VerticalStackLayout Spacing="16">
+    <ScrollView>
+        <VerticalStackLayout Spacing="0">
 
-            <!-- Header -->
-            <Label Text="🌱 Add a New Plant" FontSize="24" FontAttributes="Bold" />
-            <Label Text="Tell us about your new plant friend!"
-                   FontSize="14"
-                   TextColor="{AppThemeBinding Light='#666', Dark='#AAA'}" />
-
-            <!-- Form -->
-            <Border Padding="16"
-                    Stroke="{AppThemeBinding Light='#E0E0E0', Dark='#404040'}"
-                    StrokeThickness="1"
-                    BackgroundColor="{AppThemeBinding Light='#FAFAFA', Dark='#2A2A2A'}">
+            <!-- Hero -->
+            <Border BackgroundColor="{StaticResource AccentGreen}"
+                    Padding="24,16,24,28"
+                    StrokeThickness="0">
                 <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="10" />
+                    <RoundRectangle CornerRadius="0,0,28,28" />
                 </Border.StrokeShape>
-                <VerticalStackLayout Spacing="14">
-
-                    <VerticalStackLayout Spacing="4">
-                        <Label Text="Nickname *" FontSize="13" FontAttributes="Bold" />
-                        <Entry Placeholder="e.g. My Tomatoes"
-                               Text="{Binding Nickname}"
-                               AutomationId="NicknameEntry" />
-                    </VerticalStackLayout>
-
-                    <VerticalStackLayout Spacing="4">
-                        <Label Text="Species *" FontSize="13" FontAttributes="Bold" />
-                        <Entry Placeholder="e.g. tomato, basil, rose"
-                               Text="{Binding Species}"
-                               AutomationId="SpeciesEntry" />
-                    </VerticalStackLayout>
-
-                    <VerticalStackLayout Spacing="4">
-                        <Label Text="Location" FontSize="13" FontAttributes="Bold" />
-                        <Entry Placeholder="e.g. Back garden, Kitchen windowsill"
-                               Text="{Binding Location}"
-                               AutomationId="LocationEntry" />
-                    </VerticalStackLayout>
-
-                    <Grid ColumnDefinitions="*,Auto" Padding="0,4">
-                        <Label Text="Indoor plant?" FontSize="14" VerticalOptions="Center" />
-                        <Switch Grid.Column="1" IsToggled="{Binding IsIndoor}" AutomationId="IndoorSwitch" />
-                    </Grid>
-
+                <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                    <Label Text="&#x1F331;" FontSize="44" HorizontalOptions="Center" />
+                    <Label Text="New Plant"
+                           FontSize="26" FontAttributes="Bold"
+                           TextColor="White" HorizontalOptions="Center" />
+                    <Label Text="Tell us about your green friend"
+                           FontSize="14" TextColor="#D4E8D4" HorizontalOptions="Center" />
                 </VerticalStackLayout>
             </Border>
 
-            <!-- Status -->
-            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
-            <Label Text="{Binding StatusMessage}"
-                   FontSize="13"
-                   TextColor="{AppThemeBinding Light='#666', Dark='#AAA'}"
-                   IsVisible="{Binding IsBusy}" />
+            <VerticalStackLayout Spacing="16" Padding="20,24,20,24">
 
-            <!-- Save button -->
-            <Button Text="🌿 Add Plant"
-                    Command="{Binding SaveCommand}"
-                    BackgroundColor="#2E7D32"
-                    TextColor="White"
-                    FontSize="16"
-                    CornerRadius="8"
-                    HeightRequest="50"
-                    AutomationId="SavePlantButton" />
+                <!-- Form Card -->
+                <Border Padding="20"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource CardBg}, Dark={StaticResource CardBgDark}}"
+                        Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
+                        StrokeThickness="1">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="16" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="18">
 
+                        <!-- Nickname -->
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="Plant Nickname" FontSize="13" FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                            <Border Padding="4,0" StrokeThickness="0"
+                                    BackgroundColor="{AppThemeBinding Light=#F0EBE3, Dark=#33302A}">
+                                <Border.StrokeShape><RoundRectangle CornerRadius="10" /></Border.StrokeShape>
+                                <Entry Placeholder="e.g. My Tomatoes"
+                                       Text="{Binding Nickname}"
+                                       AutomationId="NicknameEntry"
+                                       FontSize="15"
+                                       BackgroundColor="Transparent" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Species -->
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="Species" FontSize="13" FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                            <Border Padding="4,0" StrokeThickness="0"
+                                    BackgroundColor="{AppThemeBinding Light=#F0EBE3, Dark=#33302A}">
+                                <Border.StrokeShape><RoundRectangle CornerRadius="10" /></Border.StrokeShape>
+                                <Entry Placeholder="e.g. tomato, basil, rose"
+                                       Text="{Binding Species}"
+                                       AutomationId="SpeciesEntry"
+                                       FontSize="15"
+                                       BackgroundColor="Transparent" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Location -->
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="Location" FontSize="13" FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                            <Border Padding="4,0" StrokeThickness="0"
+                                    BackgroundColor="{AppThemeBinding Light=#F0EBE3, Dark=#33302A}">
+                                <Border.StrokeShape><RoundRectangle CornerRadius="10" /></Border.StrokeShape>
+                                <Entry Placeholder="e.g. Back garden, Kitchen"
+                                       Text="{Binding Location}"
+                                       AutomationId="LocationEntry"
+                                       FontSize="15"
+                                       BackgroundColor="Transparent" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Indoor toggle -->
+                        <Border Padding="14,10" StrokeThickness="0"
+                                BackgroundColor="{AppThemeBinding Light=#F0EBE3, Dark=#33302A}">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="10" /></Border.StrokeShape>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Label Text="Indoor plant?" FontSize="15" VerticalOptions="Center"
+                                       TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
+                                <Switch Grid.Column="1" IsToggled="{Binding IsIndoor}" AutomationId="IndoorSwitch"
+                                        OnColor="{StaticResource AccentGreen}" />
+                            </Grid>
+                        </Border>
+
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Status -->
+                <VerticalStackLayout Spacing="4" IsVisible="{Binding IsBusy}">
+                    <ActivityIndicator IsRunning="{Binding IsBusy}" Color="{StaticResource AccentGreen}" />
+                    <Label Text="{Binding StatusMessage}"
+                           FontSize="13"
+                           HorizontalOptions="Center"
+                           TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                </VerticalStackLayout>
+
+                <!-- Save -->
+                <Button Text="&#x1F33F;  Add to My Garden"
+                        Command="{Binding SaveCommand}"
+                        BackgroundColor="{StaticResource AccentGreen}"
+                        TextColor="White"
+                        FontSize="16"
+                        FontAttributes="Bold"
+                        CornerRadius="14"
+                        HeightRequest="52"
+                        AutomationId="SavePlantButton" />
+
+            </VerticalStackLayout>
         </VerticalStackLayout>
     </ScrollView>
 

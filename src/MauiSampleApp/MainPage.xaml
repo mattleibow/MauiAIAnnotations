@@ -4,25 +4,33 @@
              xmlns:vm="clr-namespace:MauiSampleApp.ViewModels"
              xmlns:models="clr-namespace:MauiSampleApp.Core.Models;assembly=MauiSampleApp.Core"
              x:Class="MauiSampleApp.MainPage"
-             Title="🌱 Garden Helper">
-
-    <ContentPage.Resources>
-    </ContentPage.Resources>
+             Title="My Garden"
+             BackgroundColor="{AppThemeBinding Light={StaticResource PageBg}, Dark={StaticResource PageBgDark}}"
+             Shell.BackgroundColor="{StaticResource AccentGreen}">
 
     <Grid>
         <!-- Main Content -->
-        <Grid RowDefinitions="Auto,*,Auto" Padding="16" RowSpacing="12">
+        <Grid RowDefinitions="Auto,*,Auto" RowSpacing="0">
 
-            <!-- Header -->
-            <VerticalStackLayout Grid.Row="0" Spacing="4">
-                <Label Text="🌱 My Garden"
-                       FontSize="28"
-                       FontAttributes="Bold"
-                       AutomationId="PageTitle" />
-                <Label Text="Chat with your AI gardening assistant to add plants and track care."
-                       FontSize="14"
-                       TextColor="{AppThemeBinding Light='#666', Dark='#AAA'}" />
-            </VerticalStackLayout>
+            <!-- Hero Header -->
+            <Border Grid.Row="0"
+                    BackgroundColor="{StaticResource AccentGreen}"
+                    Padding="24,20,24,24"
+                    StrokeThickness="0">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="0,0,24,24" />
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="My Garden"
+                           FontSize="32"
+                           FontAttributes="Bold"
+                           TextColor="White"
+                           AutomationId="PageTitle" />
+                    <Label Text="Your plants, your way. Tap a plant or chat with your AI assistant."
+                           FontSize="14"
+                           TextColor="#D4E8D4" />
+                </VerticalStackLayout>
+            </Border>
 
             <!-- Plant List -->
             <CollectionView Grid.Row="1"
@@ -30,49 +38,89 @@
                             AutomationId="PlantList"
                             SelectionMode="Single"
                             SelectionChanged="OnPlantSelected"
-                            EmptyView="No plants yet. Tap + to add one or chat with the AI assistant! 🌿">
+                            Margin="16,16,16,0">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout Spacing="12" VerticalOptions="Center" HorizontalOptions="Center" Padding="40">
+                        <Label Text="&#x1F331;" FontSize="56" HorizontalOptions="Center" />
+                        <Label Text="No plants yet"
+                               FontSize="20" FontAttributes="Bold"
+                               HorizontalOptions="Center"
+                               TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
+                        <Label Text="Tap + to add your first plant, or ask the AI assistant!"
+                               FontSize="14"
+                               HorizontalOptions="Center"
+                               HorizontalTextAlignment="Center"
+                               TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:Plant">
-                        <Border Padding="12" Margin="0,4"
-                                Stroke="{AppThemeBinding Light='#C8E6C9', Dark='#2E7D32'}"
-                                StrokeThickness="1"
-                                BackgroundColor="{AppThemeBinding Light='#F1F8E9', Dark='#1B3A1B'}">
+                        <Border Padding="16"
+                                Margin="0,0,0,12"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource CardBg}, Dark={StaticResource CardBgDark}}"
+                                Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
+                                StrokeThickness="1">
                             <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="10" />
+                                <RoundRectangle CornerRadius="16" />
                             </Border.StrokeShape>
-                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
-                                <Label Text="🪴" FontSize="32" VerticalOptions="Center" />
-                                <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                            <Grid ColumnDefinitions="52,*,Auto" ColumnSpacing="14">
+                                <!-- Plant avatar -->
+                                <Border WidthRequest="52" HeightRequest="52"
+                                        BackgroundColor="{StaticResource BadgeOutdoor}"
+                                        StrokeThickness="0"
+                                        VerticalOptions="Center">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="14" />
+                                    </Border.StrokeShape>
+                                    <Label Text="&#x1FAB4;" FontSize="26" HorizontalOptions="Center" VerticalOptions="Center" />
+                                </Border>
+                                <!-- Info -->
+                                <VerticalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
                                     <Label Text="{Binding Nickname}"
-                                           FontSize="16"
-                                           FontAttributes="Bold" />
-                                    <Label Text="{Binding Location, StringFormat='📍 {0}'}"
-                                           FontSize="13"
-                                           TextColor="{AppThemeBinding Light='#555', Dark='#BBB'}" />
+                                           FontSize="17"
+                                           FontAttributes="Bold"
+                                           TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
+                                    <HorizontalStackLayout Spacing="6">
+                                        <Label Text="{Binding Location}"
+                                               FontSize="13"
+                                               TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                                    </HorizontalStackLayout>
                                 </VerticalStackLayout>
-                                <Label Grid.Column="2" Text="›" FontSize="24"
+                                <!-- Chevron -->
+                                <Label Grid.Column="2" Text="&#x203A;" FontSize="28"
                                        VerticalOptions="Center"
-                                       TextColor="{AppThemeBinding Light='#999', Dark='#666'}" />
+                                       TextColor="{AppThemeBinding Light={StaticResource Gray300}, Dark={StaticResource Gray600}}" />
                             </Grid>
                         </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
-            <!-- Bottom buttons -->
-            <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                <Button Text="💬 Chat with Garden Assistant"
+            <!-- Bottom Bar -->
+            <Grid Grid.Row="2" ColumnDefinitions="*,Auto"
+                  Padding="16,12,16,16" ColumnSpacing="12"
+                  BackgroundColor="{AppThemeBinding Light={StaticResource PageBg}, Dark={StaticResource PageBgDark}}">
+                <Button Text="&#x1F4AC;  Chat with Assistant"
                         Clicked="OnOpenChatClicked"
                         AutomationId="OpenChatButton"
+                        BackgroundColor="{StaticResource AccentGreen}"
+                        TextColor="White"
+                        FontSize="15"
+                        FontAttributes="Bold"
+                        CornerRadius="14"
+                        HeightRequest="50"
                         HorizontalOptions="Fill" />
-                <Button Grid.Column="1" Text="➕"
+                <Button Grid.Column="1"
+                        Text="+"
                         Clicked="OnAddPlantClicked"
                         AutomationId="AddPlantButton"
-                        BackgroundColor="#2E7D32"
+                        BackgroundColor="{StaticResource AccentOchre}"
                         TextColor="White"
-                        FontSize="20"
+                        FontSize="24"
+                        FontAttributes="Bold"
                         WidthRequest="50"
-                        CornerRadius="25" />
+                        HeightRequest="50"
+                        CornerRadius="14" />
             </Grid>
         </Grid>
 
@@ -80,62 +128,79 @@
         <Grid x:Name="ChatOverlay"
               IsVisible="False"
               AutomationId="ChatOverlay"
-              BackgroundColor="#80000000">
+              BackgroundColor="#66000000">
 
-            <!-- Dismiss tapping on backdrop -->
             <Grid.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnChatBackdropTapped" />
             </Grid.GestureRecognizers>
 
-            <!-- Chat Panel -->
-            <Border x:Name="ChatPanel"
-                    VerticalOptions="End"
+            <Border VerticalOptions="End"
                     HorizontalOptions="Fill"
-                    HeightRequest="450"
+                    HeightRequest="500"
                     Margin="12,0,12,12"
                     Padding="0"
-                    Stroke="{AppThemeBinding Light='#C0C0C0', Dark='#555'}"
+                    Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
                     StrokeThickness="1"
-                    BackgroundColor="{AppThemeBinding Light='White', Dark='#1E1E1E'}">
+                    BackgroundColor="{AppThemeBinding Light={StaticResource CardBg}, Dark={StaticResource CardBgDark}}">
                 <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="16,16,8,8" />
+                    <RoundRectangle CornerRadius="20,20,12,12" />
                 </Border.StrokeShape>
 
-                <Grid RowDefinitions="Auto,*,Auto,Auto" Padding="12" RowSpacing="8">
+                <Grid RowDefinitions="Auto,*,Auto,Auto" RowSpacing="0">
 
-                    <!-- Header with close button -->
-                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
-                        <Label Text="🌱 Garden Assistant"
-                               FontSize="18"
-                               FontAttributes="Bold"
-                               VerticalOptions="Center" />
-                        <Button Grid.Column="1"
-                                Text="✕"
-                                FontSize="16"
-                                BackgroundColor="Transparent"
-                                TextColor="{AppThemeBinding Light='#333', Dark='#CCC'}"
-                                Clicked="OnCloseChatClicked"
-                                AutomationId="CloseChatButton"
-                                Padding="8,4"
-                                MinimumWidthRequest="40" />
-                    </Grid>
+                    <!-- Chat Header -->
+                    <Border Grid.Row="0"
+                            BackgroundColor="{StaticResource AccentGreen}"
+                            Padding="16,14"
+                            StrokeThickness="0">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="20,20,0,0" />
+                        </Border.StrokeShape>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="&#x1F33F; Garden Assistant"
+                                   FontSize="17"
+                                   FontAttributes="Bold"
+                                   TextColor="White"
+                                   VerticalOptions="Center" />
+                            <Button Grid.Column="1"
+                                    Text="&#x2715;"
+                                    FontSize="16"
+                                    BackgroundColor="Transparent"
+                                    TextColor="#D4E8D4"
+                                    Clicked="OnCloseChatClicked"
+                                    AutomationId="CloseChatButton"
+                                    Padding="8,4"
+                                    MinimumWidthRequest="40" />
+                        </Grid>
+                    </Border>
 
                     <!-- Messages -->
                     <CollectionView Grid.Row="1"
                                     ItemsSource="{Binding ChatViewModel.Messages}"
                                     AutomationId="ChatMessages"
-                                    VerticalOptions="Fill">
+                                    Margin="12,8,12,0">
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="vm:ChatMessage">
-                                <VerticalStackLayout Padding="4,2">
-                                    <Label Text="{Binding Role, StringFormat='[{0}]'}"
-                                           FontSize="10"
-                                           FontAttributes="Bold"
-                                           TextColor="Gray" />
-                                    <Label Text="{Binding Content}"
-                                           FontSize="14"
-                                           Margin="0,0,0,6" />
-                                </VerticalStackLayout>
+                                <Grid Padding="0,4">
+                                    <Border Padding="12,10"
+                                            Margin="{Binding Role, Converter={x:Null}}"
+                                            MaximumWidthRequest="340"
+                                            HorizontalOptions="Start"
+                                            StrokeThickness="0">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="16,16,16,4" />
+                                        </Border.StrokeShape>
+                                        <VerticalStackLayout Spacing="2">
+                                            <Label Text="{Binding Role}"
+                                                   FontSize="11"
+                                                   FontAttributes="Bold"
+                                                   TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                                            <Label Text="{Binding Content}"
+                                                   FontSize="14"
+                                                   TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
+                                        </VerticalStackLayout>
+                                    </Border>
+                                </Grid>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                     </CollectionView>
@@ -143,20 +208,37 @@
                     <!-- Busy indicator -->
                     <ActivityIndicator Grid.Row="2"
                                        IsRunning="{Binding ChatViewModel.IsBusy}"
-                                       IsVisible="{Binding ChatViewModel.IsBusy}" />
+                                       IsVisible="{Binding ChatViewModel.IsBusy}"
+                                       Color="{StaticResource AccentGreen}"
+                                       Margin="0,6" />
 
                     <!-- Input Area -->
-                    <Grid Grid.Row="3" ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                        <Entry Grid.Column="0"
-                               Placeholder="Tell me about your plants..."
-                               Text="{Binding ChatViewModel.UserInput}"
-                               ReturnCommand="{Binding ChatViewModel.SendCommand}"
-                               AutomationId="ChatInput" />
-                        <Button Grid.Column="1"
-                                Text="Send"
-                                Command="{Binding ChatViewModel.SendCommand}"
-                                AutomationId="SendButton" />
-                    </Grid>
+                    <Border Grid.Row="3" Margin="12,8,12,12" Padding="6"
+                            BackgroundColor="{AppThemeBinding Light=#F0EBE3, Dark=#33302A}"
+                            StrokeThickness="0">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="14" />
+                        </Border.StrokeShape>
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                            <Entry Placeholder="Ask about your plants..."
+                                   Text="{Binding ChatViewModel.UserInput}"
+                                   ReturnCommand="{Binding ChatViewModel.SendCommand}"
+                                   AutomationId="ChatInput"
+                                   FontSize="14"
+                                   BackgroundColor="Transparent" />
+                            <Button Grid.Column="1"
+                                    Text="&#x27A4;"
+                                    Command="{Binding ChatViewModel.SendCommand}"
+                                    AutomationId="SendButton"
+                                    BackgroundColor="{StaticResource AccentGreen}"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    WidthRequest="42"
+                                    HeightRequest="42"
+                                    CornerRadius="12"
+                                    Padding="0" />
+                        </Grid>
+                    </Border>
                 </Grid>
             </Border>
         </Grid>

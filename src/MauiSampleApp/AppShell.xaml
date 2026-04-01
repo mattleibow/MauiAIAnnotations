@@ -5,7 +5,12 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:MauiSampleApp"
     Title="Garden Helper"
-    Shell.FlyoutBehavior="Disabled">
+    Shell.FlyoutBehavior="Disabled"
+    Shell.NavBarHasShadow="True"
+    Shell.BackgroundColor="{StaticResource AccentGreen}"
+    Shell.ForegroundColor="White"
+    Shell.TitleColor="White"
+    Shell.UnselectedColor="#B5D8B2">
 
     <ShellContent
         Title="My Garden"
