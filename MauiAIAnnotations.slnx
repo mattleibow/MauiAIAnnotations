@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MauiAIAnnotations/MauiAIAnnotations.csproj" />
+    <Project Path="src/MauiSampleApp.Core/MauiSampleApp.Core.csproj" />
+    <Project Path="src/MauiSampleApp/MauiSampleApp.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MauiAIAnnotations.Tests/MauiAIAnnotations.Tests.csproj" />
+    <Project Path="tests/MauiSampleApp.Core.Tests/MauiSampleApp.Core.Tests.csproj" />
+  </Folder>
+</Solution>
