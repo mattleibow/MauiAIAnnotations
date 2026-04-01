@@ -2,9 +2,14 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:controls="clr-namespace:MauiSampleApp.Controls"
+             xmlns:converters="clr-namespace:MauiSampleApp.Converters"
              xmlns:vm="clr-namespace:MauiSampleApp.ViewModels"
              x:Class="MauiSampleApp.MainPage"
              Title="Weather App">
+
+    <ContentPage.Resources>
+        <converters:StringToBoolConverter x:Key="StringToBoolConverter" />
+    </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,*,Auto" Padding="16" RowSpacing="12">
 

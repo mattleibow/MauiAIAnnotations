@@ -59,19 +59,27 @@ public class MainPageViewModel : INotifyPropertyChanged
 
         try
         {
-            // Use MAUI Essentials Geocoding to convert location string to coordinates
-            var locations = await Microsoft.Maui.Devices.Sensors.Geocoding.Default.GetLocationsAsync(LocationQuery);
-            var location = locations?.FirstOrDefault();
-
+            // Try MAUI Essentials Geocoding first to convert location string to coordinates
             List<DailyWeatherItem> items;
-            if (location is not null)
+            try
             {
-                // Use coordinate-based method with MAUI Essentials geocoded result
-                items = await _weatherService.GetWeatherForecastAsync(location.Latitude, location.Longitude);
+                var locations = await Microsoft.Maui.Devices.Sensors.Geocoding.Default.GetLocationsAsync(LocationQuery);
+                var location = locations?.FirstOrDefault();
+
+                if (location is not null)
+                {
+                    items = await _weatherService.GetWeatherForecastAsync(location.Latitude, location.Longitude);
+                }
+                else
+                {
+                    // MAUI Essentials returned no results — fallback to open-meteo geocoding
+                    items = await _weatherService.GetWeatherForecastAsync(LocationQuery);
+                }
             }
-            else
+            catch
             {
-                // Fallback to service's location-based method (uses open-meteo geocoding)
+                // MAUI Essentials Geocoding not available (e.g., no MapServiceToken on Windows)
+                // Fallback to the weather service's location-based method (open-meteo geocoding)
                 items = await _weatherService.GetWeatherForecastAsync(LocationQuery);
             }
 

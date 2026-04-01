@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using MauiSampleApp.Core.Models;
 
@@ -14,7 +15,9 @@ public class WeatherService
 
     public async Task<List<DailyWeatherItem>> GetWeatherForecastAsync(double latitude, double longitude)
     {
-        var url = $"https://api.open-meteo.com/v1/forecast?latitude={latitude:F4}&longitude={longitude:F4}&daily=temperature_2m_mean,weather_code&timezone=auto";
+        var lat = latitude.ToString("F4", CultureInfo.InvariantCulture);
+        var lon = longitude.ToString("F4", CultureInfo.InvariantCulture);
+        var url = $"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&daily=temperature_2m_mean,weather_code&timezone=auto";
 
         var response = await _httpClient.GetStringAsync(url);
         var forecast = JsonSerializer.Deserialize<WeatherForecast>(response);

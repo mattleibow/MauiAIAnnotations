@@ -1,18 +1,35 @@
 ﻿using System.ClientModel;
 using System.Reflection;
+using Azure.AI.OpenAI;
 using MauiDevFlow.Agent;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MauiSampleApp.Core.Services;
 using MauiSampleApp.ViewModels;
-using OpenAI;
 
 namespace MauiSampleApp;
 
 public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
+    {
+        try
+        {
+            return CreateMauiAppCore();
+        }
+        catch (Exception ex)
+        {
+            var logPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                "maui_crash.log");
+            File.AppendAllText(logPath,
+                $"[{DateTime.Now}] CreateMauiApp CRASH: {ex}\n\n");
+            throw;
+        }
+    }
+
+    private static MauiApp CreateMauiAppCore()
     {
         var builder = MauiApp.CreateBuilder();
         builder
@@ -79,15 +96,15 @@ public static class MauiProgram
             return builder;
         }
 
-        var client = new OpenAI.Chat.ChatClient(
-            model: deploymentName,
-            credential: new ApiKeyCredential(apiKey),
-            options: new OpenAIClientOptions { Endpoint = new Uri(endpoint) });
+        var azureClient = new AzureOpenAIClient(
+            new Uri(endpoint),
+            new ApiKeyCredential(apiKey));
+        var chatClient = azureClient.GetChatClient(deploymentName);
 
         builder.Services.AddSingleton<IChatClient>(provider =>
         {
             var lf = provider.GetRequiredService<ILoggerFactory>();
-            return client.AsIChatClient()
+            return chatClient.AsIChatClient()
                 .AsBuilder()
                 .UseLogging(lf)
                 .UseFunctionInvocation()
