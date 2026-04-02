@@ -11,8 +11,8 @@ public class HomePageViewModel(PlantDataService plantDataService) : INotifyPrope
 {
     public ObservableCollection<Plant> Plants { get; } = [];
 
-    private ChatViewModel? _chatViewModel;
-    public ChatViewModel? ChatViewModel
+    private GardenChatViewModel? _chatViewModel;
+    public GardenChatViewModel? ChatViewModel
     {
         get => _chatViewModel;
         set { _chatViewModel = value; OnPropertyChanged(); }

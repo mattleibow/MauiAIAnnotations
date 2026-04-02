@@ -2,10 +2,10 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
-using MauiSampleApp.Chat;
+using MauiAIAnnotations.Maui.Chat;
 using Microsoft.Extensions.AI;
 
-namespace MauiSampleApp.ViewModels;
+namespace MauiAIAnnotations.Maui.ViewModels;
 
 public class ChatViewModel : INotifyPropertyChanged
 {
@@ -15,10 +15,9 @@ public class ChatViewModel : INotifyPropertyChanged
     private bool _isBusy;
 
     private static readonly string SystemPrompt = """
-        You are a friendly gardening assistant. You help users manage their plants, track care events, and answer plant care questions.
-        You have access to tools to look up species information, manage plants, and log care events.
-        When a user mentions adding a plant, use the AddPlant tool. When they ask about care, look up the species profile and care history.
-        Be conversational and helpful. Use emoji occasionally to be friendly 🌱
+        You are a friendly assistant. You help users with their tasks and answer questions.
+        You have access to tools to perform various operations.
+        Be conversational and helpful.
         """;
 
     public ChatViewModel(IEnumerable<AITool> tools, IChatClient chatClient)
@@ -28,6 +27,12 @@ public class ChatViewModel : INotifyPropertyChanged
         Messages = [];
         SendCommand = new Command(async () => await SendMessageAsync(), () => !IsBusy);
     }
+
+    /// <summary>
+    /// Additional tools to include per-request (e.g., VM-specific ad-hoc tools).
+    /// Override in subclass or set before sending.
+    /// </summary>
+    public IList<AITool> AdditionalTools { get; } = new List<AITool>();
 
     public ObservableCollection<ContentContext> Messages { get; }
 
@@ -63,7 +68,6 @@ public class ChatViewModel : INotifyPropertyChanged
 
         try
         {
-            // Build history from messages
             var history = new List<ChatMessage> { new(ChatRole.System, SystemPrompt) };
             foreach (var m in Messages)
             {
@@ -74,9 +78,8 @@ public class ChatViewModel : INotifyPropertyChanged
                 }
             }
 
-            var options = new ChatOptions { Tools = [GetChatContextTool(), .. _tools] };
+            var options = new ChatOptions { Tools = [.. AdditionalTools, .. _tools] };
 
-            // Streaming response — accumulate text into a single ContentContext
             ContentContext? assistantCtx = null;
             var responseText = "";
 
@@ -103,7 +106,6 @@ public class ChatViewModel : INotifyPropertyChanged
                             }
                             else
                             {
-                                // Update in-place for streaming effect
                                 assistantCtx.Content = new TextContent(responseText);
                             }
                             break;
@@ -128,18 +130,4 @@ public class ChatViewModel : INotifyPropertyChanged
 
     protected void OnPropertyChanged([CallerMemberName] string? name = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-
-    private AITool GetChatContextTool() =>
-        AIFunctionFactory.Create(
-            () => new
-            {
-                MessageCount = Messages.Count,
-                UserMessages = Messages.Count(m => m.Role == "User"),
-                AssistantMessages = Messages.Count(m => m.Role == "Assistant"),
-                LastUserMessage = Messages.Where(m => m.Role == "User" && m.Content is TextContent)
-                    .Select(m => ((TextContent)m.Content).Text)
-                    .LastOrDefault(),
-            },
-            "get_chat_context",
-            "Gets context about the current conversation including message count and last user message.");
 }

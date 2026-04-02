@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/MauiAIAnnotations.Maui/MauiAIAnnotations.Maui.csproj" />
     <Project Path="src/MauiAIAnnotations/MauiAIAnnotations.csproj" />
   </Folder>
   <Folder Name="/samples/">

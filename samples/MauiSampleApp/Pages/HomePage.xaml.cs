@@ -7,7 +7,7 @@ public partial class HomePage : ContentPage
 {
     private readonly HomePageViewModel _viewModel;
 
-    public HomePage(HomePageViewModel viewModel, ChatViewModel chatViewModel)
+    public HomePage(HomePageViewModel viewModel, GardenChatViewModel chatViewModel)
     {
         _viewModel = viewModel;
         viewModel.ChatViewModel = chatViewModel;

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using MauiAIAnnotations.Maui.Chat;
 using MauiSampleApp.Core.Models;
 using Microsoft.Extensions.AI;
 
@@ -22,7 +23,7 @@ public class PlantResultMapping : ContentTemplateMapping
     /// <summary>
     /// Attempts to extract a <see cref="Plant"/> from a <see cref="FunctionResultContent"/>.
     /// </summary>
-    internal static Plant? TryGetPlant(FunctionResultContent result)
+    public static Plant? TryGetPlant(FunctionResultContent result)
     {
         try
         {

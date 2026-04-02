@@ -69,7 +69,7 @@ public static class MauiProgram
 
         // Register ViewModels and Pages
         builder.Services.AddSingleton<HomePageViewModel>();
-        builder.Services.AddSingleton<ChatViewModel>();
+        builder.Services.AddSingleton<GardenChatViewModel>();
         builder.Services.AddTransient<PlantDetailViewModel>();
         builder.Services.AddTransient<AddPlantViewModel>();
         builder.Services.AddTransient<DebugViewModel>();

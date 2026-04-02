@@ -11,8 +11,8 @@ public class PlantDetailViewModel(PlantDataService plantDataService, SpeciesServ
 {
     public ObservableCollection<CareEvent> CareHistory { get; } = [];
 
-    private ChatViewModel? _chatViewModel;
-    public ChatViewModel? ChatViewModel
+    private GardenChatViewModel? _chatViewModel;
+    public GardenChatViewModel? ChatViewModel
     {
         get => _chatViewModel;
         set { _chatViewModel = value; OnPropertyChanged(); }

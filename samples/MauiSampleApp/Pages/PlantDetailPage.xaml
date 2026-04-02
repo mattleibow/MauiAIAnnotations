@@ -3,7 +3,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:MauiSampleApp.ViewModels"
              xmlns:models="clr-namespace:MauiSampleApp.Core.Models;assembly=MauiSampleApp.Core"
-             xmlns:controls="clr-namespace:MauiSampleApp.Controls"
+             xmlns:maui="clr-namespace:MauiAIAnnotations.Maui.Controls;assembly=MauiAIAnnotations.Maui"
+             xmlns:mauiChat="clr-namespace:MauiAIAnnotations.Maui.Chat;assembly=MauiAIAnnotations.Maui"
+             xmlns:mauiViews="clr-namespace:MauiAIAnnotations.Maui.Views;assembly=MauiAIAnnotations.Maui"
+             xmlns:local="clr-namespace:MauiSampleApp.Chat"
+             xmlns:localViews="clr-namespace:MauiSampleApp.Views"
              x:Class="MauiSampleApp.Pages.PlantDetailPage"
              Title="Plant Details"
              Shell.NavBarIsVisible="False"
@@ -199,7 +203,17 @@
         </ScrollView>
 
         <!-- Reusable Chat Overlay -->
-        <controls:ChatOverlayControl ChatVM="{Binding ChatViewModel}" />
+        <maui:ChatOverlayControl ChatVM="{Binding ChatViewModel}">
+            <maui:ChatOverlayControl.ContentTemplates>
+                <mauiChat:TextContentMapping Role="User" ViewType="{x:Type mauiViews:UserTextView}" />
+                <mauiChat:TextContentMapping Role="Assistant" ViewType="{x:Type mauiViews:AssistantTextView}" />
+                <mauiChat:FunctionCallMapping ViewType="{x:Type mauiViews:FunctionCallView}" />
+                <local:PlantResultMapping ViewType="{x:Type localViews:PlantResultView}" />
+                <mauiChat:FunctionResultMapping ViewType="{x:Type mauiViews:FunctionResultView}" />
+                <mauiChat:ErrorContentMapping ViewType="{x:Type mauiViews:ErrorView}" />
+                <mauiChat:DefaultContentMapping ViewType="{x:Type mauiViews:DefaultContentView}" />
+            </maui:ChatOverlayControl.ContentTemplates>
+        </maui:ChatOverlayControl>
     </Grid>
 
 </ContentPage>
