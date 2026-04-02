@@ -1,28 +1,18 @@
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.AI;
 
 namespace MauiAIAnnotations.Maui.Chat;
 
-public class ContentContext : INotifyPropertyChanged
+public partial class ContentContext : ObservableObject
 {
-    private AIContent _content;
-
-    public ContentContext(AIContent content, string role)
-    {
-        _content = content;
-        Role = role;
-    }
-
-    public AIContent Content
-    {
-        get => _content;
-        set { _content = value; OnPropertyChanged(); }
-    }
+    [ObservableProperty]
+    public partial AIContent Content { get; set; }
 
     public string Role { get; }
 
-    public event PropertyChangedEventHandler? PropertyChanged;
-    protected void OnPropertyChanged([CallerMemberName] string? name = null)
-        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+    public ContentContext(AIContent content, string role)
+    {
+        Content = content;
+        Role = role;
+    }
 }

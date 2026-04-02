@@ -1,17 +1,12 @@
-using System.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.AI;
 
 namespace MauiAIAnnotations.Maui.Chat;
 
-public class UserTextViewModel : INotifyPropertyChanged
+public partial class UserTextViewModel : ObservableObject
 {
-    private string _text = "";
-
-    public string Text
-    {
-        get => _text;
-        private set { _text = value; OnPropertyChanged(nameof(Text)); }
-    }
+    [ObservableProperty]
+    public partial string Text { get; set; }
 
     public void SetContext(ContentContext context)
     {
@@ -26,8 +21,4 @@ public class UserTextViewModel : INotifyPropertyChanged
                 Text = t.Text ?? "";
         };
     }
-
-    public event PropertyChangedEventHandler? PropertyChanged;
-    protected void OnPropertyChanged(string name) =>
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }

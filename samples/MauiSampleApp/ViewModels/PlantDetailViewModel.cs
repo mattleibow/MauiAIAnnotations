@@ -1,49 +1,26 @@
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Windows.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using MauiSampleApp.Core.Models;
 using MauiSampleApp.Core.Services;
 
 namespace MauiSampleApp.ViewModels;
 
-public class PlantDetailViewModel(PlantDataService plantDataService, SpeciesService speciesService) : INotifyPropertyChanged, IQueryAttributable
+public partial class PlantDetailViewModel(PlantDataService plantDataService, SpeciesService speciesService) : ObservableObject, IQueryAttributable
 {
     public ObservableCollection<CareEvent> CareHistory { get; } = [];
 
-    private GardenChatViewModel? _chatViewModel;
-    public GardenChatViewModel? ChatViewModel
-    {
-        get => _chatViewModel;
-        set { _chatViewModel = value; OnPropertyChanged(); }
-    }
+    [ObservableProperty]
+    public partial GardenChatViewModel? ChatViewModel { get; set; }
 
-    private Command<string>? _logCareCommand;
-    public ICommand LogCareCommand => _logCareCommand ??= new Command<string>(async eventType => await LogCareAsync(eventType));
+    [ObservableProperty]
+    public partial Plant? Plant { get; set; }
 
-    private Command? _deletePlantCommand;
-    public ICommand DeletePlantCommand => _deletePlantCommand ??= new Command(async () => await DeletePlantAsync());
+    [ObservableProperty]
+    public partial SpeciesProfile? Species { get; set; }
 
-    private Plant? _plant;
-    public Plant? Plant
-    {
-        get => _plant;
-        set { _plant = value; OnPropertyChanged(); }
-    }
-
-    private SpeciesProfile? _species;
-    public SpeciesProfile? Species
-    {
-        get => _species;
-        set { _species = value; OnPropertyChanged(); }
-    }
-
-    private bool _isLoading;
-    public bool IsLoading
-    {
-        get => _isLoading;
-        set { _isLoading = value; OnPropertyChanged(); }
-    }
+    [ObservableProperty]
+    public partial bool IsLoading { get; set; }
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
@@ -75,6 +52,7 @@ public class PlantDetailViewModel(PlantDataService plantDataService, SpeciesServ
         }
     }
 
+    [RelayCommand]
     private async Task LogCareAsync(string eventType)
     {
         if (Plant is null) return;
@@ -86,14 +64,11 @@ public class PlantDetailViewModel(PlantDataService plantDataService, SpeciesServ
             CareHistory.Add(e);
     }
 
+    [RelayCommand]
     private async Task DeletePlantAsync()
     {
         if (Plant is null) return;
         await plantDataService.RemovePlantAsync(Plant.Nickname);
         await Shell.Current.GoToAsync("..");
     }
-
-    public event PropertyChangedEventHandler? PropertyChanged;
-    protected void OnPropertyChanged([CallerMemberName] string? name = null)
-        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }

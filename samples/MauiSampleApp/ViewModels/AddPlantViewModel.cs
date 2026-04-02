@@ -1,59 +1,35 @@
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Windows.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using MauiSampleApp.Core.Services;
 
 namespace MauiSampleApp.ViewModels;
 
-public class AddPlantViewModel(PlantDataService plantDataService) : INotifyPropertyChanged
+public partial class AddPlantViewModel(PlantDataService plantDataService) : ObservableObject
 {
-    private Command? _saveCommand;
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
+    public partial string Nickname { get; set; }
 
-    private string _nickname = string.Empty;
-    public string Nickname
-    {
-        get => _nickname;
-        set { _nickname = value; OnPropertyChanged(); SaveCmd.ChangeCanExecute(); }
-    }
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
+    public partial string Species { get; set; }
 
-    private string _species = string.Empty;
-    public string Species
-    {
-        get => _species;
-        set { _species = value; OnPropertyChanged(); SaveCmd.ChangeCanExecute(); }
-    }
+    [ObservableProperty]
+    public partial string Location { get; set; }
 
-    private string _location = string.Empty;
-    public string Location
-    {
-        get => _location;
-        set { _location = value; OnPropertyChanged(); }
-    }
+    [ObservableProperty]
+    public partial bool IsIndoor { get; set; }
 
-    private bool _isIndoor;
-    public bool IsIndoor
-    {
-        get => _isIndoor;
-        set { _isIndoor = value; OnPropertyChanged(); }
-    }
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
+    public partial bool IsBusy { get; set; }
 
-    private bool _isBusy;
-    public bool IsBusy
-    {
-        get => _isBusy;
-        set { _isBusy = value; OnPropertyChanged(); SaveCmd.ChangeCanExecute(); }
-    }
+    [ObservableProperty]
+    public partial string StatusMessage { get; set; }
 
-    private string _statusMessage = string.Empty;
-    public string StatusMessage
-    {
-        get => _statusMessage;
-        set { _statusMessage = value; OnPropertyChanged(); }
-    }
+    private bool CanSave() => !IsBusy && !string.IsNullOrWhiteSpace(Nickname) && !string.IsNullOrWhiteSpace(Species);
 
-    private Command SaveCmd => _saveCommand ??= new Command(async () => await SaveAsync(), () => !IsBusy && !string.IsNullOrWhiteSpace(Nickname) && !string.IsNullOrWhiteSpace(Species));
-    public ICommand SaveCommand => SaveCmd;
-
+    [RelayCommand(CanExecute = nameof(CanSave))]
     private async Task SaveAsync()
     {
         IsBusy = true;
@@ -72,8 +48,4 @@ public class AddPlantViewModel(PlantDataService plantDataService) : INotifyPrope
             IsBusy = false;
         }
     }
-
-    public event PropertyChangedEventHandler? PropertyChanged;
-    protected void OnPropertyChanged([CallerMemberName] string? name = null)
-        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }

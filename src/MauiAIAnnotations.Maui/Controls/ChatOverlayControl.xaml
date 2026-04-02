@@ -8,6 +8,7 @@
     <Grid>
         <!-- FAB Chat Button -->
         <Button Text="💬"
+                AutomationId="ChatFabButton"
                 Clicked="OnOpenChatClicked"
                 BackgroundColor="#5B8C5A"
                 TextColor="White"
@@ -21,6 +22,7 @@
 
         <!-- Chat Popup Overlay -->
         <Grid x:Name="ChatOverlay"
+              AutomationId="ChatOverlayPanel"
               IsVisible="False"
               BackgroundColor="#66000000">
 
@@ -55,6 +57,7 @@
                                    FontSize="17" FontAttributes="Bold"
                                    TextColor="White" VerticalOptions="Center" />
                             <Button Grid.Column="1" Text="&#x2715;" FontSize="16"
+                                    AutomationId="CloseChatButton"
                                     BackgroundColor="Transparent" TextColor="#D4E8D4"
                                     Clicked="OnCloseChatClicked"
                                     Padding="8,4" MinimumWidthRequest="40" />

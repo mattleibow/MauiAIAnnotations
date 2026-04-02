@@ -1,32 +1,22 @@
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Windows.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using MauiSampleApp.Core.Models;
 using MauiSampleApp.Core.Services;
 
 namespace MauiSampleApp.ViewModels;
 
-public class HomePageViewModel(PlantDataService plantDataService) : INotifyPropertyChanged
+public partial class HomePageViewModel(PlantDataService plantDataService) : ObservableObject
 {
     public ObservableCollection<Plant> Plants { get; } = [];
 
-    private GardenChatViewModel? _chatViewModel;
-    public GardenChatViewModel? ChatViewModel
-    {
-        get => _chatViewModel;
-        set { _chatViewModel = value; OnPropertyChanged(); }
-    }
+    [ObservableProperty]
+    public partial GardenChatViewModel? ChatViewModel { get; set; }
 
-    private bool _isLoading;
-    public bool IsLoading
-    {
-        get => _isLoading;
-        set { _isLoading = value; OnPropertyChanged(); }
-    }
+    [ObservableProperty]
+    public partial bool IsLoading { get; set; }
 
-    public ICommand RefreshCommand { get; } = new Command(async () => { });
-
+    [RelayCommand]
     public async Task RefreshPlantsAsync()
     {
         IsLoading = true;
@@ -42,9 +32,4 @@ public class HomePageViewModel(PlantDataService plantDataService) : INotifyPrope
             IsLoading = false;
         }
     }
-
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    protected void OnPropertyChanged([CallerMemberName] string? name = null)
-        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }

@@ -1,13 +1,12 @@
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
+using CommunityToolkit.Mvvm.ComponentModel;
 using MauiSampleApp.Core.Models;
 using Shiny.DocumentDb;
 
 namespace MauiSampleApp.ViewModels;
 
-public class DebugViewModel(IDocumentStore store) : INotifyPropertyChanged
+public partial class DebugViewModel(IDocumentStore store) : ObservableObject
 {
     public ObservableCollection<string> SpeciesProfiles { get; } = [];
     public ObservableCollection<string> Plants { get; } = [];
@@ -51,9 +50,4 @@ public class DebugViewModel(IDocumentStore store) : INotifyPropertyChanged
         foreach (var e in events)
             await store.Remove<CareEvent>(e.Id);
     }
-
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    protected void OnPropertyChanged([CallerMemberName] string? name = null)
-        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }

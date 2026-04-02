@@ -1,12 +1,15 @@
-using System.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.AI;
 
 namespace MauiAIAnnotations.Maui.Chat;
 
-public class FunctionCallViewModel : INotifyPropertyChanged
+public partial class FunctionCallViewModel : ObservableObject
 {
-    public string FunctionName { get; private set; } = "";
-    public string Arguments { get; private set; } = "";
+    [ObservableProperty]
+    public partial string FunctionName { get; set; }
+
+    [ObservableProperty]
+    public partial string Arguments { get; set; }
 
     public void SetContext(ContentContext context)
     {
@@ -16,12 +19,6 @@ public class FunctionCallViewModel : INotifyPropertyChanged
             Arguments = call.Arguments is not null
                 ? string.Join(", ", call.Arguments.Select(kvp => $"{kvp.Key}: {kvp.Value}"))
                 : "";
-            OnPropertyChanged(nameof(FunctionName));
-            OnPropertyChanged(nameof(Arguments));
         }
     }
-
-    public event PropertyChangedEventHandler? PropertyChanged;
-    protected void OnPropertyChanged(string name) =>
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }

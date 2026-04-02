@@ -7,12 +7,14 @@
     <Grid RowDefinitions="*,Auto,Auto" RowSpacing="0">
         <!-- Messages -->
         <CollectionView x:Name="ChatMessages"
+                        AutomationId="ChatMessages"
                         Grid.Row="0"
                         ItemsSource="{Binding ChatVM.Messages, Source={x:Reference Self}}"
                         Margin="12,8,12,0" />
 
         <!-- Busy indicator -->
         <ActivityIndicator Grid.Row="1"
+                           AutomationId="ChatBusyIndicator"
                            IsRunning="{Binding ChatVM.IsBusy, Source={x:Reference Self}}"
                            IsVisible="{Binding ChatVM.IsBusy, Source={x:Reference Self}}"
                            Color="#5B8C5A"
@@ -27,11 +29,13 @@
             </Border.StrokeShape>
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
                 <Entry Placeholder="Type a message..."
+                       AutomationId="ChatInput"
                        Text="{Binding ChatVM.UserInput, Source={x:Reference Self}}"
                        ReturnCommand="{Binding ChatVM.SendCommand, Source={x:Reference Self}}"
                        FontSize="14"
                        BackgroundColor="Transparent" />
                 <Button Grid.Column="1" Text="&#x27A4;"
+                        AutomationId="SendMessageButton"
                         Command="{Binding ChatVM.SendCommand, Source={x:Reference Self}}"
                         BackgroundColor="#5B8C5A"
                         TextColor="White" FontSize="16"
