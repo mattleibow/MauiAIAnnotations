@@ -7,6 +7,8 @@ namespace MauiAIAnnotations.Maui.Controls;
 
 public partial class ChatOverlayControl : ContentView
 {
+    private const double SidebarWidthThreshold = 900;
+
     public static readonly BindableProperty ChatVMProperty =
         BindableProperty.Create(
             nameof(ChatVM),
@@ -29,34 +31,74 @@ public partial class ChatOverlayControl : ContentView
     /// </summary>
     public event EventHandler? ChatClosed;
 
+    private bool _isChatOpen;
+    private bool _isWideMode;
+
     public ChatOverlayControl()
     {
         InitializeComponent();
         _contentTemplates.CollectionChanged += OnContentTemplatesChanged;
+        SizeChanged += OnSizeChanged;
     }
 
     private void OnContentTemplatesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        // Pass templates through to the inner ChatPanelControl
-        InnerChatPanel.ContentTemplates.Clear();
+        SyncTemplatesTo(InnerChatPanel);
+        SyncTemplatesTo(SidebarChatPanel);
+    }
+
+    private void SyncTemplatesTo(ChatPanelControl panel)
+    {
+        panel.ContentTemplates.Clear();
         foreach (var t in _contentTemplates)
-            InnerChatPanel.ContentTemplates.Add(t);
+            panel.ContentTemplates.Add(t);
+    }
+
+    private void OnSizeChanged(object? sender, EventArgs e)
+    {
+        var isWide = Width >= SidebarWidthThreshold;
+        if (isWide == _isWideMode)
+            return;
+
+        _isWideMode = isWide;
+        UpdateLayout();
+    }
+
+    private void UpdateLayout()
+    {
+        if (_isWideMode)
+        {
+            // Sidebar mode: hide FAB + overlay, show sidebar if chat is open
+            ChatFab.IsVisible = !_isChatOpen;
+            ChatOverlay.IsVisible = false;
+            SidebarPanel.IsVisible = _isChatOpen;
+        }
+        else
+        {
+            // Overlay mode: show FAB when chat is closed, overlay when open
+            ChatFab.IsVisible = !_isChatOpen;
+            ChatOverlay.IsVisible = _isChatOpen;
+            SidebarPanel.IsVisible = false;
+        }
     }
 
     private void OnOpenChatClicked(object? sender, EventArgs e)
     {
-        ChatOverlay.IsVisible = true;
+        _isChatOpen = true;
+        UpdateLayout();
     }
 
     private void OnCloseChatClicked(object? sender, EventArgs e)
     {
-        ChatOverlay.IsVisible = false;
+        _isChatOpen = false;
+        UpdateLayout();
         ChatClosed?.Invoke(this, EventArgs.Empty);
     }
 
     private void OnChatBackdropTapped(object? sender, TappedEventArgs e)
     {
-        ChatOverlay.IsVisible = false;
+        _isChatOpen = false;
+        UpdateLayout();
         ChatClosed?.Invoke(this, EventArgs.Empty);
     }
 }

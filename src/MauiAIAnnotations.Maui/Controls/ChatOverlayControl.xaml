@@ -6,8 +6,9 @@
              x:Name="Self">
 
     <Grid>
-        <!-- FAB Chat Button -->
-        <Button Text="💬"
+        <!-- FAB Chat Button (hidden in sidebar mode) -->
+        <Button x:Name="ChatFab"
+                Text="💬"
                 AutomationId="ChatFabButton"
                 Clicked="OnOpenChatClicked"
                 BackgroundColor="#5B8C5A"
@@ -20,7 +21,7 @@
                 VerticalOptions="End"
                 Margin="0,0,20,20" />
 
-        <!-- Chat Popup Overlay -->
+        <!-- Chat Popup Overlay (narrow screens) -->
         <Grid x:Name="ChatOverlay"
               AutomationId="ChatOverlayPanel"
               IsVisible="False"
@@ -30,17 +31,18 @@
                 <TapGestureRecognizer Tapped="OnChatBackdropTapped" />
             </Grid.GestureRecognizers>
 
-            <Border VerticalOptions="End"
-                    HorizontalOptions="Fill"
-                    HeightRequest="500"
-                    Margin="12,0,12,12"
+            <Border x:Name="OverlayBorder"
+                    VerticalOptions="Fill"
+                    HorizontalOptions="End"
+                    WidthRequest="420"
+                    Margin="0"
                     Padding="0"
                     InputTransparent="False"
                     Stroke="{AppThemeBinding Light=#E8E0D4, Dark=#3D3930}"
                     StrokeThickness="1"
                     BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2A2721}">
                 <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="20,20,12,12" />
+                    <RoundRectangle CornerRadius="0" />
                 </Border.StrokeShape>
 
                 <Grid RowDefinitions="Auto,*" RowSpacing="0">
@@ -50,13 +52,19 @@
                             Padding="16,14"
                             StrokeThickness="0">
                         <Border.StrokeShape>
-                            <RoundRectangle CornerRadius="20,20,0,0" />
+                            <RoundRectangle CornerRadius="0" />
                         </Border.StrokeShape>
-                        <Grid ColumnDefinitions="*,Auto">
+                        <Grid ColumnDefinitions="*,Auto,Auto">
                             <Label Text="&#x1F33F; Chat Assistant"
                                    FontSize="17" FontAttributes="Bold"
                                    TextColor="White" VerticalOptions="Center" />
-                            <Button Grid.Column="1" Text="&#x2715;" FontSize="16"
+                            <Button Grid.Column="1" Text="&#x1F5D1;" FontSize="14"
+                                    AutomationId="ClearChatButton"
+                                    BackgroundColor="Transparent" TextColor="#D4E8D4"
+                                    Command="{Binding ChatVM.ClearCommand, Source={x:Reference Self}}"
+                                    Padding="8,4" MinimumWidthRequest="40"
+                                    ToolTipProperties.Text="Clear chat" />
+                            <Button Grid.Column="2" Text="&#x2715;" FontSize="16"
                                     AutomationId="CloseChatButton"
                                     BackgroundColor="Transparent" TextColor="#D4E8D4"
                                     Clicked="OnCloseChatClicked"
@@ -71,6 +79,56 @@
                 </Grid>
             </Border>
         </Grid>
+
+        <!-- Sidebar panel (wide screens — always visible when open) -->
+        <Border x:Name="SidebarPanel"
+                IsVisible="False"
+                HorizontalOptions="End"
+                VerticalOptions="Fill"
+                WidthRequest="400"
+                Margin="0"
+                Padding="0"
+                InputTransparent="False"
+                Stroke="{AppThemeBinding Light=#E8E0D4, Dark=#3D3930}"
+                StrokeThickness="1"
+                BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2A2721}">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="0" />
+            </Border.StrokeShape>
+
+            <Grid RowDefinitions="Auto,*" RowSpacing="0">
+                <!-- Sidebar Header -->
+                <Border Grid.Row="0"
+                        BackgroundColor="#5B8C5A"
+                        Padding="16,14"
+                        StrokeThickness="0">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="0" />
+                    </Border.StrokeShape>
+                    <Grid ColumnDefinitions="*,Auto,Auto">
+                        <Label Text="&#x1F33F; Chat Assistant"
+                               FontSize="17" FontAttributes="Bold"
+                               TextColor="White" VerticalOptions="Center" />
+                        <Button Grid.Column="1" Text="&#x1F5D1;" FontSize="14"
+                                AutomationId="SidebarClearChatButton"
+                                BackgroundColor="Transparent" TextColor="#D4E8D4"
+                                Command="{Binding ChatVM.ClearCommand, Source={x:Reference Self}}"
+                                Padding="8,4" MinimumWidthRequest="40"
+                                ToolTipProperties.Text="Clear chat" />
+                        <Button Grid.Column="2" Text="&#x2715;" FontSize="16"
+                                AutomationId="SidebarCloseChatButton"
+                                BackgroundColor="Transparent" TextColor="#D4E8D4"
+                                Clicked="OnCloseChatClicked"
+                                Padding="8,4" MinimumWidthRequest="40" />
+                    </Grid>
+                </Border>
+
+                <!-- Inner ChatPanelControl (sidebar) -->
+                <controls:ChatPanelControl x:Name="SidebarChatPanel"
+                                           Grid.Row="1"
+                                           ChatVM="{Binding ChatVM, Source={x:Reference Self}}" />
+            </Grid>
+        </Border>
     </Grid>
 
 </ContentView>

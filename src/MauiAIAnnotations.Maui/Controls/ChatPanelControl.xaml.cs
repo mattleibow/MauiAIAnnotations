@@ -53,7 +53,14 @@ public partial class ChatPanelControl : ContentView
     {
         if (ChatVM is not null && ChatVM.Messages.Count > 0)
         {
-            ChatMessages.ScrollTo(ChatVM.Messages.Count - 1, position: ScrollToPosition.End, animate: false);
+            // Dispatch with a short delay so the layout pass completes before scrolling
+            Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(50), () =>
+            {
+                if (ChatVM is not null && ChatVM.Messages.Count > 0)
+                {
+                    ChatMessages.ScrollTo(ChatVM.Messages.Count - 1, position: ScrollToPosition.End, animate: true);
+                }
+            });
         }
     }
 }

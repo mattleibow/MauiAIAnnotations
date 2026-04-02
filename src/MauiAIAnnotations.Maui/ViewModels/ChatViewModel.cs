@@ -40,6 +40,9 @@ public partial class ChatViewModel : ObservableObject
 
     private bool CanSend() => !IsBusy;
 
+    [RelayCommand]
+    private void Clear() => Messages.Clear();
+
     [RelayCommand(CanExecute = nameof(CanSend))]
     private async Task SendAsync()
     {
