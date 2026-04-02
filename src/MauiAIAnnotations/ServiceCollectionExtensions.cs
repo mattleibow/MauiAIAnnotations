@@ -15,16 +15,19 @@ namespace MauiAIAnnotations;
 public static class ServiceCollectionExtensions
 {
     /// <summary>
-    /// Scans the calling assembly for types containing methods annotated with
-    /// <see cref="ExportAIFunctionAttribute"/> and registers the discovered <see cref="AITool"/>
-    /// instances in DI. Consumers inject <c>IEnumerable&lt;AITool&gt;</c> to receive all tools.
+    /// Scans the calling assembly and its referenced assemblies for types containing methods
+    /// annotated with <see cref="ExportAIFunctionAttribute"/> and registers the discovered
+    /// <see cref="AITool"/> instances in DI. Consumers inject <c>IEnumerable&lt;AITool&gt;</c>
+    /// to receive all tools.
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <returns>The service collection for chaining.</returns>
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static IServiceCollection AddAITools(this IServiceCollection services)
     {
-        return services.AddAITools(Assembly.GetCallingAssembly());
+        var callingAssembly = Assembly.GetCallingAssembly();
+        var assemblies = GetRelevantAssemblies(callingAssembly);
+        return services.AddAITools([.. assemblies]);
     }
 
     /// <summary>
@@ -85,6 +88,25 @@ public static class ServiceCollectionExtensions
     {
         return type.GetMethods(BindingFlags.Public | BindingFlags.Instance)
             .Any(m => m.GetCustomAttribute<ExportAIFunctionAttribute>() is not null);
+    }
+
+    private static List<Assembly> GetRelevantAssemblies(Assembly root)
+    {
+        var result = new List<Assembly> { root };
+        foreach (var refName in root.GetReferencedAssemblies())
+        {
+            try
+            {
+                var asm = Assembly.Load(refName);
+                if (asm.GetExportedTypes().Any(t => t.IsClass && !t.IsAbstract && TypeHasExportedFunctions(t)))
+                    result.Add(asm);
+            }
+            catch
+            {
+                // Skip assemblies that can't be loaded
+            }
+        }
+        return result;
     }
 
     private static List<ToolRegistration> DiscoverRegistrations(IEnumerable<Type> types)

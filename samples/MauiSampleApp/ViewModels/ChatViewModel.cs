@@ -2,11 +2,10 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using MauiSampleApp.Chat;
 using Microsoft.Extensions.AI;
 
 namespace MauiSampleApp.ViewModels;
-
-public record ConversationEntry(string Role, string Content);
 
 public class ChatViewModel : INotifyPropertyChanged
 {
@@ -30,7 +29,7 @@ public class ChatViewModel : INotifyPropertyChanged
         SendCommand = new Command(async () => await SendMessageAsync(), () => !IsBusy);
     }
 
-    public ObservableCollection<ConversationEntry> Messages { get; }
+    public ObservableCollection<ChatEntry> Messages { get; }
 
     public string UserInput
     {
@@ -58,7 +57,7 @@ public class ChatViewModel : INotifyPropertyChanged
 
         var userMessage = UserInput;
         UserInput = string.Empty;
-        Messages.Add(new ConversationEntry("User", userMessage));
+        Messages.Add(new ChatEntry { Type = ChatEntryType.UserText, Content = userMessage });
         IsBusy = true;
 
         try
@@ -67,9 +66,8 @@ public class ChatViewModel : INotifyPropertyChanged
 
             foreach (var m in Messages)
             {
-                history.Add(m.Role == "User"
-                    ? new ChatMessage(ChatRole.User, m.Content)
-                    : new ChatMessage(ChatRole.Assistant, m.Content));
+                var role = m.Type == ChatEntryType.UserText ? ChatRole.User : ChatRole.Assistant;
+                history.Add(new ChatMessage(role, m.Content));
             }
 
             // Combine DI-registered tools with VM-specific ad-hoc tools.
@@ -77,9 +75,9 @@ public class ChatViewModel : INotifyPropertyChanged
             // tools that have access to ViewModel state.
             var options = new ChatOptions { Tools = [GetChatContextTool(), .. _tools] };
 
-            // Streaming response
-            var index = Messages.Count;
-            Messages.Add(new ConversationEntry("Assistant", ""));
+            // Streaming response — use a mutable ChatEntry so the UI updates in-place
+            var assistantEntry = new ChatEntry { Type = ChatEntryType.AssistantText, Content = "" };
+            Messages.Add(assistantEntry);
             var responseText = "";
 
             await foreach (var update in _chatClient.GetStreamingResponseAsync(history, options))
@@ -87,16 +85,16 @@ public class ChatViewModel : INotifyPropertyChanged
                 if (update.Text is { } text)
                 {
                     responseText += text;
-                    Messages[index] = new ConversationEntry("Assistant", responseText);
+                    assistantEntry.Content = responseText;
                 }
             }
 
             if (string.IsNullOrEmpty(responseText))
-                Messages[index] = new ConversationEntry("Assistant", "(no response)");
+                assistantEntry.Content = "(no response)";
         }
         catch (Exception ex)
         {
-            Messages.Add(new ConversationEntry("Assistant", $"Error: {ex.Message}"));
+            Messages.Add(new ChatEntry { Type = ChatEntryType.Error, Content = ex.Message });
         }
         finally
         {
@@ -120,9 +118,9 @@ public class ChatViewModel : INotifyPropertyChanged
             () => new
             {
                 MessageCount = Messages.Count,
-                UserMessages = Messages.Count(m => m.Role == "User"),
-                AssistantMessages = Messages.Count(m => m.Role == "Assistant"),
-                LastUserMessage = Messages.LastOrDefault(m => m.Role == "User")?.Content,
+                UserMessages = Messages.Count(m => m.Type == ChatEntryType.UserText),
+                AssistantMessages = Messages.Count(m => m.Type == ChatEntryType.AssistantText),
+                LastUserMessage = Messages.LastOrDefault(m => m.Type == ChatEntryType.UserText)?.Content,
             },
             "get_chat_context",
             "Gets context about the current conversation including message count and last user message. " +

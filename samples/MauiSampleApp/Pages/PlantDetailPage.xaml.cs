@@ -35,19 +35,4 @@ public partial class PlantDetailPage : ContentPage
     {
         await Shell.Current.GoToAsync("..");
     }
-
-    private void OnOpenChatClicked(object? sender, EventArgs e)
-    {
-        ChatOverlay.IsVisible = true;
-    }
-
-    private void OnCloseChatClicked(object? sender, EventArgs e)
-    {
-        ChatOverlay.IsVisible = false;
-    }
-
-    private void OnChatBackdropTapped(object? sender, TappedEventArgs e)
-    {
-        ChatOverlay.IsVisible = false;
-    }
 }

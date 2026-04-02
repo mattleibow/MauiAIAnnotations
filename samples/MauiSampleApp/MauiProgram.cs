@@ -1,5 +1,4 @@
 ﻿using System.ClientModel;
-using System.ComponentModel;
 using System.Reflection;
 using Azure.AI.OpenAI;
 using MauiAIAnnotations;
@@ -42,12 +41,15 @@ public static class MauiProgram
         // Register services
         builder.Services.AddSingleton<SpeciesService>();
         builder.Services.AddSingleton<PlantDataService>();
+        builder.Services.AddSingleton<SeasonsService>();
 
         // ── AI Tools ────────────────────────────────────────────────
         //
         // 1. Attribute-discovered tools (from [ExportAIFunction] on services)
         //    These are the "new way" using MauiAIAnnotations.
-        builder.Services.AddAITools(typeof(PlantDataService).Assembly);
+        //    The parameterless overload scans the calling assembly and its
+        //    referenced assemblies (e.g. MauiSampleApp.Core) automatically.
+        builder.Services.AddAITools();
 
         // 2. Classic / bespoke tools (hand-crafted with AIFunctionFactory)
         //    These demonstrate the "old school" pattern used in apps like
@@ -58,22 +60,6 @@ public static class MauiProgram
                 () => DateTime.Now.ToString("dddd, MMMM d yyyy, h:mm tt"),
                 "get_current_datetime",
                 "Gets the current date and time. Useful for checking when a plant was last watered relative to now."));
-
-        builder.Services.AddSingleton<AITool>(
-            AIFunctionFactory.Create(
-                ([Description("The month number (1-12)")] int month) =>
-                {
-                    return month switch
-                    {
-                        >= 3 and <= 5 => "Spring: Great time for planting annuals, starting seeds, and dividing perennials. Watch for late frosts.",
-                        >= 6 and <= 8 => "Summer: Focus on watering, mulching, and pest control. Harvest regularly to encourage more growth.",
-                        >= 9 and <= 11 => "Autumn: Plant bulbs for spring, collect seeds, add compost to beds, and prepare tender plants for winter.",
-                        12 or 1 or 2 => "Winter: Plan next year's garden, order seeds, prune dormant trees, and protect plants from frost.",
-                        _ => "Invalid month number."
-                    };
-                },
-                "get_seasonal_gardening_advice",
-                "Gets gardening advice for the current season based on the month number (1-12)."));
 
         // ── End AI Tools ────────────────────────────────────────────
 

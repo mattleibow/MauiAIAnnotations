@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:chat="clr-namespace:MauiSampleApp.Chat"
+             xmlns:controls="clr-namespace:MauiSampleApp.Controls"
+             x:Class="MauiSampleApp.Controls.ChatOverlayControl"
+             x:Name="Self">
+
+    <ContentView.Resources>
+        <chat:ChatEntryTemplateSelector x:Key="ChatTemplateSelector">
+
+            <!-- User message: green bubble, right-aligned -->
+            <chat:ChatEntryTemplateSelector.UserTextTemplate>
+                <DataTemplate x:DataType="chat:ChatEntry">
+                    <Grid Padding="0,4">
+                        <Border Padding="12,10"
+                                MaximumWidthRequest="340"
+                                HorizontalOptions="End"
+                                BackgroundColor="{StaticResource ChatUser}"
+                                StrokeThickness="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="16,16,4,16" />
+                            </Border.StrokeShape>
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="User"
+                                       FontSize="11" FontAttributes="Bold"
+                                       TextColor="#D4E8D4" />
+                                <Label Text="{Binding Content}"
+                                       FontSize="14" TextColor="White" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+                </DataTemplate>
+            </chat:ChatEntryTemplateSelector.UserTextTemplate>
+
+            <!-- Assistant message: light bubble, left-aligned -->
+            <chat:ChatEntryTemplateSelector.AssistantTextTemplate>
+                <DataTemplate x:DataType="chat:ChatEntry">
+                    <Grid Padding="0,4">
+                        <Border Padding="12,10"
+                                MaximumWidthRequest="340"
+                                HorizontalOptions="Start"
+                                BackgroundColor="{AppThemeBinding Light=#F0EBE3, Dark=#33302A}"
+                                StrokeThickness="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="16,16,16,4" />
+                            </Border.StrokeShape>
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="Assistant"
+                                       FontSize="11" FontAttributes="Bold"
+                                       TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                                <Label Text="{Binding Content}"
+                                       FontSize="14"
+                                       TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+                </DataTemplate>
+            </chat:ChatEntryTemplateSelector.AssistantTextTemplate>
+
+            <!-- Tool call: compact gray card -->
+            <chat:ChatEntryTemplateSelector.ToolCallTemplate>
+                <DataTemplate x:DataType="chat:ChatEntry">
+                    <Grid Padding="0,2">
+                        <Border Padding="10,8"
+                                HorizontalOptions="Start"
+                                BackgroundColor="{AppThemeBinding Light=#E8E0D4, Dark=#2A2620}"
+                                StrokeThickness="0"
+                                Opacity="0.85">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="10" />
+                            </Border.StrokeShape>
+                            <HorizontalStackLayout Spacing="6">
+                                <Label Text="&#x2699;&#xFE0F;" FontSize="12" VerticalOptions="Center" />
+                                <Label Text="{Binding ToolName, StringFormat='Called {0}'}"
+                                       FontSize="12" FontAttributes="Italic"
+                                       TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                            </HorizontalStackLayout>
+                        </Border>
+                    </Grid>
+                </DataTemplate>
+            </chat:ChatEntryTemplateSelector.ToolCallTemplate>
+
+            <!-- Tool result: compact light card -->
+            <chat:ChatEntryTemplateSelector.ToolResultTemplate>
+                <DataTemplate x:DataType="chat:ChatEntry">
+                    <Grid Padding="0,2">
+                        <Border Padding="10,8"
+                                HorizontalOptions="Start"
+                                BackgroundColor="{AppThemeBinding Light=#EDF6EC, Dark=#1A251A}"
+                                StrokeThickness="0"
+                                Opacity="0.85">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="10" />
+                            </Border.StrokeShape>
+                            <Label Text="{Binding Content}"
+                                   FontSize="12" LineBreakMode="WordWrap" MaximumWidthRequest="300"
+                                   TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                        </Border>
+                    </Grid>
+                </DataTemplate>
+            </chat:ChatEntryTemplateSelector.ToolResultTemplate>
+
+            <!-- Error: red-tinted bubble -->
+            <chat:ChatEntryTemplateSelector.ErrorTemplate>
+                <DataTemplate x:DataType="chat:ChatEntry">
+                    <Grid Padding="0,4">
+                        <Border Padding="12,10"
+                                MaximumWidthRequest="340"
+                                HorizontalOptions="Start"
+                                BackgroundColor="{AppThemeBinding Light=#FDE8E8, Dark=#2A1818}"
+                                StrokeThickness="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12" />
+                            </Border.StrokeShape>
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="Error"
+                                       FontSize="11" FontAttributes="Bold"
+                                       TextColor="{StaticResource Danger}" />
+                                <Label Text="{Binding Content}"
+                                       FontSize="14"
+                                       TextColor="{StaticResource Danger}" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+                </DataTemplate>
+            </chat:ChatEntryTemplateSelector.ErrorTemplate>
+
+        </chat:ChatEntryTemplateSelector>
+    </ContentView.Resources>
+
+    <Grid>
+        <!-- FAB Chat Button -->
+        <Button Text="💬"
+                Clicked="OnOpenChatClicked"
+                AutomationId="OpenChatButton"
+                BackgroundColor="{StaticResource AccentGreen}"
+                TextColor="White"
+                FontSize="24"
+                WidthRequest="56"
+                HeightRequest="56"
+                CornerRadius="28"
+                HorizontalOptions="End"
+                VerticalOptions="End"
+                Margin="0,0,20,20" />
+
+        <!-- Chat Popup Overlay -->
+        <Grid x:Name="ChatOverlay"
+              IsVisible="False"
+              AutomationId="ChatOverlay"
+              BackgroundColor="#66000000">
+
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnChatBackdropTapped" />
+            </Grid.GestureRecognizers>
+
+            <Border VerticalOptions="End"
+                    HorizontalOptions="Fill"
+                    HeightRequest="500"
+                    Margin="12,0,12,12"
+                    Padding="0"
+                    InputTransparent="False"
+                    Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
+                    StrokeThickness="1"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource CardBg}, Dark={StaticResource CardBgDark}}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="20,20,12,12" />
+                </Border.StrokeShape>
+
+                <Grid RowDefinitions="Auto,*,Auto,Auto" RowSpacing="0">
+
+                    <!-- Chat Header -->
+                    <Border Grid.Row="0"
+                            BackgroundColor="{StaticResource AccentGreen}"
+                            Padding="16,14"
+                            StrokeThickness="0">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="20,20,0,0" />
+                        </Border.StrokeShape>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="&#x1F33F; Garden Assistant"
+                                   FontSize="17"
+                                   FontAttributes="Bold"
+                                   TextColor="White"
+                                   VerticalOptions="Center" />
+                            <Button Grid.Column="1"
+                                    Text="&#x2715;"
+                                    FontSize="16"
+                                    BackgroundColor="Transparent"
+                                    TextColor="#D4E8D4"
+                                    Clicked="OnCloseChatClicked"
+                                    AutomationId="CloseChatButton"
+                                    Padding="8,4"
+                                    MinimumWidthRequest="40" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Messages -->
+                    <CollectionView x:Name="ChatMessages"
+                                    Grid.Row="1"
+                                    ItemsSource="{Binding ChatVM.Messages, Source={x:Reference Self}}"
+                                    ItemTemplate="{StaticResource ChatTemplateSelector}"
+                                    AutomationId="ChatMessages"
+                                    Margin="12,8,12,0" />
+
+                    <!-- Busy indicator -->
+                    <ActivityIndicator Grid.Row="2"
+                                       IsRunning="{Binding ChatVM.IsBusy, Source={x:Reference Self}}"
+                                       IsVisible="{Binding ChatVM.IsBusy, Source={x:Reference Self}}"
+                                       Color="{StaticResource AccentGreen}"
+                                       Margin="0,6" />
+
+                    <!-- Input Area -->
+                    <Border Grid.Row="3" Margin="12,8,12,12" Padding="6"
+                            BackgroundColor="{AppThemeBinding Light=#F0EBE3, Dark=#33302A}"
+                            StrokeThickness="0">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="14" />
+                        </Border.StrokeShape>
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                            <Entry Placeholder="Ask about your plants..."
+                                   Text="{Binding ChatVM.UserInput, Source={x:Reference Self}}"
+                                   ReturnCommand="{Binding ChatVM.SendCommand, Source={x:Reference Self}}"
+                                   AutomationId="ChatInput"
+                                   FontSize="14"
+                                   BackgroundColor="Transparent" />
+                            <Button Grid.Column="1"
+                                    Text="&#x27A4;"
+                                    Command="{Binding ChatVM.SendCommand, Source={x:Reference Self}}"
+                                    AutomationId="SendButton"
+                                    BackgroundColor="{StaticResource AccentGreen}"
+                                    TextColor="White"
+                                    FontSize="16"
+                                    WidthRequest="42"
+                                    HeightRequest="42"
+                                    CornerRadius="12"
+                                    Padding="0" />
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+
+</ContentView>

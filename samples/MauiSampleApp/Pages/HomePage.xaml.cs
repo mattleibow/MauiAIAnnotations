@@ -37,20 +37,8 @@ public partial class HomePage : ContentPage
         await Shell.Current.GoToAsync("AddPlant");
     }
 
-    private void OnOpenChatClicked(object? sender, EventArgs e)
+    private async void OnChatClosed(object? sender, EventArgs e)
     {
-        ChatOverlay.IsVisible = true;
-    }
-
-    private async void OnCloseChatClicked(object? sender, EventArgs e)
-    {
-        ChatOverlay.IsVisible = false;
-        await _viewModel.RefreshPlantsAsync();
-    }
-
-    private async void OnChatBackdropTapped(object? sender, TappedEventArgs e)
-    {
-        ChatOverlay.IsVisible = false;
         await _viewModel.RefreshPlantsAsync();
     }
 }
