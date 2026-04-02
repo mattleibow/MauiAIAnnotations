@@ -72,7 +72,10 @@ public class ChatViewModel : INotifyPropertyChanged
                     : new ChatMessage(ChatRole.Assistant, m.Content));
             }
 
-            var options = new ChatOptions { Tools = _tools };
+            // Combine DI-registered tools with VM-specific ad-hoc tools.
+            // This demonstrates the spread pattern for adding per-request
+            // tools that have access to ViewModel state.
+            var options = new ChatOptions { Tools = [GetChatContextTool(), .. _tools] };
 
             // Streaming response
             var index = Messages.Count;
@@ -105,4 +108,23 @@ public class ChatViewModel : INotifyPropertyChanged
 
     protected void OnPropertyChanged([CallerMemberName] string? name = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
+    /// <summary>
+    /// Creates a VM-specific ad-hoc tool that gives the AI context about the
+    /// current conversation. This tool accesses ViewModel state (Messages)
+    /// and is created fresh each send — demonstrating per-request tools that
+    /// can't be registered in DI because they depend on runtime state.
+    /// </summary>
+    private AITool GetChatContextTool() =>
+        AIFunctionFactory.Create(
+            () => new
+            {
+                MessageCount = Messages.Count,
+                UserMessages = Messages.Count(m => m.Role == "User"),
+                AssistantMessages = Messages.Count(m => m.Role == "Assistant"),
+                LastUserMessage = Messages.LastOrDefault(m => m.Role == "User")?.Content,
+            },
+            "get_chat_context",
+            "Gets context about the current conversation including message count and last user message. " +
+            "Use this to understand the conversation history when the user refers to earlier messages.");
 }
