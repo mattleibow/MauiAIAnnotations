@@ -1,8 +1,7 @@
 using MauiAIAnnotations.Maui.Chat;
-using MauiSampleApp.Chat;
 using Microsoft.Extensions.AI;
 
-namespace MauiSampleApp.Views;
+namespace MauiSampleApp.Chat;
 
 public partial class PlantResultView : ContentView
 {
@@ -11,11 +10,11 @@ public partial class PlantResultView : ContentView
     protected override void OnBindingContextChanged()
     {
         base.OnBindingContextChanged();
-        if (BindingContext is ContentContext ctx && ctx.Content is FunctionResultContent result)
+        if (BindingContext is ContentContext context)
         {
-            var plant = PlantResultMapping.TryGetPlant(result);
-            if (plant is not null)
-                Card.BindingContext = plant;
+            var vm = new PlantResultViewModel();
+            vm.SetContext(context);
+            InnerContent.BindingContext = vm;
         }
     }
 }

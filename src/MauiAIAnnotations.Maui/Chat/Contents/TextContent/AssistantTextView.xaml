@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="MauiAIAnnotations.Maui.Views.AssistantTextView">
-    <Grid Padding="0,4">
+             x:Class="MauiAIAnnotations.Maui.Chat.AssistantTextView">
+    <Grid x:Name="InnerContent" Padding="0,4">
         <Border Padding="12,10" MaximumWidthRequest="340"
                 HorizontalOptions="Start"
                 BackgroundColor="{AppThemeBinding Light=#F0EBE3, Dark=#33302A}"
                 StrokeThickness="0">
             <Border.StrokeShape><RoundRectangle CornerRadius="16,16,16,4" /></Border.StrokeShape>
-            <Label Text="{Binding Content.Text}" FontSize="14"
+            <Label Text="{Binding Text}" FontSize="14"
                    TextColor="{AppThemeBinding Light=#2C2416, Dark=#EDE8DF}" />
         </Border>
     </Grid>

@@ -2,9 +2,9 @@
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:controls="clr-namespace:MauiSampleApp.Controls"
-             x:Class="MauiSampleApp.Views.PlantResultView">
-    <Grid Padding="0,4">
-        <controls:PlantCardView x:Name="Card"
+             x:Class="MauiSampleApp.Chat.PlantResultView">
+    <Grid x:Name="InnerContent" Padding="0,4">
+        <controls:PlantCardView BindingContext="{Binding Plant}"
                                 HorizontalOptions="Start"
                                 MaximumWidthRequest="320" />
     </Grid>
