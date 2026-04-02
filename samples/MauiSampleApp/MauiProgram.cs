@@ -1,4 +1,5 @@
 ﻿using System.ClientModel;
+using System.ComponentModel;
 using System.Reflection;
 using Azure.AI.OpenAI;
 using MauiAIAnnotations;
@@ -9,7 +10,6 @@ using Microsoft.Extensions.Logging;
 using MauiSampleApp.Core.Services;
 using MauiSampleApp.Pages;
 using MauiSampleApp.ViewModels;
-using Shiny.DocumentDb;
 using Shiny.DocumentDb.Sqlite;
 
 namespace MauiSampleApp;
@@ -17,23 +17,6 @@ namespace MauiSampleApp;
 public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
-    {
-        try
-        {
-            return CreateMauiAppCore();
-        }
-        catch (Exception ex)
-        {
-            var logPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                "maui_crash.log");
-            File.AppendAllText(logPath,
-                $"[{DateTime.Now}] CreateMauiApp CRASH: {ex}\n\n");
-            throw;
-        }
-    }
-
-    private static MauiApp CreateMauiAppCore()
     {
         var builder = MauiApp.CreateBuilder();
         builder
@@ -60,8 +43,39 @@ public static class MauiProgram
         builder.Services.AddSingleton<SpeciesService>();
         builder.Services.AddSingleton<PlantDataService>();
 
-        // Register AI tools (discovers [ExportAIFunction] methods)
+        // ── AI Tools ────────────────────────────────────────────────
+        //
+        // 1. Attribute-discovered tools (from [ExportAIFunction] on services)
+        //    These are the "new way" using MauiAIAnnotations.
         builder.Services.AddAITools(typeof(PlantDataService).Assembly);
+
+        // 2. Classic / bespoke tools (hand-crafted with AIFunctionFactory)
+        //    These demonstrate the "old school" pattern used in apps like
+        //    BaristaNotes — AIFunctionFactory.Create with a delegate.
+        //    Both styles coexist: DI aggregates them all into IEnumerable<AITool>.
+        builder.Services.AddSingleton<AITool>(
+            AIFunctionFactory.Create(
+                () => DateTime.Now.ToString("dddd, MMMM d yyyy, h:mm tt"),
+                "get_current_datetime",
+                "Gets the current date and time. Useful for checking when a plant was last watered relative to now."));
+
+        builder.Services.AddSingleton<AITool>(
+            AIFunctionFactory.Create(
+                ([Description("The month number (1-12)")] int month) =>
+                {
+                    return month switch
+                    {
+                        >= 3 and <= 5 => "Spring: Great time for planting annuals, starting seeds, and dividing perennials. Watch for late frosts.",
+                        >= 6 and <= 8 => "Summer: Focus on watering, mulching, and pest control. Harvest regularly to encourage more growth.",
+                        >= 9 and <= 11 => "Autumn: Plant bulbs for spring, collect seeds, add compost to beds, and prepare tender plants for winter.",
+                        12 or 1 or 2 => "Winter: Plan next year's garden, order seeds, prune dormant trees, and protect plants from frost.",
+                        _ => "Invalid month number."
+                    };
+                },
+                "get_seasonal_gardening_advice",
+                "Gets gardening advice for the current season based on the month number (1-12)."));
+
+        // ── End AI Tools ────────────────────────────────────────────
 
         // Register AI
         builder.AddOpenAIServices();
@@ -87,8 +101,6 @@ public static class MauiProgram
     private static void AddUserSecrets(this ConfigurationManager manager)
     {
         var assembly = Assembly.GetExecutingAssembly();
-        // The embedded resource name is based on the UserSecretsId path
-        // Try all manifest resource names to find the secrets.json
         var resourceNames = assembly.GetManifestResourceNames();
         var secretsResource = resourceNames.FirstOrDefault(n => n.EndsWith("secrets.json"));
         if (secretsResource is not null)

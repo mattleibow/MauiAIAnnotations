@@ -660,3 +660,82 @@ public class AIToolProviderCancellationTests
         Assert.Equal("done: hello", result?.ToString());
     }
 }
+
+
+public class MixedToolRegistrationTests
+{
+    [Fact]
+    public void Classic_and_discovered_tools_coexist_in_IEnumerable()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<TestToolService>();
+
+        // 1. Attribute-discovered tools (our library)
+        services.AddAITools(typeof(TestToolService));
+
+        // 2. Classic bespoke tool (AIFunctionFactory.Create — the "old school" way)
+        var classicTool = AIFunctionFactory.Create(
+            () => "2024-01-15",
+            "get_current_date",
+            "Gets the current date");
+        services.AddSingleton<AITool>(classicTool);
+
+        var provider = services.BuildServiceProvider();
+        var allTools = provider.GetRequiredService<IEnumerable<AITool>>().ToList();
+
+        // All tools should be present: 3 discovered + 1 classic = 4
+        Assert.Equal(4, allTools.Count());
+        Assert.Contains(allTools, t => t.Name == "test_tool");      // discovered
+        Assert.Contains(allTools, t => t.Name == "GetCount");        // discovered
+        Assert.Contains(allTools, t => t.Name == "async_tool");      // discovered
+        Assert.Contains(allTools, t => t.Name == "get_current_date"); // classic
+    }
+
+    [Fact]
+    public void Ad_hoc_tools_can_be_spread_into_options()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<TestToolService>();
+        services.AddAITools(typeof(TestToolService));
+
+        var provider = services.BuildServiceProvider();
+        var registeredTools = provider.GetRequiredService<IEnumerable<AITool>>().ToList();
+
+        // Ad-hoc tool created at call time (not registered in DI)
+        var adHocTool = AIFunctionFactory.Create(
+            (string query) => $"Search results for: {query}",
+            "search_web",
+            "Searches the web for information");
+
+        // Spread pattern: combine registered tools with ad-hoc tools
+        IList<AITool> allTools = [adHocTool, .. registeredTools];
+
+        Assert.Equal(4, allTools.Count); // 3 discovered + 1 ad-hoc
+        Assert.Contains(allTools, t => t.Name == "test_tool");
+        Assert.Contains(allTools, t => t.Name == "search_web");
+    }
+
+    [Fact]
+    public void Classic_tools_registered_before_AddAITools()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<TestToolService>();
+
+        // Register classic tool FIRST (before AddAITools)
+        services.AddSingleton<AITool>(AIFunctionFactory.Create(
+            () => 42,
+            "answer_everything",
+            "The answer to everything"));
+
+        // Then add discovered tools
+        services.AddAITools(typeof(TestToolService));
+
+        var provider = services.BuildServiceProvider();
+        var allTools = provider.GetRequiredService<IEnumerable<AITool>>().ToList();
+
+        // Order: classic first, then discovered (DI preserves registration order)
+        Assert.Equal(4, allTools.Count());
+        Assert.Equal("answer_everything", allTools[0].Name);
+        Assert.Contains(allTools, t => t.Name == "test_tool");
+    }
+}
