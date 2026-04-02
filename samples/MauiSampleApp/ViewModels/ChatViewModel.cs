@@ -29,7 +29,7 @@ public class ChatViewModel : INotifyPropertyChanged
         SendCommand = new Command(async () => await SendMessageAsync(), () => !IsBusy);
     }
 
-    public ObservableCollection<ChatEntry> Messages { get; }
+    public ObservableCollection<ContentContext> Messages { get; }
 
     public string UserInput
     {
@@ -57,44 +57,66 @@ public class ChatViewModel : INotifyPropertyChanged
 
         var userMessage = UserInput;
         UserInput = string.Empty;
-        Messages.Add(new ChatEntry { Type = ChatEntryType.UserText, Content = userMessage });
+
+        Messages.Add(new ContentContext(new TextContent(userMessage), "User"));
         IsBusy = true;
 
         try
         {
+            // Build history from messages
             var history = new List<ChatMessage> { new(ChatRole.System, SystemPrompt) };
-
             foreach (var m in Messages)
             {
-                var role = m.Type == ChatEntryType.UserText ? ChatRole.User : ChatRole.Assistant;
-                history.Add(new ChatMessage(role, m.Content));
+                if (m.Content is TextContent text)
+                {
+                    var role = m.Role == "User" ? ChatRole.User : ChatRole.Assistant;
+                    history.Add(new ChatMessage(role, text.Text ?? ""));
+                }
             }
 
-            // Combine DI-registered tools with VM-specific ad-hoc tools.
-            // This demonstrates the spread pattern for adding per-request
-            // tools that have access to ViewModel state.
             var options = new ChatOptions { Tools = [GetChatContextTool(), .. _tools] };
 
-            // Streaming response — use a mutable ChatEntry so the UI updates in-place
-            var assistantEntry = new ChatEntry { Type = ChatEntryType.AssistantText, Content = "" };
-            Messages.Add(assistantEntry);
+            // Streaming response — accumulate text into a single ContentContext
+            ContentContext? assistantCtx = null;
             var responseText = "";
 
             await foreach (var update in _chatClient.GetStreamingResponseAsync(history, options))
             {
-                if (update.Text is { } text)
+                foreach (var content in update.Contents)
                 {
-                    responseText += text;
-                    assistantEntry.Content = responseText;
+                    switch (content)
+                    {
+                        case FunctionCallContent call:
+                            Messages.Add(new ContentContext(call, "Tool"));
+                            break;
+
+                        case FunctionResultContent result:
+                            Messages.Add(new ContentContext(result, "Tool"));
+                            break;
+
+                        case TextContent textContent when textContent.Text is not null:
+                            responseText += textContent.Text;
+                            if (assistantCtx is null)
+                            {
+                                assistantCtx = new ContentContext(new TextContent(responseText), "Assistant");
+                                Messages.Add(assistantCtx);
+                            }
+                            else
+                            {
+                                // Update in-place for streaming effect
+                                assistantCtx.Content = new TextContent(responseText);
+                            }
+                            break;
+                    }
                 }
             }
 
-            if (string.IsNullOrEmpty(responseText))
-                assistantEntry.Content = "(no response)";
+            if (assistantCtx is null)
+                Messages.Add(new ContentContext(new TextContent("(no response)"), "Assistant"));
         }
         catch (Exception ex)
         {
-            Messages.Add(new ChatEntry { Type = ChatEntryType.Error, Content = ex.Message });
+            Messages.Add(new ContentContext(new ErrorContent(ex.Message), "Error"));
         }
         finally
         {
@@ -107,22 +129,17 @@ public class ChatViewModel : INotifyPropertyChanged
     protected void OnPropertyChanged([CallerMemberName] string? name = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
-    /// <summary>
-    /// Creates a VM-specific ad-hoc tool that gives the AI context about the
-    /// current conversation. This tool accesses ViewModel state (Messages)
-    /// and is created fresh each send — demonstrating per-request tools that
-    /// can't be registered in DI because they depend on runtime state.
-    /// </summary>
     private AITool GetChatContextTool() =>
         AIFunctionFactory.Create(
             () => new
             {
                 MessageCount = Messages.Count,
-                UserMessages = Messages.Count(m => m.Type == ChatEntryType.UserText),
-                AssistantMessages = Messages.Count(m => m.Type == ChatEntryType.AssistantText),
-                LastUserMessage = Messages.LastOrDefault(m => m.Type == ChatEntryType.UserText)?.Content,
+                UserMessages = Messages.Count(m => m.Role == "User"),
+                AssistantMessages = Messages.Count(m => m.Role == "Assistant"),
+                LastUserMessage = Messages.Where(m => m.Role == "User" && m.Content is TextContent)
+                    .Select(m => ((TextContent)m.Content).Text)
+                    .LastOrDefault(),
             },
             "get_chat_context",
-            "Gets context about the current conversation including message count and last user message. " +
-            "Use this to understand the conversation history when the user refers to earlier messages.");
+            "Gets context about the current conversation including message count and last user message.");
 }

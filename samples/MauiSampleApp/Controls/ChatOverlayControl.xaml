@@ -2,131 +2,115 @@
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:chat="clr-namespace:MauiSampleApp.Chat"
-             xmlns:controls="clr-namespace:MauiSampleApp.Controls"
              x:Class="MauiSampleApp.Controls.ChatOverlayControl"
              x:Name="Self">
 
     <ContentView.Resources>
-        <chat:ChatEntryTemplateSelector x:Key="ChatTemplateSelector">
+        <chat:ContentTemplateSelector x:Key="ChatTemplateSelector">
+            <chat:ContentTemplateSelector.Templates>
 
-            <!-- User message: green bubble, right-aligned -->
-            <chat:ChatEntryTemplateSelector.UserTextTemplate>
-                <DataTemplate x:DataType="chat:ChatEntry">
-                    <Grid Padding="0,4">
-                        <Border Padding="12,10"
-                                MaximumWidthRequest="340"
-                                HorizontalOptions="End"
-                                BackgroundColor="{StaticResource ChatUser}"
-                                StrokeThickness="0">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="16,16,4,16" />
-                            </Border.StrokeShape>
-                            <VerticalStackLayout Spacing="2">
-                                <Label Text="User"
-                                       FontSize="11" FontAttributes="Bold"
-                                       TextColor="#D4E8D4" />
-                                <Label Text="{Binding Content}"
-                                       FontSize="14" TextColor="White" />
-                            </VerticalStackLayout>
-                        </Border>
-                    </Grid>
-                </DataTemplate>
-            </chat:ChatEntryTemplateSelector.UserTextTemplate>
+                <!-- User text: green bubble, right-aligned -->
+                <chat:TextContentMapping Role="User">
+                    <chat:TextContentMapping.Template>
+                        <DataTemplate x:DataType="chat:ContentContext">
+                            <Grid Padding="0,4">
+                                <Border Padding="12,10" MaximumWidthRequest="340"
+                                        HorizontalOptions="End"
+                                        BackgroundColor="{StaticResource ChatUser}"
+                                        StrokeThickness="0">
+                                    <Border.StrokeShape><RoundRectangle CornerRadius="16,16,4,16" /></Border.StrokeShape>
+                                    <Label Text="{Binding DisplayText}" FontSize="14" TextColor="White" />
+                                </Border>
+                            </Grid>
+                        </DataTemplate>
+                    </chat:TextContentMapping.Template>
+                </chat:TextContentMapping>
 
-            <!-- Assistant message: light bubble, left-aligned -->
-            <chat:ChatEntryTemplateSelector.AssistantTextTemplate>
-                <DataTemplate x:DataType="chat:ChatEntry">
-                    <Grid Padding="0,4">
-                        <Border Padding="12,10"
-                                MaximumWidthRequest="340"
-                                HorizontalOptions="Start"
-                                BackgroundColor="{AppThemeBinding Light=#F0EBE3, Dark=#33302A}"
-                                StrokeThickness="0">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="16,16,16,4" />
-                            </Border.StrokeShape>
-                            <VerticalStackLayout Spacing="2">
-                                <Label Text="Assistant"
-                                       FontSize="11" FontAttributes="Bold"
-                                       TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
-                                <Label Text="{Binding Content}"
-                                       FontSize="14"
-                                       TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
-                            </VerticalStackLayout>
-                        </Border>
-                    </Grid>
-                </DataTemplate>
-            </chat:ChatEntryTemplateSelector.AssistantTextTemplate>
+                <!-- Assistant text: light bubble, left-aligned -->
+                <chat:TextContentMapping Role="Assistant">
+                    <chat:TextContentMapping.Template>
+                        <DataTemplate x:DataType="chat:ContentContext">
+                            <Grid Padding="0,4">
+                                <Border Padding="12,10" MaximumWidthRequest="340"
+                                        HorizontalOptions="Start"
+                                        BackgroundColor="{AppThemeBinding Light=#F0EBE3, Dark=#33302A}"
+                                        StrokeThickness="0">
+                                    <Border.StrokeShape><RoundRectangle CornerRadius="16,16,16,4" /></Border.StrokeShape>
+                                    <Label Text="{Binding DisplayText}" FontSize="14"
+                                           TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
+                                </Border>
+                            </Grid>
+                        </DataTemplate>
+                    </chat:TextContentMapping.Template>
+                </chat:TextContentMapping>
 
-            <!-- Tool call: compact gray card -->
-            <chat:ChatEntryTemplateSelector.ToolCallTemplate>
-                <DataTemplate x:DataType="chat:ChatEntry">
-                    <Grid Padding="0,2">
-                        <Border Padding="10,8"
-                                HorizontalOptions="Start"
-                                BackgroundColor="{AppThemeBinding Light=#E8E0D4, Dark=#2A2620}"
-                                StrokeThickness="0"
-                                Opacity="0.85">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="10" />
-                            </Border.StrokeShape>
-                            <HorizontalStackLayout Spacing="6">
-                                <Label Text="&#x2699;&#xFE0F;" FontSize="12" VerticalOptions="Center" />
-                                <Label Text="{Binding ToolName, StringFormat='Called {0}'}"
-                                       FontSize="12" FontAttributes="Italic"
-                                       TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
-                            </HorizontalStackLayout>
-                        </Border>
-                    </Grid>
-                </DataTemplate>
-            </chat:ChatEntryTemplateSelector.ToolCallTemplate>
+                <!-- Function call: compact gray card with tool name -->
+                <chat:FunctionCallMapping>
+                    <chat:FunctionCallMapping.Template>
+                        <DataTemplate x:DataType="chat:ContentContext">
+                            <Grid Padding="0,2">
+                                <Border Padding="10,6" HorizontalOptions="Start"
+                                        BackgroundColor="{AppThemeBinding Light=#E8E0D4, Dark=#2A2620}"
+                                        StrokeThickness="0" Opacity="0.85">
+                                    <Border.StrokeShape><RoundRectangle CornerRadius="10" /></Border.StrokeShape>
+                                    <HorizontalStackLayout Spacing="6">
+                                        <Label Text="&#x2699;&#xFE0F;" FontSize="12" VerticalOptions="Center" />
+                                        <Label Text="{Binding DisplayText}" FontSize="12" FontAttributes="Italic"
+                                               TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                                    </HorizontalStackLayout>
+                                </Border>
+                            </Grid>
+                        </DataTemplate>
+                    </chat:FunctionCallMapping.Template>
+                </chat:FunctionCallMapping>
 
-            <!-- Tool result: compact light card -->
-            <chat:ChatEntryTemplateSelector.ToolResultTemplate>
-                <DataTemplate x:DataType="chat:ChatEntry">
-                    <Grid Padding="0,2">
-                        <Border Padding="10,8"
-                                HorizontalOptions="Start"
-                                BackgroundColor="{AppThemeBinding Light=#EDF6EC, Dark=#1A251A}"
-                                StrokeThickness="0"
-                                Opacity="0.85">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="10" />
-                            </Border.StrokeShape>
-                            <Label Text="{Binding Content}"
-                                   FontSize="12" LineBreakMode="WordWrap" MaximumWidthRequest="300"
+                <!-- Function result: compact light green card -->
+                <chat:FunctionResultMapping>
+                    <chat:FunctionResultMapping.Template>
+                        <DataTemplate x:DataType="chat:ContentContext">
+                            <Grid Padding="0,2">
+                                <Border Padding="10,6" HorizontalOptions="Start"
+                                        BackgroundColor="{AppThemeBinding Light=#EDF6EC, Dark=#1A251A}"
+                                        StrokeThickness="0" Opacity="0.85">
+                                    <Border.StrokeShape><RoundRectangle CornerRadius="10" /></Border.StrokeShape>
+                                    <Label Text="{Binding DisplayText}" FontSize="11" LineBreakMode="WordWrap"
+                                           MaximumWidthRequest="300"
+                                           TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                                </Border>
+                            </Grid>
+                        </DataTemplate>
+                    </chat:FunctionResultMapping.Template>
+                </chat:FunctionResultMapping>
+
+                <!-- Error: red-tinted bubble -->
+                <chat:ErrorContentMapping>
+                    <chat:ErrorContentMapping.Template>
+                        <DataTemplate x:DataType="chat:ContentContext">
+                            <Grid Padding="0,4">
+                                <Border Padding="12,10" MaximumWidthRequest="340"
+                                        HorizontalOptions="Start"
+                                        BackgroundColor="{AppThemeBinding Light=#FDE8E8, Dark=#2A1818}"
+                                        StrokeThickness="0">
+                                    <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
+                                    <Label Text="{Binding DisplayText}" FontSize="14" TextColor="{StaticResource Danger}" />
+                                </Border>
+                            </Grid>
+                        </DataTemplate>
+                    </chat:ErrorContentMapping.Template>
+                </chat:ErrorContentMapping>
+
+                <!-- Default fallback -->
+                <chat:DefaultContentMapping>
+                    <chat:DefaultContentMapping.Template>
+                        <DataTemplate x:DataType="chat:ContentContext">
+                            <Label Text="{Binding DisplayText}" FontSize="13" Padding="4"
                                    TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
-                        </Border>
-                    </Grid>
-                </DataTemplate>
-            </chat:ChatEntryTemplateSelector.ToolResultTemplate>
+                        </DataTemplate>
+                    </chat:DefaultContentMapping.Template>
+                </chat:DefaultContentMapping>
 
-            <!-- Error: red-tinted bubble -->
-            <chat:ChatEntryTemplateSelector.ErrorTemplate>
-                <DataTemplate x:DataType="chat:ChatEntry">
-                    <Grid Padding="0,4">
-                        <Border Padding="12,10"
-                                MaximumWidthRequest="340"
-                                HorizontalOptions="Start"
-                                BackgroundColor="{AppThemeBinding Light=#FDE8E8, Dark=#2A1818}"
-                                StrokeThickness="0">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="12" />
-                            </Border.StrokeShape>
-                            <VerticalStackLayout Spacing="2">
-                                <Label Text="Error"
-                                       FontSize="11" FontAttributes="Bold"
-                                       TextColor="{StaticResource Danger}" />
-                                <Label Text="{Binding Content}"
-                                       FontSize="14"
-                                       TextColor="{StaticResource Danger}" />
-                            </VerticalStackLayout>
-                        </Border>
-                    </Grid>
-                </DataTemplate>
-            </chat:ChatEntryTemplateSelector.ErrorTemplate>
-
-        </chat:ChatEntryTemplateSelector>
+            </chat:ContentTemplateSelector.Templates>
+        </chat:ContentTemplateSelector>
     </ContentView.Resources>
 
     <Grid>
@@ -168,7 +152,6 @@
                 </Border.StrokeShape>
 
                 <Grid RowDefinitions="Auto,*,Auto,Auto" RowSpacing="0">
-
                     <!-- Chat Header -->
                     <Border Grid.Row="0"
                             BackgroundColor="{StaticResource AccentGreen}"
@@ -179,23 +162,17 @@
                         </Border.StrokeShape>
                         <Grid ColumnDefinitions="*,Auto">
                             <Label Text="&#x1F33F; Garden Assistant"
-                                   FontSize="17"
-                                   FontAttributes="Bold"
-                                   TextColor="White"
-                                   VerticalOptions="Center" />
-                            <Button Grid.Column="1"
-                                    Text="&#x2715;"
-                                    FontSize="16"
-                                    BackgroundColor="Transparent"
-                                    TextColor="#D4E8D4"
+                                   FontSize="17" FontAttributes="Bold"
+                                   TextColor="White" VerticalOptions="Center" />
+                            <Button Grid.Column="1" Text="&#x2715;" FontSize="16"
+                                    BackgroundColor="Transparent" TextColor="#D4E8D4"
                                     Clicked="OnCloseChatClicked"
                                     AutomationId="CloseChatButton"
-                                    Padding="8,4"
-                                    MinimumWidthRequest="40" />
+                                    Padding="8,4" MinimumWidthRequest="40" />
                         </Grid>
                     </Border>
 
-                    <!-- Messages -->
+                    <!-- Messages with content template selector -->
                     <CollectionView x:Name="ChatMessages"
                                     Grid.Row="1"
                                     ItemsSource="{Binding ChatVM.Messages, Source={x:Reference Self}}"
@@ -221,20 +198,15 @@
                             <Entry Placeholder="Ask about your plants..."
                                    Text="{Binding ChatVM.UserInput, Source={x:Reference Self}}"
                                    ReturnCommand="{Binding ChatVM.SendCommand, Source={x:Reference Self}}"
-                                   AutomationId="ChatInput"
-                                   FontSize="14"
+                                   AutomationId="ChatInput" FontSize="14"
                                    BackgroundColor="Transparent" />
-                            <Button Grid.Column="1"
-                                    Text="&#x27A4;"
+                            <Button Grid.Column="1" Text="&#x27A4;"
                                     Command="{Binding ChatVM.SendCommand, Source={x:Reference Self}}"
                                     AutomationId="SendButton"
                                     BackgroundColor="{StaticResource AccentGreen}"
-                                    TextColor="White"
-                                    FontSize="16"
-                                    WidthRequest="42"
-                                    HeightRequest="42"
-                                    CornerRadius="12"
-                                    Padding="0" />
+                                    TextColor="White" FontSize="16"
+                                    WidthRequest="42" HeightRequest="42"
+                                    CornerRadius="12" Padding="0" />
                         </Grid>
                     </Border>
                 </Grid>
