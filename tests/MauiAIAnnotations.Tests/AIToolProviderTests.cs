@@ -76,6 +76,31 @@ public class InvocationCounterService
     }
 }
 
+public class CancellableToolService
+{
+    [ExportAIFunction("cancellable_tool", Description = "A cancellable tool")]
+    public async Task<string> CancellableWork(
+        [Description("input value")] string input,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        await Task.Delay(1, cancellationToken);
+        return $"done: {input}";
+    }
+}
+
+public class GenericMethodService
+{
+    [ExportAIFunction("bad_generic")]
+    public T GenericMethod<T>() => default!;
+}
+
+public class RefParameterService
+{
+    [ExportAIFunction("bad_ref")]
+    public void RefMethod(ref string x) { }
+}
+
 #endregion
 
 public class AIToolProviderDiscoveryTests
@@ -199,17 +224,24 @@ public class AIToolProviderRegistrationTests
     [Fact]
     public void Assembly_scanning_finds_types()
     {
+        // Note: We use explicit types here instead of full assembly scanning
+        // because the test assembly also contains intentionally invalid types
+        // (GenericMethodService, RefParameterService) that would cause discovery to throw.
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-        services.AddAIToolProvider(typeof(TestToolService).Assembly);
+        services.AddSingleton<DisposableToolService>();
+        services.AddSingleton<DescriptionFallbackService>();
+        services.AddAIToolProvider(typeof(TestToolService), typeof(DisposableToolService), typeof(DescriptionFallbackService));
         var provider = services.BuildServiceProvider();
 
         var toolProvider = provider.GetRequiredService<IAIToolProvider>();
         var tools = toolProvider.GetTools();
 
-        // Should find tools from all annotated types in this assembly
-        Assert.True(tools.Count >= 3, $"Expected at least 3 tools, got {tools.Count}");
+        // Should find tools from multiple types
+        Assert.True(tools.Count >= 4, $"Expected at least 4 tools, got {tools.Count}");
         Assert.Contains(tools, t => t.Name == "test_tool");
+        Assert.Contains(tools, t => t.Name == "disposable_tool");
+        Assert.Contains(tools, t => t.Name == "fallback_desc");
     }
 
     [Fact]
@@ -446,5 +478,201 @@ public class AIToolProviderSchemaTests
         var second = toolProvider.GetTools();
 
         Assert.Same(first, second);
+    }
+
+    [Fact]
+    public void Schema_matches_direct_AIFunctionFactory_output()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<TestToolService>();
+        services.AddAIToolProvider(typeof(TestToolService));
+        var provider = services.BuildServiceProvider();
+
+        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
+        var diTool = toolProvider.GetTools().First(t => t.Name == "test_tool") as AIFunctionDeclaration;
+        Assert.NotNull(diTool);
+
+        // Create a direct AIFunction via AIFunctionFactory for comparison
+        var method = typeof(TestToolService).GetMethod("DoSomething")!;
+        var directTool = AIFunctionFactory.Create(method, new TestToolService(),
+            new AIFunctionFactoryOptions { Name = "test_tool", Description = "A test tool" });
+
+        // Schemas should be equivalent
+        Assert.Equal(directTool.JsonSchema.ToString(), diTool.JsonSchema.ToString());
+    }
+}
+
+public class AIToolProviderValidationTests
+{
+    [Fact]
+    public void Rejects_generic_methods()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<GenericMethodService>();
+        services.AddAIToolProvider(typeof(GenericMethodService));
+        var provider = services.BuildServiceProvider();
+
+        // Validation happens when the provider is resolved (singleton factory runs DiscoverRegistrations)
+        Assert.Throws<InvalidOperationException>(() =>
+            provider.GetRequiredService<IAIToolProvider>());
+    }
+
+    [Fact]
+    public void Rejects_ref_parameters()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<RefParameterService>();
+        services.AddAIToolProvider(typeof(RefParameterService));
+        var provider = services.BuildServiceProvider();
+
+        Assert.Throws<InvalidOperationException>(() =>
+            provider.GetRequiredService<IAIToolProvider>());
+    }
+}
+
+public class AIToolProviderScopedLifetimeTests
+{
+    private static int GetIntResult(object? result)
+    {
+        if (result is JsonElement je)
+            return je.GetInt32();
+        return Convert.ToInt32(result);
+    }
+
+    [Fact]
+    public async Task Scoped_with_root_provider_and_ValidateScopes_throws()
+    {
+        var services = new ServiceCollection();
+        services.AddScoped<InvocationCounterService>();
+        services.AddAIToolProvider(typeof(InvocationCounterService));
+        var provider = services.BuildServiceProvider(new ServiceProviderOptions
+        {
+            ValidateScopes = true,
+        });
+
+        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
+        var tool = toolProvider.GetTools().First(t => t.Name == "counter_tool") as AIFunction;
+
+        // args.Services is null → falls back to root provider →
+        // with ValidateScopes, resolving scoped from root throws
+        var args = new AIFunctionArguments(new Dictionary<string, object?>());
+
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await tool!.InvokeAsync(args));
+    }
+
+    [Fact]
+    public async Task Scoped_with_scoped_provider_returns_same_instance_within_scope()
+    {
+        var services = new ServiceCollection();
+        services.AddScoped<InvocationCounterService>();
+        services.AddAIToolProvider(typeof(InvocationCounterService));
+        var provider = services.BuildServiceProvider(new ServiceProviderOptions
+        {
+            ValidateScopes = true,
+        });
+
+        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
+        var tool = toolProvider.GetTools().First(t => t.Name == "counter_tool") as AIFunction;
+
+        // Same scope → same instance → counter increments
+        using var scope = provider.CreateScope();
+        var args1 = new AIFunctionArguments(new Dictionary<string, object?>()) { Services = scope.ServiceProvider };
+        var args2 = new AIFunctionArguments(new Dictionary<string, object?>()) { Services = scope.ServiceProvider };
+
+        var result1 = await tool!.InvokeAsync(args1);
+        var result2 = await tool.InvokeAsync(args2);
+
+        Assert.Equal(1, GetIntResult(result1));
+        Assert.Equal(2, GetIntResult(result2));
+    }
+
+    [Fact]
+    public async Task Scoped_with_different_scopes_returns_different_instances()
+    {
+        var services = new ServiceCollection();
+        services.AddScoped<InvocationCounterService>();
+        services.AddAIToolProvider(typeof(InvocationCounterService));
+        var provider = services.BuildServiceProvider(new ServiceProviderOptions
+        {
+            ValidateScopes = true,
+        });
+
+        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
+        var tool = toolProvider.GetTools().First(t => t.Name == "counter_tool") as AIFunction;
+
+        // Different scopes → different instances → counter resets
+        using var scope1 = provider.CreateScope();
+        var args1 = new AIFunctionArguments(new Dictionary<string, object?>()) { Services = scope1.ServiceProvider };
+        var result1 = await tool!.InvokeAsync(args1);
+
+        using var scope2 = provider.CreateScope();
+        var args2 = new AIFunctionArguments(new Dictionary<string, object?>()) { Services = scope2.ServiceProvider };
+        var result2 = await tool.InvokeAsync(args2);
+
+        // Both should be 1 (fresh instance in each scope)
+        Assert.Equal(1, GetIntResult(result1));
+        Assert.Equal(1, GetIntResult(result2));
+    }
+
+    [Fact]
+    public async Task Scoped_with_root_provider_without_ValidateScopes_works()
+    {
+        var services = new ServiceCollection();
+        services.AddScoped<InvocationCounterService>();
+        services.AddAIToolProvider(typeof(InvocationCounterService));
+
+        // ValidateScopes = false (default)
+        var provider = services.BuildServiceProvider();
+
+        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
+        var tool = toolProvider.GetTools().First(t => t.Name == "counter_tool") as AIFunction;
+
+        var args = new AIFunctionArguments(new Dictionary<string, object?>());
+        var result = await tool!.InvokeAsync(args);
+
+        // Works but uses root-scoped instance (documented user risk)
+        Assert.Equal(1, GetIntResult(result));
+    }
+}
+
+public class AIToolProviderCancellationTests
+{
+    [Fact]
+    public async Task CancellationToken_is_bound_correctly()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<CancellableToolService>();
+        services.AddAIToolProvider(typeof(CancellableToolService));
+        var provider = services.BuildServiceProvider();
+
+        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
+        var tool = toolProvider.GetTools().First(t => t.Name == "cancellable_tool") as AIFunction;
+
+        // Pass a pre-cancelled token
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        var args = new AIFunctionArguments(new Dictionary<string, object?> { ["input"] = "hello" });
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
+            await tool!.InvokeAsync(args, cts.Token));
+    }
+
+    [Fact]
+    public async Task Non_cancelled_token_completes_successfully()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<CancellableToolService>();
+        services.AddAIToolProvider(typeof(CancellableToolService));
+        var provider = services.BuildServiceProvider();
+
+        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
+        var tool = toolProvider.GetTools().First(t => t.Name == "cancellable_tool") as AIFunction;
+
+        var args = new AIFunctionArguments(new Dictionary<string, object?> { ["input"] = "hello" });
+        var result = await tool!.InvokeAsync(args);
+
+        Assert.Equal("done: hello", result?.ToString());
     }
 }
