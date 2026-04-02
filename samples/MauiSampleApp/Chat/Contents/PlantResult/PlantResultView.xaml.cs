@@ -1,10 +1,11 @@
 using MauiAIAnnotations.Maui.Chat;
-using Microsoft.Extensions.AI;
 
 namespace MauiSampleApp.Chat;
 
 public partial class PlantResultView : ContentView
 {
+    private PlantResultViewModel? _vm;
+
     public PlantResultView() => InitializeComponent();
 
     protected override void OnBindingContextChanged()
@@ -12,9 +13,10 @@ public partial class PlantResultView : ContentView
         base.OnBindingContextChanged();
         if (BindingContext is ContentContext context)
         {
-            var vm = new PlantResultViewModel();
-            vm.SetContext(context);
-            InnerContent.BindingContext = vm;
+            // Reuse the ViewModel instance across recycling
+            _vm ??= new PlantResultViewModel();
+            _vm.SetContext(context);
+            InnerContent.BindingContext = _vm;
         }
     }
 }

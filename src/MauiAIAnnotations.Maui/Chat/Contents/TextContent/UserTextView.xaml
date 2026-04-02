@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="MauiAIAnnotations.Maui.Chat.UserTextView">
-    <Grid x:Name="InnerContent" Padding="0,4">
+             xmlns:chat="clr-namespace:MauiAIAnnotations.Maui.Chat"
+             x:Class="MauiAIAnnotations.Maui.Chat.UserTextView"
+             x:DataType="chat:ContentContext">
+    <Grid Padding="0,4">
         <Border Padding="12,10" MaximumWidthRequest="340"
                 HorizontalOptions="End"
                 BackgroundColor="#5B8C5A"
