@@ -31,7 +31,7 @@ public class PlantDataService
 builder.Services.AddSingleton<PlantDataService>();
 
 // Scan an assembly for [ExportAIFunction] methods
-builder.Services.AddAIToolProvider(typeof(PlantDataService).Assembly);
+builder.Services.AddAITools(typeof(PlantDataService).Assembly);
 ```
 
 ### 3. Use with IChatClient
@@ -39,18 +39,18 @@ builder.Services.AddAIToolProvider(typeof(PlantDataService).Assembly);
 ```csharp
 public class ChatViewModel
 {
-    private readonly IAIToolProvider _toolProvider;
+    private readonly IList<AITool> _tools;
     private readonly IChatClient _chatClient;
 
-    public ChatViewModel(IAIToolProvider toolProvider, IChatClient chatClient)
+    public ChatViewModel(IEnumerable<AITool> tools, IChatClient chatClient)
     {
-        _toolProvider = toolProvider;
+        _tools = tools.ToList();
         _chatClient = chatClient;
     }
 
     async Task SendAsync(string message)
     {
-        var options = new ChatOptions { Tools = _toolProvider.GetTools() };
+        var options = new ChatOptions { Tools = _tools };
         await foreach (var update in _chatClient.GetStreamingResponseAsync(messages, options))
         {
             // handle streaming response
@@ -70,24 +70,15 @@ Marks a public instance method to be exported as an AI tool.
 | `Name` | `string?` | Tool name exposed to the AI model. Defaults to the method name. |
 | `Description` | `string?` | Description for the AI model. Falls back to `[Description]` on the method. |
 
-### IAIToolProvider
-
-Interface for retrieving discovered AI tools.
-
-```csharp
-public interface IAIToolProvider
-{
-    IReadOnlyList<AITool> GetTools();
-}
-```
-
 ### ServiceCollectionExtensions
 
 | Method | Description |
 |--------|-------------|
-| `AddAIToolProvider()` | Scans the calling assembly for annotated types. |
-| `AddAIToolProvider(params Assembly[])` | Scans specified assemblies. |
-| `AddAIToolProvider(params Type[])` | Registers specific types to scan. |
+| `AddAITools()` | Scans the calling assembly for annotated types. |
+| `AddAITools(params Assembly[])` | Scans specified assemblies. |
+| `AddAITools(params Type[])` | Registers specific types to scan. |
+
+Each discovered method is registered as a singleton `AITool` in DI. Consumers inject `IEnumerable<AITool>` to receive all tools.
 
 ## How It Works
 

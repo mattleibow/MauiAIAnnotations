@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
-using MauiAIAnnotations;
 using Microsoft.Extensions.AI;
 
 namespace MauiSampleApp.ViewModels;
@@ -12,7 +11,7 @@ public record ConversationEntry(string Role, string Content);
 public class ChatViewModel : INotifyPropertyChanged
 {
     private readonly IChatClient _chatClient;
-    private readonly IAIToolProvider _toolProvider;
+    private readonly IList<AITool> _tools;
     private string _userInput = string.Empty;
     private bool _isBusy;
 
@@ -23,9 +22,9 @@ public class ChatViewModel : INotifyPropertyChanged
         Be conversational and helpful. Use emoji occasionally to be friendly 🌱
         """;
 
-    public ChatViewModel(IAIToolProvider toolProvider, IChatClient chatClient)
+    public ChatViewModel(IEnumerable<AITool> tools, IChatClient chatClient)
     {
-        _toolProvider = toolProvider;
+        _tools = tools.ToList();
         _chatClient = chatClient;
         Messages = [];
         SendCommand = new Command(async () => await SendMessageAsync(), () => !IsBusy);
@@ -73,7 +72,7 @@ public class ChatViewModel : INotifyPropertyChanged
                     : new ChatMessage(ChatRole.Assistant, m.Content));
             }
 
-            var options = new ChatOptions { Tools = _toolProvider.GetTools().ToList() };
+            var options = new ChatOptions { Tools = _tools };
 
             // Streaming response
             var index = Messages.Count;

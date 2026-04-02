@@ -1,23 +1,44 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace MauiAIAnnotations;
 
+/// <summary>
+/// Extension methods for registering AI tools discovered from annotated service methods.
+/// </summary>
 public static class ServiceCollectionExtensions
 {
+    /// <summary>
+    /// Scans the calling assembly for types containing methods annotated with
+    /// <see cref="ExportAIFunctionAttribute"/> and registers the discovered <see cref="AITool"/>
+    /// instances in DI. Consumers inject <c>IEnumerable&lt;AITool&gt;</c> to receive all tools.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static IServiceCollection AddAIToolProvider(this IServiceCollection services)
+    public static IServiceCollection AddAITools(this IServiceCollection services)
     {
-        return services.AddAIToolProvider(Assembly.GetCallingAssembly());
+        return services.AddAITools(Assembly.GetCallingAssembly());
     }
 
+    /// <summary>
+    /// Scans the specified assemblies for types containing methods annotated with
+    /// <see cref="ExportAIFunctionAttribute"/> and registers the discovered <see cref="AITool"/>
+    /// instances in DI. Consumers inject <c>IEnumerable&lt;AITool&gt;</c> to receive all tools.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="assemblies">The assemblies to scan.</param>
+    /// <returns>The service collection for chaining.</returns>
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static IServiceCollection AddAIToolProvider(this IServiceCollection services, params Assembly[] assemblies)
+    public static IServiceCollection AddAITools(
+        this IServiceCollection services,
+        params Assembly[] assemblies)
     {
         if (assemblies.Length == 0)
             assemblies = [Assembly.GetCallingAssembly()];
@@ -28,14 +49,35 @@ public static class ServiceCollectionExtensions
             .Where(TypeHasExportedFunctions)
             .ToList();
 
-        return services.AddAIToolProvider(types.ToArray());
+        return services.AddAITools([.. types]);
     }
 
-    public static IServiceCollection AddAIToolProvider(this IServiceCollection services, params Type[] types)
+    /// <summary>
+    /// Registers <see cref="AITool"/> instances from the specified types' annotated methods.
+    /// Each method with <see cref="ExportAIFunctionAttribute"/> becomes a singleton <see cref="AITool"/>
+    /// in DI. Consumers inject <c>IEnumerable&lt;AITool&gt;</c> to receive all tools.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="types">The types to scan for <see cref="ExportAIFunctionAttribute"/> methods.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddAITools(
+        this IServiceCollection services,
+        params Type[] types)
     {
-        var serviceTypes = types.ToList();
-        services.TryAddSingleton<IAIToolProvider>(sp =>
-            new ReflectionAIToolProvider(sp, serviceTypes));
+        var registrations = DiscoverRegistrations(types);
+
+        foreach (var reg in registrations)
+        {
+            // Capture values for closure
+            var method = reg.Method;
+            var serviceType = reg.ServiceType;
+            var name = reg.Name;
+            var description = reg.Description;
+
+            services.AddSingleton<AITool>(sp =>
+                new DependencyInjectionAIFunction(method, serviceType, sp, name, description));
+        }
+
         return services;
     }
 
@@ -44,4 +86,45 @@ public static class ServiceCollectionExtensions
         return type.GetMethods(BindingFlags.Public | BindingFlags.Instance)
             .Any(m => m.GetCustomAttribute<ExportAIFunctionAttribute>() is not null);
     }
+
+    private static List<ToolRegistration> DiscoverRegistrations(IEnumerable<Type> types)
+    {
+        var registrations = new List<ToolRegistration>();
+
+        foreach (var type in types)
+        {
+            if (type.IsAbstract || type.IsGenericTypeDefinition || !type.IsClass)
+                continue;
+
+            var methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance);
+            foreach (var method in methods)
+            {
+                var attr = method.GetCustomAttribute<ExportAIFunctionAttribute>();
+                if (attr is null)
+                    continue;
+
+                if (method.IsGenericMethodDefinition)
+                    throw new InvalidOperationException(
+                        $"[ExportAIFunction] is not supported on generic method '{type.Name}.{method.Name}'.");
+
+                if (method.GetParameters().Any(p => p.ParameterType.IsByRef))
+                    throw new InvalidOperationException(
+                        $"[ExportAIFunction] is not supported on method '{type.Name}.{method.Name}' because it has ref/out/in parameters.");
+
+                var name = attr.Name ?? method.Name;
+                var description = attr.Description
+                    ?? method.GetCustomAttribute<DescriptionAttribute>()?.Description;
+
+                registrations.Add(new ToolRegistration(type, method, name, description));
+            }
+        }
+
+        return registrations;
+    }
+
+    private sealed record ToolRegistration(
+        Type ServiceType,
+        MethodInfo Method,
+        string Name,
+        string? Description);
 }

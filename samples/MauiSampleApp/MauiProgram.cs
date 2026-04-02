@@ -60,8 +60,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<SpeciesService>();
         builder.Services.AddSingleton<PlantDataService>();
 
-        // Register AI tool provider
-        builder.Services.AddAIToolProvider(typeof(PlantDataService).Assembly);
+        // Register AI tools (discovers [ExportAIFunction] methods)
+        builder.Services.AddAITools(typeof(PlantDataService).Assembly);
 
         // Register AI
         builder.AddOpenAIServices();

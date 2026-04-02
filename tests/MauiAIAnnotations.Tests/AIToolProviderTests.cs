@@ -110,13 +110,13 @@ public class AIToolProviderDiscoveryTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-        services.AddAIToolProvider(typeof(TestToolService));
+        services.AddAITools(typeof(TestToolService));
         var provider = services.BuildServiceProvider();
 
-        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
-        var tools = toolProvider.GetTools();
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>();
+        
 
-        Assert.Equal(3, tools.Count);
+        Assert.Equal(3, tools.Count());
     }
 
     [Fact]
@@ -124,11 +124,11 @@ public class AIToolProviderDiscoveryTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-        services.AddAIToolProvider(typeof(TestToolService));
+        services.AddAITools(typeof(TestToolService));
         var provider = services.BuildServiceProvider();
 
-        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
-        var tools = toolProvider.GetTools();
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>();
+        
 
         Assert.Contains(tools, t => t.Name == "test_tool");
     }
@@ -138,11 +138,11 @@ public class AIToolProviderDiscoveryTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-        services.AddAIToolProvider(typeof(TestToolService));
+        services.AddAITools(typeof(TestToolService));
         var provider = services.BuildServiceProvider();
 
-        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
-        var tools = toolProvider.GetTools();
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>();
+        
 
         Assert.Contains(tools, t => t.Name == "GetCount");
     }
@@ -152,11 +152,11 @@ public class AIToolProviderDiscoveryTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-        services.AddAIToolProvider(typeof(TestToolService));
+        services.AddAITools(typeof(TestToolService));
         var provider = services.BuildServiceProvider();
 
-        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
-        var tools = toolProvider.GetTools();
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>();
+        
         var tool = tools.First(t => t.Name == "test_tool");
 
         Assert.Equal("A test tool", tool.Description);
@@ -167,11 +167,11 @@ public class AIToolProviderDiscoveryTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<DescriptionFallbackService>();
-        services.AddAIToolProvider(typeof(DescriptionFallbackService));
+        services.AddAITools(typeof(DescriptionFallbackService));
         var provider = services.BuildServiceProvider();
 
-        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
-        var tools = toolProvider.GetTools();
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>();
+        
         var tool = tools.First(t => t.Name == "fallback_desc");
 
         Assert.Equal("Method-level description from DescriptionAttribute", tool.Description);
@@ -182,11 +182,11 @@ public class AIToolProviderDiscoveryTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-        services.AddAIToolProvider(typeof(TestToolService));
+        services.AddAITools(typeof(TestToolService));
         var provider = services.BuildServiceProvider();
 
-        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
-        var tools = toolProvider.GetTools();
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>();
+        
 
         Assert.DoesNotContain(tools, t => t.Name == "InternalMethod");
     }
@@ -196,11 +196,11 @@ public class AIToolProviderDiscoveryTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<NoAttributeService>();
-        services.AddAIToolProvider(typeof(NoAttributeService));
+        services.AddAITools(typeof(NoAttributeService));
         var provider = services.BuildServiceProvider();
 
-        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
-        var tools = toolProvider.GetTools();
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>();
+        
 
         Assert.Empty(tools);
     }
@@ -209,11 +209,11 @@ public class AIToolProviderDiscoveryTests
     public void Skips_abstract_types()
     {
         var services = new ServiceCollection();
-        services.AddAIToolProvider(typeof(AbstractService));
+        services.AddAITools(typeof(AbstractService));
         var provider = services.BuildServiceProvider();
 
-        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
-        var tools = toolProvider.GetTools();
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>();
+        
 
         Assert.Empty(tools);
     }
@@ -231,14 +231,14 @@ public class AIToolProviderRegistrationTests
         services.AddSingleton<TestToolService>();
         services.AddSingleton<DisposableToolService>();
         services.AddSingleton<DescriptionFallbackService>();
-        services.AddAIToolProvider(typeof(TestToolService), typeof(DisposableToolService), typeof(DescriptionFallbackService));
+        services.AddAITools(typeof(TestToolService), typeof(DisposableToolService), typeof(DescriptionFallbackService));
         var provider = services.BuildServiceProvider();
 
-        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
-        var tools = toolProvider.GetTools();
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>();
+        
 
         // Should find tools from multiple types
-        Assert.True(tools.Count >= 4, $"Expected at least 4 tools, got {tools.Count}");
+        Assert.True(tools.Count() >= 4, $"Expected at least 4 tools, got {tools.Count()}");
         Assert.Contains(tools, t => t.Name == "test_tool");
         Assert.Contains(tools, t => t.Name == "disposable_tool");
         Assert.Contains(tools, t => t.Name == "fallback_desc");
@@ -249,27 +249,30 @@ public class AIToolProviderRegistrationTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-        services.AddAIToolProvider(typeof(TestToolService));
+        services.AddAITools(typeof(TestToolService));
         var provider = services.BuildServiceProvider();
 
-        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
-        var tools = toolProvider.GetTools();
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>();
+        
 
-        Assert.Equal(3, tools.Count);
+        Assert.Equal(3, tools.Count());
     }
 
     [Fact]
-    public void Provider_is_registered_as_singleton()
+    public void Tools_are_registered_as_singletons()
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-        services.AddAIToolProvider(typeof(TestToolService));
+        services.AddAITools(typeof(TestToolService));
         var provider = services.BuildServiceProvider();
 
-        var first = provider.GetRequiredService<IAIToolProvider>();
-        var second = provider.GetRequiredService<IAIToolProvider>();
+        var first = provider.GetRequiredService<IEnumerable<AITool>>().ToList();
+        var second = provider.GetRequiredService<IEnumerable<AITool>>().ToList();
 
-        Assert.Same(first, second);
+        // Individual AITool instances are singletons
+        Assert.Equal(first.Count(), second.Count());
+        for (int i = 0; i < first.Count; i++)
+            Assert.Same(first[i], second[i]);
     }
 }
 
@@ -286,11 +289,11 @@ public class AIToolProviderInvocationTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<InvocationCounterService>();
-        services.AddAIToolProvider(typeof(InvocationCounterService));
+        services.AddAITools(typeof(InvocationCounterService));
         var provider = services.BuildServiceProvider();
 
-        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
-        var tools = toolProvider.GetTools();
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>();
+        
         var tool = tools.First(t => t.Name == "counter_tool") as AIFunction;
 
         var args = new AIFunctionArguments(new Dictionary<string, object?>());
@@ -307,11 +310,11 @@ public class AIToolProviderInvocationTests
     {
         var services = new ServiceCollection();
         services.AddTransient<InvocationCounterService>();
-        services.AddAIToolProvider(typeof(InvocationCounterService));
+        services.AddAITools(typeof(InvocationCounterService));
         var provider = services.BuildServiceProvider();
 
-        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
-        var tools = toolProvider.GetTools();
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>();
+        
         var tool = tools.First(t => t.Name == "counter_tool") as AIFunction;
 
         var args = new AIFunctionArguments(new Dictionary<string, object?>());
@@ -328,11 +331,11 @@ public class AIToolProviderInvocationTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-        services.AddAIToolProvider(typeof(TestToolService));
+        services.AddAITools(typeof(TestToolService));
         var provider = services.BuildServiceProvider();
 
-        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
-        var tools = toolProvider.GetTools();
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>();
+        
         var tool = tools.First(t => t.Name == "test_tool") as AIFunction;
 
         var args = new AIFunctionArguments(new Dictionary<string, object?> { ["input"] = "hello" });
@@ -346,11 +349,11 @@ public class AIToolProviderInvocationTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-        services.AddAIToolProvider(typeof(TestToolService));
+        services.AddAITools(typeof(TestToolService));
         var provider = services.BuildServiceProvider();
 
-        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
-        var tools = toolProvider.GetTools();
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>();
+        
         var tool = tools.First(t => t.Name == "async_tool") as AIFunction;
 
         var args = new AIFunctionArguments(new Dictionary<string, object?> { ["input"] = "world" });
@@ -364,11 +367,11 @@ public class AIToolProviderInvocationTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<MultiParamService>();
-        services.AddAIToolProvider(typeof(MultiParamService));
+        services.AddAITools(typeof(MultiParamService));
         var provider = services.BuildServiceProvider();
 
-        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
-        var tools = toolProvider.GetTools();
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>();
+        
         var tool = tools.First(t => t.Name == "multi_param") as AIFunction;
 
         var args = new AIFunctionArguments(new Dictionary<string, object?>
@@ -387,12 +390,12 @@ public class AIToolProviderInvocationTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<DisposableToolService>();
-        services.AddAIToolProvider(typeof(DisposableToolService));
+        services.AddAITools(typeof(DisposableToolService));
         var provider = services.BuildServiceProvider();
 
         var disposableService = provider.GetRequiredService<DisposableToolService>();
-        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
-        var tools = toolProvider.GetTools();
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>();
+        
         var tool = tools.First(t => t.Name == "disposable_tool") as AIFunction;
 
         var args = new AIFunctionArguments(new Dictionary<string, object?>());
@@ -407,11 +410,11 @@ public class AIToolProviderInvocationTests
     {
         var services = new ServiceCollection();
         // Deliberately NOT registering TestToolService in DI
-        services.AddAIToolProvider(typeof(TestToolService));
+        services.AddAITools(typeof(TestToolService));
         var provider = services.BuildServiceProvider();
 
-        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
-        var tools = toolProvider.GetTools();
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>();
+        
         var tool = tools.First(t => t.Name == "test_tool") as AIFunction;
 
         var args = new AIFunctionArguments(new Dictionary<string, object?> { ["input"] = "test" });
@@ -428,11 +431,11 @@ public class AIToolProviderSchemaTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-        services.AddAIToolProvider(typeof(TestToolService));
+        services.AddAITools(typeof(TestToolService));
         var provider = services.BuildServiceProvider();
 
-        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
-        var tools = toolProvider.GetTools();
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>();
+        
         var tool = tools.First(t => t.Name == "test_tool");
 
         // The tool should be an AIFunctionDeclaration with schema
@@ -451,11 +454,11 @@ public class AIToolProviderSchemaTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-        services.AddAIToolProvider(typeof(TestToolService));
+        services.AddAITools(typeof(TestToolService));
         var provider = services.BuildServiceProvider();
 
-        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
-        var tools = toolProvider.GetTools();
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>();
+        
         var tool = tools.First(t => t.Name == "test_tool") as AIFunctionDeclaration;
 
         Assert.NotNull(tool);
@@ -466,30 +469,15 @@ public class AIToolProviderSchemaTests
     }
 
     [Fact]
-    public void GetTools_returns_same_list_on_multiple_calls()
-    {
-        var services = new ServiceCollection();
-        services.AddSingleton<TestToolService>();
-        services.AddAIToolProvider(typeof(TestToolService));
-        var provider = services.BuildServiceProvider();
-
-        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
-        var first = toolProvider.GetTools();
-        var second = toolProvider.GetTools();
-
-        Assert.Same(first, second);
-    }
-
-    [Fact]
     public void Schema_matches_direct_AIFunctionFactory_output()
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-        services.AddAIToolProvider(typeof(TestToolService));
+        services.AddAITools(typeof(TestToolService));
         var provider = services.BuildServiceProvider();
 
-        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
-        var diTool = toolProvider.GetTools().First(t => t.Name == "test_tool") as AIFunctionDeclaration;
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>();
+        var diTool = tools.First(t => t.Name == "test_tool") as AIFunctionDeclaration;
         Assert.NotNull(diTool);
 
         // Create a direct AIFunction via AIFunctionFactory for comparison
@@ -509,12 +497,10 @@ public class AIToolProviderValidationTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<GenericMethodService>();
-        services.AddAIToolProvider(typeof(GenericMethodService));
-        var provider = services.BuildServiceProvider();
 
-        // Validation happens when the provider is resolved (singleton factory runs DiscoverRegistrations)
+        // Validation happens eagerly during AddAITools (at registration time)
         Assert.Throws<InvalidOperationException>(() =>
-            provider.GetRequiredService<IAIToolProvider>());
+            services.AddAITools(typeof(GenericMethodService)));
     }
 
     [Fact]
@@ -522,11 +508,9 @@ public class AIToolProviderValidationTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<RefParameterService>();
-        services.AddAIToolProvider(typeof(RefParameterService));
-        var provider = services.BuildServiceProvider();
 
         Assert.Throws<InvalidOperationException>(() =>
-            provider.GetRequiredService<IAIToolProvider>());
+            services.AddAITools(typeof(RefParameterService)));
     }
 }
 
@@ -544,14 +528,14 @@ public class AIToolProviderScopedLifetimeTests
     {
         var services = new ServiceCollection();
         services.AddScoped<InvocationCounterService>();
-        services.AddAIToolProvider(typeof(InvocationCounterService));
+        services.AddAITools(typeof(InvocationCounterService));
         var provider = services.BuildServiceProvider(new ServiceProviderOptions
         {
             ValidateScopes = true,
         });
 
-        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
-        var tool = toolProvider.GetTools().First(t => t.Name == "counter_tool") as AIFunction;
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>();
+        var tool = tools.First(t => t.Name == "counter_tool") as AIFunction;
 
         // args.Services is null → falls back to root provider →
         // with ValidateScopes, resolving scoped from root throws
@@ -566,14 +550,14 @@ public class AIToolProviderScopedLifetimeTests
     {
         var services = new ServiceCollection();
         services.AddScoped<InvocationCounterService>();
-        services.AddAIToolProvider(typeof(InvocationCounterService));
+        services.AddAITools(typeof(InvocationCounterService));
         var provider = services.BuildServiceProvider(new ServiceProviderOptions
         {
             ValidateScopes = true,
         });
 
-        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
-        var tool = toolProvider.GetTools().First(t => t.Name == "counter_tool") as AIFunction;
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>();
+        var tool = tools.First(t => t.Name == "counter_tool") as AIFunction;
 
         // Same scope → same instance → counter increments
         using var scope = provider.CreateScope();
@@ -592,14 +576,14 @@ public class AIToolProviderScopedLifetimeTests
     {
         var services = new ServiceCollection();
         services.AddScoped<InvocationCounterService>();
-        services.AddAIToolProvider(typeof(InvocationCounterService));
+        services.AddAITools(typeof(InvocationCounterService));
         var provider = services.BuildServiceProvider(new ServiceProviderOptions
         {
             ValidateScopes = true,
         });
 
-        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
-        var tool = toolProvider.GetTools().First(t => t.Name == "counter_tool") as AIFunction;
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>();
+        var tool = tools.First(t => t.Name == "counter_tool") as AIFunction;
 
         // Different scopes → different instances → counter resets
         using var scope1 = provider.CreateScope();
@@ -620,13 +604,13 @@ public class AIToolProviderScopedLifetimeTests
     {
         var services = new ServiceCollection();
         services.AddScoped<InvocationCounterService>();
-        services.AddAIToolProvider(typeof(InvocationCounterService));
+        services.AddAITools(typeof(InvocationCounterService));
 
         // ValidateScopes = false (default)
         var provider = services.BuildServiceProvider();
 
-        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
-        var tool = toolProvider.GetTools().First(t => t.Name == "counter_tool") as AIFunction;
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>();
+        var tool = tools.First(t => t.Name == "counter_tool") as AIFunction;
 
         var args = new AIFunctionArguments(new Dictionary<string, object?>());
         var result = await tool!.InvokeAsync(args);
@@ -643,11 +627,11 @@ public class AIToolProviderCancellationTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<CancellableToolService>();
-        services.AddAIToolProvider(typeof(CancellableToolService));
+        services.AddAITools(typeof(CancellableToolService));
         var provider = services.BuildServiceProvider();
 
-        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
-        var tool = toolProvider.GetTools().First(t => t.Name == "cancellable_tool") as AIFunction;
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>();
+        var tool = tools.First(t => t.Name == "cancellable_tool") as AIFunction;
 
         // Pass a pre-cancelled token
         using var cts = new CancellationTokenSource();
@@ -664,11 +648,11 @@ public class AIToolProviderCancellationTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<CancellableToolService>();
-        services.AddAIToolProvider(typeof(CancellableToolService));
+        services.AddAITools(typeof(CancellableToolService));
         var provider = services.BuildServiceProvider();
 
-        var toolProvider = provider.GetRequiredService<IAIToolProvider>();
-        var tool = toolProvider.GetTools().First(t => t.Name == "cancellable_tool") as AIFunction;
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>();
+        var tool = tools.First(t => t.Name == "cancellable_tool") as AIFunction;
 
         var args = new AIFunctionArguments(new Dictionary<string, object?> { ["input"] = "hello" });
         var result = await tool!.InvokeAsync(args);
