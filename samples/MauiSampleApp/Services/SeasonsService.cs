@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using MauiAIAnnotations;
 
-namespace MauiSampleApp.Core.Services;
+namespace MauiSampleApp.Services;
 
 public class SeasonsService
 {

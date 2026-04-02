@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MauiSampleApp.Controls.PlantCardView">
+
+    <Border Padding="14"
+            BackgroundColor="{AppThemeBinding Light=#F1F8E9, Dark=#1B3A1B}"
+            Stroke="{AppThemeBinding Light=#C8E6C9, Dark=#2E7D32}"
+            StrokeThickness="1">
+        <Border.StrokeShape>
+            <RoundRectangle CornerRadius="14" />
+        </Border.StrokeShape>
+        <Grid ColumnDefinitions="44,*" ColumnSpacing="12">
+            <Border WidthRequest="44" HeightRequest="44"
+                    BackgroundColor="{StaticResource BadgeOutdoor}"
+                    StrokeThickness="0" VerticalOptions="Center">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12" />
+                </Border.StrokeShape>
+                <Label Text="🪴" FontSize="22" HorizontalOptions="Center" VerticalOptions="Center" />
+            </Border>
+            <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                <Label Text="{Binding Nickname}" FontSize="15" FontAttributes="Bold"
+                       TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
+                <Label Text="{Binding Location, StringFormat='📍 {0}'}" FontSize="12"
+                       TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                <HorizontalStackLayout Spacing="8">
+                    <Label FontSize="11"
+                           TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}">
+                        <Label.Text>
+                            <Binding Path="IsIndoor" StringFormat="{}🏠 Indoor: {0}" />
+                        </Label.Text>
+                    </Label>
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+        </Grid>
+    </Border>
+
+</ContentView>

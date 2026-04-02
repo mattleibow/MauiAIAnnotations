@@ -38,6 +38,15 @@ public class ContentContext : INotifyPropertyChanged
         _ => Content.ToString() ?? ""
     };
 
+    /// <summary>
+    /// For FunctionResultContent that contains a Plant, returns the deserialized Plant.
+    /// Used by PlantResultMapping's DataTemplate to bind to PlantCardView.
+    /// </summary>
+    public MauiSampleApp.Core.Models.Plant? PlantResult =>
+        Content is FunctionResultContent result
+            ? PlantResultMapping.TryGetPlant(result)
+            : null;
+
     public event PropertyChangedEventHandler? PropertyChanged;
 
     protected void OnPropertyChanged([CallerMemberName] string? name = null)

@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MauiSampleApp.Core.Services;
 using MauiSampleApp.Pages;
+using MauiSampleApp.Services;
 using MauiSampleApp.ViewModels;
 using Shiny.DocumentDb.Sqlite;
 

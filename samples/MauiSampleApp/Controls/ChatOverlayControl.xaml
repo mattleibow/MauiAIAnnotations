@@ -2,6 +2,7 @@
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:chat="clr-namespace:MauiSampleApp.Chat"
+             xmlns:controls="clr-namespace:MauiSampleApp.Controls"
              x:Class="MauiSampleApp.Controls.ChatOverlayControl"
              x:Name="Self">
 
@@ -64,7 +65,20 @@
                     </chat:FunctionCallMapping.Template>
                 </chat:FunctionCallMapping>
 
-                <!-- Function result: compact light green card -->
+                <!-- Plant result: renders a reusable PlantCardView for Plant objects -->
+                <chat:PlantResultMapping>
+                    <chat:PlantResultMapping.Template>
+                        <DataTemplate x:DataType="chat:ContentContext">
+                            <Grid Padding="0,4">
+                                <controls:PlantCardView BindingContext="{Binding PlantResult}"
+                                                        HorizontalOptions="Start"
+                                                        MaximumWidthRequest="320" />
+                            </Grid>
+                        </DataTemplate>
+                    </chat:PlantResultMapping.Template>
+                </chat:PlantResultMapping>
+
+                <!-- Function result: compact light green card (generic fallback) -->
                 <chat:FunctionResultMapping>
                     <chat:FunctionResultMapping.Template>
                         <DataTemplate x:DataType="chat:ContentContext">
