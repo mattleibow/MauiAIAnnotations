@@ -1,10 +1,9 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Text.Json;
 using System.Windows.Input;
+using MauiAIAnnotations;
 using Microsoft.Extensions.AI;
-using MauiSampleApp.Core.Services;
 
 namespace MauiSampleApp.ViewModels;
 
@@ -13,8 +12,7 @@ public record ConversationEntry(string Role, string Content);
 public class ChatViewModel : INotifyPropertyChanged
 {
     private readonly IChatClient _chatClient;
-    private readonly SpeciesService _speciesService;
-    private readonly PlantDataService _plantDataService;
+    private readonly IAIToolProvider _toolProvider;
     private string _userInput = string.Empty;
     private bool _isBusy;
 
@@ -25,14 +23,12 @@ public class ChatViewModel : INotifyPropertyChanged
         Be conversational and helpful. Use emoji occasionally to be friendly 🌱
         """;
 
-    public ChatViewModel(IChatClient chatClient, SpeciesService speciesService, PlantDataService plantDataService)
+    public ChatViewModel(IAIToolProvider toolProvider, IChatClient chatClient)
     {
+        _toolProvider = toolProvider;
         _chatClient = chatClient;
-        _speciesService = speciesService;
-        _plantDataService = plantDataService;
         Messages = [];
         SendCommand = new Command(async () => await SendMessageAsync(), () => !IsBusy);
-        SetupAIFunctions();
     }
 
     public ObservableCollection<ConversationEntry> Messages { get; }
@@ -56,78 +52,6 @@ public class ChatViewModel : INotifyPropertyChanged
 
     public ICommand SendCommand { get; }
 
-    private List<AITool> _aiTools = [];
-
-    private void SetupAIFunctions()
-    {
-        var getSpecies = AIFunctionFactory.Create(
-            async (string name) =>
-            {
-                var species = await _speciesService.GetSpeciesAsync(name);
-                return JsonSerializer.Serialize(species);
-            },
-            "get_species",
-            "Gets a species profile by common name (e.g. 'tomato', 'basil'). Returns care information including watering frequency, sunlight needs, and frost tolerance.");
-
-        var getPlants = AIFunctionFactory.Create(
-            async () =>
-            {
-                var plants = await _plantDataService.GetPlantsAsync();
-                return JsonSerializer.Serialize(plants);
-            },
-            "get_plants",
-            "Gets all plants the user has registered.");
-
-        var getPlant = AIFunctionFactory.Create(
-            async (string nickname) =>
-            {
-                var plant = await _plantDataService.GetPlantAsync(nickname);
-                return plant is not null ? JsonSerializer.Serialize(plant) : "Plant not found.";
-            },
-            "get_plant",
-            "Gets a specific plant by its nickname.");
-
-        var addPlant = AIFunctionFactory.Create(
-            async (string nickname, string species, string location, bool isIndoor) =>
-            {
-                var plant = await _plantDataService.AddPlantAsync(nickname, species, location, isIndoor);
-                return $"Added plant '{plant.Nickname}' ({species}) at {plant.Location}.";
-            },
-            "add_plant",
-            "Adds a new plant. Requires nickname, species name, location, and whether it's indoors.");
-
-        var removePlant = AIFunctionFactory.Create(
-            async (string nickname) =>
-            {
-                await _plantDataService.RemovePlantAsync(nickname);
-                return $"Removed plant '{nickname}'.";
-            },
-            "remove_plant",
-            "Removes a plant by its nickname.");
-
-        var logCareEvent = AIFunctionFactory.Create(
-            async (string plantNickname, string eventType, string notes) =>
-            {
-                var careEvent = await _plantDataService.LogCareEventAsync(plantNickname, eventType, notes);
-                return $"Logged '{eventType}' for '{plantNickname}' at {careEvent.Timestamp:g}.";
-            },
-            "log_care_event",
-            "Logs a care event for a plant. EventType must be one of: Watered, Fertilized, Pruned, Repotted, TreatedForPest, Observed.");
-
-        var getCareHistory = AIFunctionFactory.Create(
-            async (string plantNickname) =>
-            {
-                var history = await _plantDataService.GetCareHistoryAsync(plantNickname);
-                return history.Count > 0
-                    ? JsonSerializer.Serialize(history)
-                    : $"No care history found for '{plantNickname}'.";
-            },
-            "get_care_history",
-            "Gets the care history for a plant by its nickname.");
-
-        _aiTools = [getSpecies, getPlants, getPlant, addPlant, removePlant, logCareEvent, getCareHistory];
-    }
-
     private async Task SendMessageAsync()
     {
         if (string.IsNullOrWhiteSpace(UserInput))
@@ -149,7 +73,7 @@ public class ChatViewModel : INotifyPropertyChanged
                     : new ChatMessage(ChatRole.Assistant, m.Content));
             }
 
-            var options = new ChatOptions { Tools = _aiTools };
+            var options = new ChatOptions { Tools = _toolProvider.GetTools().ToList() };
 
             // Streaming response
             var index = Messages.Count;

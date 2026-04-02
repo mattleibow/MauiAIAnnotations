@@ -1,6 +1,7 @@
 ﻿using System.ClientModel;
 using System.Reflection;
 using Azure.AI.OpenAI;
+using MauiAIAnnotations;
 using MauiDevFlow.Agent;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
@@ -58,6 +59,9 @@ public static class MauiProgram
         // Register services
         builder.Services.AddSingleton<SpeciesService>();
         builder.Services.AddSingleton<PlantDataService>();
+
+        // Register AI tool provider
+        builder.Services.AddAIToolProvider(typeof(PlantDataService).Assembly);
 
         // Register AI
         builder.AddOpenAIServices();
@@ -129,7 +133,7 @@ public static class MauiProgram
                 .AsBuilder()
                 .UseLogging(lf)
                 .UseFunctionInvocation()
-                .Build();
+                .Build(provider);
         });
 
         return builder;

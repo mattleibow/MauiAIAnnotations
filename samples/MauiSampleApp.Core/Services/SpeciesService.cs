@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using MauiAIAnnotations;
 using MauiSampleApp.Core.Models;
 using Microsoft.Extensions.AI;
 using Shiny.DocumentDb;
@@ -6,7 +8,9 @@ namespace MauiSampleApp.Core.Services;
 
 public class SpeciesService(IDocumentStore store, IChatClient chatClient)
 {
-    public async Task<SpeciesProfile> GetSpeciesAsync(string name)
+    [ExportAIFunction("get_species", Description = "Gets a species profile by common name (e.g. 'tomato', 'basil'). Returns care information including watering frequency, sunlight needs, and frost tolerance.")]
+    public async Task<SpeciesProfile> GetSpeciesAsync(
+        [Description("The common name of the plant species")] string name)
     {
         var normalizedName = name.Trim().ToLowerInvariant();
 
