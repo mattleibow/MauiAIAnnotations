@@ -32,12 +32,6 @@ public partial class ChatViewModel : ObservableObject
 
     public ObservableCollection<ContentContext> Messages { get; } = [];
 
-    /// <summary>
-    /// Additional tools to include per-request (e.g., VM-specific ad-hoc tools).
-    /// Override in subclass or set before sending.
-    /// </summary>
-    public IList<AITool> AdditionalTools { get; } = new List<AITool>();
-
     public ChatViewModel(IEnumerable<AITool> tools, IChatClient chatClient)
     {
         _tools = tools.ToList();
@@ -125,7 +119,7 @@ public partial class ChatViewModel : ObservableObject
     private async Task RunStreamingLoopAsync()
     {
         var history = BuildHistory();
-        var options = new ChatOptions { Tools = [.. AdditionalTools, .. _tools] };
+        var options = new ChatOptions { Tools = [.. _tools] };
 
         while (true)
         {

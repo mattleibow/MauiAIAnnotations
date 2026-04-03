@@ -69,7 +69,7 @@ public static class MauiProgram
         builder.AddOpenAIServices();
 
         // Register AI chat
-        builder.Services.AddAIChat<GardenChatViewModel>();
+        builder.Services.AddAIChat();
 
         // Register ViewModels and Pages
         builder.Services.AddSingleton<HomePageViewModel>();

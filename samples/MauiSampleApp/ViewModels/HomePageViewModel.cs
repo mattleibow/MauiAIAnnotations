@@ -11,9 +11,6 @@ public partial class HomePageViewModel(PlantDataService plantDataService) : Obse
     public ObservableCollection<Plant> Plants { get; } = [];
 
     [ObservableProperty]
-    public partial GardenChatViewModel? ChatViewModel { get; set; }
-
-    [ObservableProperty]
     public partial bool IsLoading { get; set; }
 
     [RelayCommand]

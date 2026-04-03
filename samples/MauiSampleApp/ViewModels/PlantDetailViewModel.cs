@@ -11,9 +11,6 @@ public partial class PlantDetailViewModel(PlantDataService plantDataService, Spe
     public ObservableCollection<CareEvent> CareHistory { get; } = [];
 
     [ObservableProperty]
-    public partial GardenChatViewModel? ChatViewModel { get; set; }
-
-    [ObservableProperty]
     public partial Plant? Plant { get; set; }
 
     [ObservableProperty]
