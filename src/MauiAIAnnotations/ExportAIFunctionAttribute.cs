@@ -38,4 +38,12 @@ public sealed class ExportAIFunctionAttribute : Attribute
     /// on the method, if present.
     /// </summary>
     public string? Description { get; set; }
+
+    /// <summary>
+    /// When true, the tool will require user approval before execution.
+    /// The function is wrapped in <c>ApprovalRequiredAIFunction</c> so that
+    /// <c>FunctionInvokingChatClient</c> yields a <c>ToolApprovalRequestContent</c>
+    /// instead of auto-invoking.
+    /// </summary>
+    public bool ApprovalRequired { get; set; }
 }

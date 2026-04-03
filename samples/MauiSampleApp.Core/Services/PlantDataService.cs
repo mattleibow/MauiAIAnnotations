@@ -22,7 +22,7 @@ public class PlantDataService(IDocumentStore store, SpeciesService speciesServic
         return all.FirstOrDefault(p => p.Nickname.Equals(nickname.Trim(), StringComparison.OrdinalIgnoreCase));
     }
 
-    [ExportAIFunction("add_plant", Description = "Adds a new plant. Requires nickname, species name, location, and whether it's indoors.")]
+    [ExportAIFunction("add_plant", Description = "Adds a new plant. Requires nickname, species name, location, and whether it's indoors.", ApprovalRequired = true)]
     public async Task<Plant> AddPlantAsync(
         [Description("A friendly name for the plant")] string nickname,
         [Description("The species name (e.g. 'tomato', 'basil')")] string species,
@@ -45,7 +45,7 @@ public class PlantDataService(IDocumentStore store, SpeciesService speciesServic
         return plant;
     }
 
-    [ExportAIFunction("remove_plant", Description = "Removes a plant by its nickname.")]
+    [ExportAIFunction("remove_plant", Description = "Removes a plant by its nickname.", ApprovalRequired = true)]
     public async Task RemovePlantAsync(
         [Description("The nickname of the plant to remove")] string nickname)
     {

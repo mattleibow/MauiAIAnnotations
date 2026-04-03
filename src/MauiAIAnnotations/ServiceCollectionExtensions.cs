@@ -76,9 +76,13 @@ public static class ServiceCollectionExtensions
             var serviceType = reg.ServiceType;
             var name = reg.Name;
             var description = reg.Description;
+            var approvalRequired = reg.ApprovalRequired;
 
             services.AddSingleton<AITool>(sp =>
-                new DependencyInjectionAIFunction(method, serviceType, sp, name, description));
+            {
+                AIFunction fn = new DependencyInjectionAIFunction(method, serviceType, sp, name, description);
+                return approvalRequired ? new ApprovalRequiredAIFunction(fn) : fn;
+            });
         }
 
         return services;
@@ -137,7 +141,7 @@ public static class ServiceCollectionExtensions
                 var description = attr.Description
                     ?? method.GetCustomAttribute<DescriptionAttribute>()?.Description;
 
-                registrations.Add(new ToolRegistration(type, method, name, description));
+                registrations.Add(new ToolRegistration(type, method, name, description, attr.ApprovalRequired));
             }
         }
 
@@ -148,5 +152,6 @@ public static class ServiceCollectionExtensions
         Type ServiceType,
         MethodInfo Method,
         string Name,
-        string? Description);
+        string? Description,
+        bool ApprovalRequired);
 }
