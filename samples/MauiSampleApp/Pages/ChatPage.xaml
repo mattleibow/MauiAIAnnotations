@@ -35,8 +35,8 @@
         <maui:ChatPanelControl Grid.Row="1"
                                ChatVM="{Binding}">
             <maui:ChatPanelControl.ContentTemplates>
-                <mauiChat:TextContentTemplate Role="User" ViewType="{x:Type mauiChat:UserTextView}" />
-                <mauiChat:TextContentTemplate Role="Assistant" ViewType="{x:Type mauiChat:AssistantTextView}" />
+                <mauiChat:TextContentTemplate Role="User" />
+                <mauiChat:TextContentTemplate Role="Assistant" />
                 <mauiChat:FunctionCallTemplate />
                 <mauiChat:ToolApprovalTemplate ToolName="add_plant" ViewType="{x:Type local:PlantApprovalView}" />
                 <mauiChat:ToolApprovalTemplate ToolName="log_batch_care_events" ViewType="{x:Type local:BatchCareApprovalView}" />
