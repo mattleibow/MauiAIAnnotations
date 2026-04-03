@@ -101,6 +101,24 @@ public class RefParameterService
     public void RefMethod(ref string x) { }
 }
 
+public class ApprovalMixedService
+{
+    [ExportAIFunction("safe_read", Description = "A safe read-only tool")]
+    public string ReadData() => "data";
+
+    [ExportAIFunction("dangerous_write", Description = "A dangerous write tool", ApprovalRequired = true)]
+    public string WriteData([Description("data to write")] string data) => $"wrote: {data}";
+
+    [ExportAIFunction("another_safe", Description = "Another safe tool")]
+    public int GetCount() => 1;
+}
+
+public class AllApprovalService
+{
+    [ExportAIFunction("needs_approval", Description = "Needs approval", ApprovalRequired = true)]
+    public string DoWork() => "done";
+}
+
 #endregion
 
 public class AIToolProviderDiscoveryTests
@@ -737,5 +755,76 @@ public class MixedToolRegistrationTests
         Assert.Equal(4, allTools.Count());
         Assert.Equal("answer_everything", allTools[0].Name);
         Assert.Contains(allTools, t => t.Name == "test_tool");
+    }
+}
+
+public class ApprovalRequiredTests
+{
+    [Fact]
+    public void ApprovalRequired_true_wraps_in_ApprovalRequiredAIFunction()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<AllApprovalService>();
+        services.AddAITools(typeof(AllApprovalService));
+        var provider = services.BuildServiceProvider();
+
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>().ToList();
+
+        Assert.Single(tools);
+        Assert.IsType<ApprovalRequiredAIFunction>(tools[0]);
+        Assert.Equal("needs_approval", tools[0].Name);
+    }
+
+    [Fact]
+    public void ApprovalRequired_false_does_not_wrap()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<TestToolService>();
+        services.AddAITools(typeof(TestToolService));
+        var provider = services.BuildServiceProvider();
+
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>().ToList();
+
+        foreach (var tool in tools)
+        {
+            Assert.IsNotType<ApprovalRequiredAIFunction>(tool);
+        }
+    }
+
+    [Fact]
+    public void Mixed_service_wraps_only_flagged_methods()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<ApprovalMixedService>();
+        services.AddAITools(typeof(ApprovalMixedService));
+        var provider = services.BuildServiceProvider();
+
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>().ToList();
+
+        Assert.Equal(3, tools.Count);
+
+        var safeRead = tools.Single(t => t.Name == "safe_read");
+        var dangerousWrite = tools.Single(t => t.Name == "dangerous_write");
+        var anotherSafe = tools.Single(t => t.Name == "another_safe");
+
+        Assert.IsNotType<ApprovalRequiredAIFunction>(safeRead);
+        Assert.IsType<ApprovalRequiredAIFunction>(dangerousWrite);
+        Assert.IsNotType<ApprovalRequiredAIFunction>(anotherSafe);
+    }
+
+    [Fact]
+    public void ApprovalRequired_preserves_tool_name_and_description()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<ApprovalMixedService>();
+        services.AddAITools(typeof(ApprovalMixedService));
+        var provider = services.BuildServiceProvider();
+
+        var tools = provider.GetRequiredService<IEnumerable<AITool>>().ToList();
+        var wrapped = tools.Single(t => t.Name == "dangerous_write");
+
+        Assert.IsType<ApprovalRequiredAIFunction>(wrapped);
+        Assert.Equal("dangerous_write", wrapped.Name);
+        Assert.Equal("A dangerous write tool", wrapped.Description);
     }
 }
