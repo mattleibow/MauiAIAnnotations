@@ -36,9 +36,4 @@ public partial class HomePage : ContentPage
     {
         await Shell.Current.GoToAsync("AddPlant");
     }
-
-    private async void OnChatClosed(object? sender, EventArgs e)
-    {
-        await _viewModel.RefreshPlantsAsync();
-    }
 }

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:MauiAIAnnotations.Maui.Controls"
+             x:Class="MauiAIAnnotations.Maui.Controls.ChatSidebarControl"
+             x:Name="Self"
+             AutomationId="ChatSidebar">
+
+    <Border Padding="0"
+            Stroke="{AppThemeBinding Light=#E8E0D4, Dark=#3D3930}"
+            StrokeThickness="1"
+            BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2A2721}">
+        <Border.StrokeShape>
+            <RoundRectangle CornerRadius="0" />
+        </Border.StrokeShape>
+
+        <Grid RowDefinitions="Auto,*" RowSpacing="0">
+            <!-- Chat Header -->
+            <Border Grid.Row="0"
+                    BackgroundColor="#5B8C5A"
+                    Padding="16,14"
+                    StrokeThickness="0">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="0" />
+                </Border.StrokeShape>
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Text="&#x1F33F; Chat Assistant"
+                           FontSize="17" FontAttributes="Bold"
+                           TextColor="White" VerticalOptions="Center" />
+                    <Button Grid.Column="1" Text="&#x1F5D1;" FontSize="14"
+                            AutomationId="ClearChatButton"
+                            BackgroundColor="Transparent" TextColor="#D4E8D4"
+                            Command="{Binding ChatVM.ClearCommand, Source={x:Reference Self}}"
+                            Padding="8,4" MinimumWidthRequest="40"
+                            ToolTipProperties.Text="Clear chat" />
+                </Grid>
+            </Border>
+
+            <!-- Inner ChatPanelControl -->
+            <controls:ChatPanelControl x:Name="InnerChatPanel"
+                                       Grid.Row="1"
+                                       ChatVM="{Binding ChatVM, Source={x:Reference Self}}" />
+        </Grid>
+    </Border>
+
+</ContentView>
