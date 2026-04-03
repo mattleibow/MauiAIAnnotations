@@ -178,18 +178,54 @@ In the screenshot below the user changed *"Sun Daisy"* to
 
 ## After Rejection
 
-When the user taps **Reject**, the approval card is replaced with a
-"❌ tool_name — rejected by user" note and the tool is **not** invoked.
+After approval or rejection, the card **stays visible but is disabled** — inputs become
+read-only and the buttons are replaced with a status message. Chat history is preserved.
+
+## After Rejection
+
+When the user taps **Reject**, the buttons are replaced with
+"❌ Rejected — tool_name" and the tool is **not** invoked.
 
 ![After Rejection](images/approval-rejected.png)
+
+## Batch Approval with Checkboxes
+
+For tools that accept arrays (e.g. logging multiple care events at once), create
+a custom content view with checkboxes. The user can uncheck items they didn't do —
+only the selected items are submitted on approval.
+
+![Batch Care Approval](images/approval-batch.png)
+
+The batch care tool demonstrates this pattern:
+
+```csharp
+[ExportAIFunction("log_batch_care_events",
+    Description = "Log multiple care events for a plant at once.",
+    ApprovalRequired = true)]
+public async Task<List<CareEvent>> LogBatchCareEventsAsync(
+    string plantNickname, List<string> eventTypes) { ... }
+```
+
+Register the checkbox view via `ToolApprovalMapping.InnerViewType`:
+
+```xml
+<mauiChat:ToolApprovalMapping ToolName="log_batch_care_events"
+    InnerViewType="{x:Type local:BatchCareApprovalView}"
+    ViewType="{x:Type mauiChat:ToolApprovalView}" />
+```
 
 ## Key Points
 
 - **`ApprovalRequired = true`** is the only change needed in your service code.
 - **No `MauiProgram.cs` changes** — the discovery pipeline wraps the function
   automatically.
-- **Custom approval views** let users inspect and edit arguments before the tool runs.
+- **Library owns the Approve/Reject buttons** — app views implement
+  `IApprovalContentProvider` to provide editable content only.
+- **Cards stay after resolution** — inputs disabled, buttons replaced with status text.
+- **`ToolApprovalMapping.InnerViewType`** — declare custom content per tool name.
 - **`ChatViewModel.RespondToApproval()`** supports passing modified arguments back to
   the tool invocation.
 
-> **Full sample code:** See `samples/MauiSampleApp/Chat/Contents/PlantApproval/` for the complete editable plant approval implementation.
+> **Full sample code:** See `samples/MauiSampleApp/Chat/Contents/PlantApproval/` for
+> the editable plant form and `samples/MauiSampleApp/Chat/Contents/BatchCareApproval/`
+> for the checkbox-based batch approval.
