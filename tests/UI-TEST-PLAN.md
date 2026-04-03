@@ -190,46 +190,106 @@ maui-devflow MAUI tree
 
 ---
 
-## Scenario 10: Approval Flow (Human-in-the-Loop)
+## Scenario 10a: Custom Approval — Add Plant (Approve with Edits)
 
-**Prerequisites:** `add_plant` tool is wrapped with `ApprovalRequired = true`
+**Prerequisites:** `add_plant` is `ApprovalRequired = true` and has a custom `PlantApprovalMapping`
 
 **Steps:**
 ```bash
 maui-devflow MAUI tap ChatFabButton
-maui-devflow MAUI fill ChatInput "Add a new plant called Sun Daisy in the balcony, outdoor"
+maui-devflow MAUI fill ChatInput "Add a new plant called Sun Daisy, species daisy, balcony, outdoor"
 maui-devflow MAUI tap SendMessageButton
-# Wait 15 seconds for AI to propose the tool call
+# Wait 18 seconds for AI to propose the tool call
 maui-devflow MAUI screenshot
 maui-devflow MAUI tree
 ```
 
 **Expected:**
 - User message appears
-- ⚙️ Function call bubble for `add_plant`
-- **Approval card** appears with editable fields:
-  - Nickname: "Sun Daisy" (editable)
-  - Species: (editable)
-  - Location: "balcony" (editable)
-  - Indoor: false (toggle)
-  - Approve ✅ / Reject ❌ buttons
-- AI is paused waiting for user decision
+- **Custom approval card** (PlantApprovalView) with editable fields:
+  - Nickname: "Sun Daisy" — `ApprovalNicknameEntry`
+  - Species: "daisy" — `ApprovalSpeciesEntry`
+  - Location: "balcony" — `ApprovalLocationEntry`
+  - Indoor toggle — `ApprovalIndoorSwitch`
+  - ✅ Add Plant / ❌ Cancel buttons (`ApproveToolButton`, `RejectToolButton`)
+- Tree contains `PlantApprovalView` (NOT `ToolApprovalView`) under ChatMessages
 
-**Approval steps:**
+**Approve with edits:**
 ```bash
-# Modify the nickname
 maui-devflow MAUI fill ApprovalNicknameEntry "Golden Daisy"
 maui-devflow MAUI tap ApproveToolButton
-# Wait 10 seconds for function execution + AI response
+# Wait 15 seconds for function execution + AI response
+maui-devflow MAUI screenshot
+maui-devflow MAUI tree
+```
+
+**Expected after approve:**
+- Approval card is **replaced** with ⚙️ "Calling add_plant..." function call bubble
+- PlantResultView card shows plant with modified name "Golden Daisy"
+- Assistant confirms the addition
+- Tree: no `PlantApprovalView` or `ToolApprovalView` under ChatMessages
+
+**Pass criteria:** Custom approval form rendered, card replaced after approve, modified name used.
+
+---
+
+## Scenario 10b: Generic Approval — Remove Plant (Approve)
+
+**Prerequisites:** `remove_plant` is `ApprovalRequired = true` and has NO custom mapping (uses generic `ToolApprovalView`)
+
+**Steps:**
+```bash
+maui-devflow MAUI tap SidebarClearChatButton
+maui-devflow MAUI fill ChatInput "Remove the plant called Golden Daisy"
+maui-devflow MAUI tap SendMessageButton
+# Wait 18 seconds
+maui-devflow MAUI screenshot
+maui-devflow MAUI tree
+```
+
+**Expected:**
+- **Generic approval card** (ToolApprovalView) with:
+  - "⚠️ Approval Required" header
+  - "Tool: remove_plant"
+  - ✅ Approve / ❌ Reject buttons
+  - NO editable fields
+- Tree contains `ToolApprovalView` (NOT `PlantApprovalView`) under ChatMessages
+
+**Approve:**
+```bash
+maui-devflow MAUI tap ApproveToolButton
+# Wait 15 seconds
 maui-devflow MAUI screenshot
 ```
 
 **Expected after approve:**
-- Plant saved with modified name "Golden Daisy"
-- PlantResultView card appears showing the saved plant
-- Assistant confirms the addition
+- Approval card is **replaced** with ⚙️ "Calling remove_plant..." function call bubble
+- Assistant confirms the removal
+- Close chat, verify plant is removed from PlantList
 
-**Pass criteria:** Plant saved with user-modified name. Approval card disappears after decision.
+**Pass criteria:** Generic approval rendered, card replaced after approve, plant removed.
+
+---
+
+## Scenario 10c: Generic Approval — Remove Plant (Reject)
+
+**Steps:**
+```bash
+maui-devflow MAUI tap SidebarClearChatButton
+maui-devflow MAUI fill ChatInput "Remove the plant called Sunny Basil"
+maui-devflow MAUI tap SendMessageButton
+# Wait 18 seconds
+maui-devflow MAUI tap RejectToolButton
+# Wait 5 seconds
+maui-devflow MAUI screenshot
+```
+
+**Expected after reject:**
+- Approval card is **replaced** with "❌ remove_plant — rejected by user" text
+- "Tool call was rejected." message appears
+- Close chat, verify Sunny Basil is **still** in PlantList
+
+**Pass criteria:** Card replaced with rejection text, plant NOT removed.
 
 ---
 

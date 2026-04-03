@@ -9,7 +9,7 @@ A .NET 10 library for attribute-based AI tool discovery (`MauiAIAnnotations`) wi
 # Build everything (TreatWarningsAsErrors is on)
 dotnet build MauiAIAnnotations.slnx
 
-# Run unit tests (50 tests across 2 projects)
+# Run unit tests (54 tests across 2 projects) — MUST PASS before pushing
 dotnet test MauiAIAnnotations.slnx
 
 # Build Windows target for running the sample app
@@ -19,12 +19,18 @@ dotnet build samples/MauiSampleApp/MauiSampleApp.csproj -f net10.0-windows10.0.1
 dotnet run --project samples/MauiSampleApp/MauiSampleApp.csproj -f net10.0-windows10.0.19041.0 --no-build
 
 # UI testing with MauiDevFlow (after app is running)
-# See tests/UI-TEST-PLAN.md for full test scenarios
+# ALL scenarios in tests/UI-TEST-PLAN.md MUST be run and confirmed passing before pushing
 maui-devflow MAUI tree
 maui-devflow MAUI screenshot
 maui-devflow MAUI tap <AutomationId>
 maui-devflow MAUI fill <AutomationId> "text"
 ```
+
+### Pre-Push Checklist
+1. `dotnet build MauiAIAnnotations.slnx` — 0 warnings, 0 errors
+2. `dotnet test MauiAIAnnotations.slnx` — all tests pass
+3. Launch app and run ALL scenarios in `tests/UI-TEST-PLAN.md` (1–10c) via MauiDevFlow
+4. Every scenario must produce the expected result before code is pushed
 
 ## Architecture
 
@@ -59,6 +65,8 @@ builder.Services.AddAITools(); // discovers [ExportAIFunction] methods automatic
 - PlantDetailPage: `CareHistoryList`, `DeletePlantButton`
 - Chat: `ChatFabButton`, `ChatOverlayPanel`, `CloseChatButton`, `ClearChatButton`, `ChatMessages`, `ChatInput`, `SendMessageButton`, `ChatBusyIndicator`
 - Sidebar: `SidebarClearChatButton`, `SidebarCloseChatButton`
+- Approval (generic): `ApproveToolButton`, `RejectToolButton`
+- Approval (plant-specific): `ApprovalNicknameEntry`, `ApprovalSpeciesEntry`, `ApprovalLocationEntry`, `ApprovalIndoorSwitch`, `ApproveToolButton`, `RejectToolButton`
 
 ## Conventions
 - `TreatWarningsAsErrors` is enabled in `Directory.Build.props`
