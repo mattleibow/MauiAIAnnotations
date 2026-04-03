@@ -27,8 +27,13 @@
                        TextColor="{AppThemeBinding Light=#2C2416, Dark=#EDE8DF}" />
             </HorizontalStackLayout>
 
-            <!-- Approve / Reject buttons -->
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+            <!-- Inner content slot (generic args or app-specific editable view) -->
+            <ContentView x:Name="InnerContentSlot" />
+
+            <!-- Approve / Reject buttons (visible only when pending) -->
+            <Grid x:Name="ButtonsGrid"
+                  IsVisible="{Binding IsPendingApproval}"
+                  ColumnDefinitions="*,*" ColumnSpacing="10">
                 <Button Text="✅ Approve"
                         AutomationId="ApproveToolButton"
                         Clicked="OnApproveClicked"
@@ -44,6 +49,14 @@
                         FontSize="14" FontAttributes="Bold"
                         CornerRadius="10" HeightRequest="40" />
             </Grid>
+
+            <!-- Resolution status (visible after approval/rejection) -->
+            <Label x:Name="ResolutionLabel"
+                   IsVisible="{Binding ApprovalResolved}"
+                   Text="{Binding ApprovalResolutionText}"
+                   FontSize="14" FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   Padding="8,6" />
         </VerticalStackLayout>
     </Border>
 </ContentView>

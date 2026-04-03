@@ -1,56 +1,38 @@
 using MauiAIAnnotations.Maui.Chat;
-using MauiAIAnnotations.Maui.Controls;
-using MauiAIAnnotations.Maui.ViewModels;
-using Microsoft.Extensions.AI;
 
 namespace MauiSampleApp.Chat;
 
-public partial class PlantApprovalView : ContentView
+/// <summary>
+/// Content-only approval view for add_plant.
+/// Provides editable fields; the library wrapper handles header + buttons.
+/// </summary>
+public partial class PlantApprovalView : ContentView, IApprovalContentProvider
 {
-    private PlantApprovalViewModel? _vm;
+    private readonly PlantApprovalViewModel _vm = new();
 
-    public PlantApprovalView() => InitializeComponent();
-
-    protected override void OnBindingContextChanged()
+    public PlantApprovalView()
     {
-        base.OnBindingContextChanged();
-        if (BindingContext is ContentContext context)
-        {
-            _vm ??= new PlantApprovalViewModel();
-            _vm.SetContext(context);
-            this.BindingContext = _vm;
-        }
+        InitializeComponent();
+        BindingContext = _vm;
     }
 
-    private void OnApproveClicked(object? sender, EventArgs e)
+    public void Initialize(IDictionary<string, object?>? arguments)
     {
-        if (_vm?.Request is not ToolApprovalRequestContent request)
-            return;
+        if (arguments is null) return;
 
-        var chatVm = FindChatViewModel();
-        chatVm?.RespondToApproval(request, true, _vm.BuildArguments());
+        _vm.Nickname = arguments.TryGetValue("nickname", out var n) ? n?.ToString() ?? "" : "";
+        _vm.Species = arguments.TryGetValue("species", out var s) ? s?.ToString() ?? "" : "";
+        _vm.Location = arguments.TryGetValue("location", out var l) ? l?.ToString() ?? "" : "";
+        _vm.IsIndoor = arguments.TryGetValue("isIndoor", out var i) && i is true;
     }
 
-    private void OnRejectClicked(object? sender, EventArgs e)
-    {
-        if (_vm?.Request is not ToolApprovalRequestContent request)
-            return;
+    public IDictionary<string, object?> GetArguments() => _vm.BuildArguments();
 
-        var chatVm = FindChatViewModel();
-        chatVm?.RespondToApproval(request, false);
-    }
-
-    private ChatViewModel? FindChatViewModel()
+    public void SetReadOnly(bool readOnly)
     {
-        Element? current = this;
-        while (current is not null)
-        {
-            if (current is ChatPanelControl panel)
-                return panel.ChatVM;
-            if (current is ChatOverlayControl overlay)
-                return overlay.ChatVM;
-            current = current.Parent;
-        }
-        return null;
+        NicknameEntry.IsEnabled = !readOnly;
+        SpeciesEntry.IsEnabled = !readOnly;
+        LocationEntry.IsEnabled = !readOnly;
+        IndoorSwitch.IsEnabled = !readOnly;
     }
 }

@@ -23,8 +23,9 @@ public abstract class ContentTemplateMapping : BindableObject
     /// <summary>
     /// Returns a cached DataTemplate for the ViewType. MAUI requires the same
     /// instance on repeated calls to avoid memory leaks and broken virtualization.
+    /// Subclasses can override to customize template creation (e.g. to compose wrapper + inner content).
     /// </summary>
-    internal DataTemplate GetTemplate()
+    internal virtual DataTemplate GetTemplate()
     {
         var type = ViewType ?? throw new InvalidOperationException($"{GetType().Name} has no ViewType set.");
         return _cachedTemplate ??= new DataTemplate(type);

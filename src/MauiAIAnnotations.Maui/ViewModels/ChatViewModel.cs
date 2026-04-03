@@ -58,46 +58,26 @@ public partial class ChatViewModel : ObservableObject
     public void RespondToApproval(ToolApprovalRequestContent request, bool approved, IDictionary<string, object?>? modifiedArguments = null)
     {
         ToolApprovalResponseContent response;
-        FunctionCallContent? resolvedCall = null;
 
         if (approved && modifiedArguments is not null && request.ToolCall is FunctionCallContent originalCall)
         {
-            resolvedCall = new FunctionCallContent(originalCall.CallId, originalCall.Name, modifiedArguments);
-            response = new ToolApprovalResponseContent(request.RequestId, true, resolvedCall);
+            var modifiedCall = new FunctionCallContent(originalCall.CallId, originalCall.Name, modifiedArguments);
+            response = new ToolApprovalResponseContent(request.RequestId, true, modifiedCall);
         }
         else
         {
-            resolvedCall = request.ToolCall as FunctionCallContent;
             response = request.CreateResponse(approved, approved ? null : "User rejected");
         }
 
-        // Replace the approval card in Messages with the resolved tool call (or rejection note)
-        var approvalIdx = -1;
-        for (int i = 0; i < Messages.Count; i++)
+        // Mark the approval card as resolved in-place (don't replace — preserve chat history)
+        var toolName = request.ToolCall is FunctionCallContent fc ? fc.Name : "Tool";
+        var approvalCtx = Messages.FirstOrDefault(m => ReferenceEquals(m.Content, request));
+        if (approvalCtx is not null)
         {
-            if (ReferenceEquals(Messages[i].Content, request))
-            {
-                approvalIdx = i;
-                break;
-            }
-        }
-
-        if (approvalIdx >= 0)
-        {
-            if (approved && resolvedCall is not null)
-            {
-                // Remove approval card and insert a normal function call bubble in its place
-                Messages.RemoveAt(approvalIdx);
-                Messages.Insert(approvalIdx, new ContentContext(resolvedCall, "Tool"));
-            }
-            else
-            {
-                // On rejection, replace with a text note
-                Messages.RemoveAt(approvalIdx);
-                Messages.Insert(approvalIdx, new ContentContext(
-                    new TextContent($"❌ {(request.ToolCall is FunctionCallContent fc ? fc.Name : "Tool")} — rejected by user"),
-                    "Assistant"));
-            }
+            approvalCtx.ApprovalResolved = true;
+            approvalCtx.ApprovalResolutionText = approved
+                ? $"✅ Approved — {toolName}"
+                : $"❌ Rejected — {toolName}";
         }
 
         // Collect the response and signal the waiting loop

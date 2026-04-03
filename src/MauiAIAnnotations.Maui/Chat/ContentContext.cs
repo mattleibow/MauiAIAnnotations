@@ -16,6 +16,7 @@ public partial class ContentContext : ObservableObject
     [NotifyPropertyChangedFor(nameof(ResultText))]
     [NotifyPropertyChangedFor(nameof(DisplayText))]
     [NotifyPropertyChangedFor(nameof(IsApprovalRequest))]
+    [NotifyPropertyChangedFor(nameof(IsPendingApproval))]
     [NotifyPropertyChangedFor(nameof(ApprovalToolName))]
     public partial AIContent Content { get; set; }
 
@@ -46,8 +47,20 @@ public partial class ContentContext : ObservableObject
 
     // Approval properties
 
-    /// <summary>True if this content is a tool approval request awaiting user decision.</summary>
+    /// <summary>True if this content is a tool approval request.</summary>
     public bool IsApprovalRequest => Content is ToolApprovalRequestContent;
+
+    /// <summary>True if this is an unresolved approval request still awaiting user decision.</summary>
+    public bool IsPendingApproval => IsApprovalRequest && !ApprovalResolved;
+
+    /// <summary>Whether the approval has been resolved (approved or rejected).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsPendingApproval))]
+    public partial bool ApprovalResolved { get; set; }
+
+    /// <summary>Status text shown after resolution (e.g. "✅ Approved" or "❌ Rejected").</summary>
+    [ObservableProperty]
+    public partial string? ApprovalResolutionText { get; set; }
 
     /// <summary>The tool name for an approval request.</summary>
     public string? ApprovalToolName => (Content as ToolApprovalRequestContent)?.ToolCall is FunctionCallContent fc ? fc.Name : null;
