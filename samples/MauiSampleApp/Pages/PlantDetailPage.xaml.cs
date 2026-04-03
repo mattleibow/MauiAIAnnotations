@@ -4,9 +4,8 @@ namespace MauiSampleApp.Pages;
 
 public partial class PlantDetailPage : ContentPage
 {
-    public PlantDetailPage(PlantDetailViewModel viewModel, GardenChatViewModel chatViewModel)
+    public PlantDetailPage(PlantDetailViewModel viewModel)
     {
-        viewModel.ChatViewModel = chatViewModel;
         BindingContext = viewModel;
         InitializeComponent();
     }

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:maui="clr-namespace:MauiAIAnnotations.Maui.Controls;assembly=MauiAIAnnotations.Maui"
+             xmlns:mauiChat="clr-namespace:MauiAIAnnotations.Maui.Chat;assembly=MauiAIAnnotations.Maui"
+             xmlns:local="clr-namespace:MauiSampleApp.Chat"
+             x:Class="MauiSampleApp.Pages.ChatPage"
+             Title="AI Chat"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{AppThemeBinding Light={StaticResource PageBg}, Dark={StaticResource PageBgDark}}">
+
+    <maui:ChatSidebarControl ChatVM="{Binding}">
+        <maui:ChatSidebarControl.ContentTemplates>
+            <mauiChat:TextContentMapping Role="User" ViewType="{x:Type mauiChat:UserTextView}" />
+            <mauiChat:TextContentMapping Role="Assistant" ViewType="{x:Type mauiChat:AssistantTextView}" />
+            <mauiChat:FunctionCallMapping ViewType="{x:Type mauiChat:FunctionCallView}" />
+            <mauiChat:ToolApprovalMapping ToolName="add_plant" InnerViewType="{x:Type local:PlantApprovalView}" ViewType="{x:Type mauiChat:ToolApprovalView}" />
+            <mauiChat:ToolApprovalMapping ToolName="log_batch_care_events" InnerViewType="{x:Type local:BatchCareApprovalView}" ViewType="{x:Type mauiChat:ToolApprovalView}" />
+            <mauiChat:ToolApprovalMapping ViewType="{x:Type mauiChat:ToolApprovalView}" />
+            <local:PlantResultMapping ViewType="{x:Type local:PlantResultView}" />
+            <mauiChat:FunctionResultMapping ViewType="{x:Type mauiChat:FunctionResultView}" />
+            <mauiChat:ErrorContentMapping ViewType="{x:Type mauiChat:ErrorView}" />
+            <mauiChat:DefaultContentMapping ViewType="{x:Type mauiChat:DefaultContentView}" />
+        </maui:ChatSidebarControl.ContentTemplates>
+    </maui:ChatSidebarControl>
+
+</ContentPage>

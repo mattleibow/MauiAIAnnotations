@@ -7,10 +7,9 @@ public partial class HomePage : ContentPage
 {
     private readonly HomePageViewModel _viewModel;
 
-    public HomePage(HomePageViewModel viewModel, GardenChatViewModel chatViewModel)
+    public HomePage(HomePageViewModel viewModel)
     {
         _viewModel = viewModel;
-        viewModel.ChatViewModel = chatViewModel;
         BindingContext = viewModel;
         InitializeComponent();
     }

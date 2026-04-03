@@ -11,11 +11,24 @@
     Shell.BackgroundColor="{StaticResource AccentGreen}"
     Shell.ForegroundColor="White"
     Shell.TitleColor="White"
-    Shell.UnselectedColor="#B5D8B2">
+    Shell.UnselectedColor="#B5D8B2"
+    Shell.TabBarBackgroundColor="{StaticResource AccentGreen}"
+    Shell.TabBarForegroundColor="White"
+    Shell.TabBarUnselectedColor="#B5D8B2"
+    Shell.TabBarTitleColor="White">
 
-    <ShellContent
-        Title="My Garden"
-        ContentTemplate="{DataTemplate pages:HomePage}"
-        Route="HomePage" />
+    <TabBar>
+        <ShellContent
+            Title="My Garden"
+            Icon="{FontImageSource FontFamily='OpenSansRegular', Glyph='&#x1FAB4;', Color=White}"
+            ContentTemplate="{DataTemplate pages:HomePage}"
+            Route="HomePage" />
+
+        <ShellContent
+            Title="AI Chat"
+            Icon="{FontImageSource FontFamily='OpenSansRegular', Glyph='&#x1F4AC;', Color=White}"
+            ContentTemplate="{DataTemplate pages:ChatPage}"
+            Route="ChatPage" />
+    </TabBar>
 
 </Shell>
