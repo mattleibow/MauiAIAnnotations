@@ -5,67 +5,26 @@ namespace MauiAIAnnotations.Maui.Chat;
 
 /// <summary>
 /// Wraps an <see cref="AIContent"/> item with its role for display in a chat UI.
-/// Provides computed properties for direct XAML binding with compiled bindings.
+/// Views subscribe to PropertyChanged on Content to react to streaming updates.
 /// </summary>
 public partial class ContentContext : ObservableObject
 {
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(Text))]
-    [NotifyPropertyChangedFor(nameof(FunctionName))]
-    [NotifyPropertyChangedFor(nameof(ErrorMessage))]
-    [NotifyPropertyChangedFor(nameof(ResultText))]
-    [NotifyPropertyChangedFor(nameof(DisplayText))]
-    [NotifyPropertyChangedFor(nameof(IsApprovalRequest))]
-    [NotifyPropertyChangedFor(nameof(IsPendingApproval))]
-    [NotifyPropertyChangedFor(nameof(ApprovalToolName))]
     public partial AIContent Content { get; set; }
 
     public string Role { get; }
 
-    public ContentContext(AIContent content, string role)
-    {
-        Content = content;
-        Role = role;
-    }
-
-    // Convenience properties for compiled binding in content views
-
-    /// <summary>Text for TextContent messages (user and assistant).</summary>
-    public string? Text => (Content as TextContent)?.Text;
-
-    /// <summary>Function name for FunctionCallContent messages.</summary>
-    public string? FunctionName => (Content as FunctionCallContent)?.Name;
-
-    /// <summary>Error message for ErrorContent messages.</summary>
-    public string? ErrorMessage => (Content as ErrorContent)?.Message;
-
-    /// <summary>Stringified result for FunctionResultContent messages.</summary>
-    public string? ResultText => (Content as FunctionResultContent)?.Result?.ToString();
-
-    /// <summary>Fallback display text for any content type.</summary>
-    public string? DisplayText => Content?.ToString();
-
-    // Approval properties
-
-    /// <summary>True if this content is a tool approval request.</summary>
-    public bool IsApprovalRequest => Content is ToolApprovalRequestContent;
-
-    /// <summary>True if this is an unresolved approval request still awaiting user decision.</summary>
-    public bool IsPendingApproval => IsApprovalRequest && !ApprovalResolved;
-
     /// <summary>Whether the approval has been resolved (approved or rejected).</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsPendingApproval))]
     public partial bool ApprovalResolved { get; set; }
 
     /// <summary>Status text shown after resolution (e.g. "✅ Approved" or "❌ Rejected").</summary>
     [ObservableProperty]
     public partial string? ApprovalResolutionText { get; set; }
 
-    /// <summary>The tool name for an approval request.</summary>
-    public string? ApprovalToolName => (Content as ToolApprovalRequestContent)?.ToolCall is FunctionCallContent fc ? fc.Name : null;
-
-    /// <summary>Gets the arguments dictionary from an approval request's tool call.</summary>
-    public IDictionary<string, object?>? ApprovalArguments =>
-        (Content as ToolApprovalRequestContent)?.ToolCall is FunctionCallContent fc ? fc.Arguments : null;
+    public ContentContext(AIContent content, string role)
+    {
+        Content = content;
+        Role = role;
+    }
 }

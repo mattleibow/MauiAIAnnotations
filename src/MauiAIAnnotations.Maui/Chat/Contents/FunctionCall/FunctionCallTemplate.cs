@@ -4,7 +4,7 @@ namespace MauiAIAnnotations.Maui.Chat;
 
 public class FunctionCallTemplate : ContentTemplate
 {
-    public FunctionCallTemplate() => ViewType = typeof(FunctionCallView);
+    public FunctionCallTemplate() => ViewType = typeof(FunctionCallMessageView);
 
     public string? ToolName { get; set; }
 

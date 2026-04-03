@@ -15,11 +15,7 @@ public class TextContentTemplate : ContentTemplate
         if (ViewType is not null)
             return base.GetTemplate();
 
-        var role = Role;
-        return _cachedTemplate ??= new DataTemplate(
-            string.Equals(role, "User", StringComparison.OrdinalIgnoreCase)
-                ? typeof(UserTextView)
-                : typeof(AssistantTextView));
+        return _cachedTemplate ??= new DataTemplate(typeof(ChatMessageView));
     }
 
     private DataTemplate? _cachedTemplate;

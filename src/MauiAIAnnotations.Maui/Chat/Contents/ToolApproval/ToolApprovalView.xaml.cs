@@ -1,10 +1,56 @@
+using System.ComponentModel;
+using System.Windows.Input;
 using MauiAIAnnotations.Maui.ViewModels;
 using Microsoft.Extensions.AI;
 
 namespace MauiAIAnnotations.Maui.Chat;
 
-public partial class ToolApprovalView : ContentView
+/// <summary>
+/// Standalone C# ContentView for tool approval requests.
+/// Subscribes to ContentContext.PropertyChanged to track
+/// Content and ApprovalResolved changes. No XAML backing — styled via ControlTemplate.
+/// </summary>
+public class ToolApprovalView : ContentView
 {
+    public static readonly BindableProperty ToolNameProperty =
+        BindableProperty.Create(nameof(ToolName), typeof(string), typeof(ToolApprovalView));
+
+    public string? ToolName
+    {
+        get => (string?)GetValue(ToolNameProperty);
+        set => SetValue(ToolNameProperty, value);
+    }
+
+    public static readonly BindableProperty IsPendingProperty =
+        BindableProperty.Create(nameof(IsPending), typeof(bool), typeof(ToolApprovalView), true);
+
+    public bool IsPending
+    {
+        get => (bool)GetValue(IsPendingProperty);
+        set => SetValue(IsPendingProperty, value);
+    }
+
+    public static readonly BindableProperty IsResolvedProperty =
+        BindableProperty.Create(nameof(IsResolved), typeof(bool), typeof(ToolApprovalView));
+
+    public bool IsResolved
+    {
+        get => (bool)GetValue(IsResolvedProperty);
+        set => SetValue(IsResolvedProperty, value);
+    }
+
+    public static readonly BindableProperty ResolutionTextProperty =
+        BindableProperty.Create(nameof(ResolutionText), typeof(string), typeof(ToolApprovalView));
+
+    public string? ResolutionText
+    {
+        get => (string?)GetValue(ResolutionTextProperty);
+        set => SetValue(ResolutionTextProperty, value);
+    }
+
+    public ICommand ApproveCommand { get; }
+    public ICommand RejectCommand { get; }
+
     /// <summary>
     /// Optional inner content view type. When set, the wrapper resolves this view
     /// from DI (supporting constructor injection) and places it in the content slot.
@@ -13,45 +59,100 @@ public partial class ToolApprovalView : ContentView
     /// </summary>
     internal Type? InnerContentType { get; set; }
 
-    public ToolApprovalView() => InitializeComponent();
+    private ContentContext? _ctx;
+
+    public ToolApprovalView()
+    {
+        ApproveCommand = new Command(() => Respond(true));
+        RejectCommand = new Command(() => Respond(false));
+    }
 
     protected override void OnBindingContextChanged()
     {
         base.OnBindingContextChanged();
-        if (BindingContext is not ContentContext context)
+        if (_ctx is not null)
+            _ctx.PropertyChanged -= OnCtxChanged;
+        _ctx = BindingContext as ContentContext;
+        if (_ctx is not null)
+        {
+            _ctx.PropertyChanged += OnCtxChanged;
+            Refresh();
+        }
+    }
+
+    private void OnCtxChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(ContentContext.Content))
+            RefreshToolName();
+        if (e.PropertyName is nameof(ContentContext.ApprovalResolved) or nameof(ContentContext.ApprovalResolutionText))
+            RefreshApprovalState();
+    }
+
+    private void Refresh()
+    {
+        RefreshToolName();
+        RefreshApprovalState();
+        BuildInnerContent();
+    }
+
+    private void RefreshToolName()
+    {
+        if (_ctx?.Content is ToolApprovalRequestContent approval &&
+            approval.ToolCall is FunctionCallContent fc)
+        {
+            ToolName = fc.Name;
+        }
+    }
+
+    private void RefreshApprovalState()
+    {
+        IsPending = _ctx is not null && !_ctx.ApprovalResolved;
+        IsResolved = _ctx?.ApprovalResolved ?? false;
+        ResolutionText = _ctx?.ApprovalResolutionText;
+        if (IsResolved)
+            VisualStateManager.GoToState(this, "Resolved");
+    }
+
+    private void BuildInnerContent()
+    {
+        if (_ctx is null)
             return;
 
+        // Find the PART_ContentSlot in the ControlTemplate (if template applied)
+        // For now, build inner content and set as Content (visual child)
         if (InnerContentType is not null)
         {
-            // Resolve from DI (supports constructor injection for VMs)
             var services = Handler?.MauiContext?.Services;
             var innerView = services is not null
                 ? (View)(services.GetService(InnerContentType) ?? Activator.CreateInstance(InnerContentType)!)
                 : (View)Activator.CreateInstance(InnerContentType)!;
 
-            // IContentContextAware — check view then its BindingContext (like IQueryAttributable)
             var aware = innerView as IContentContextAware ?? innerView.BindingContext as IContentContextAware;
-            aware?.ApplyContentContext(context);
+            aware?.ApplyContentContext(_ctx);
 
-            InnerContentSlot.Content = innerView;
+            Content = innerView;
         }
         else
         {
-            InnerContentSlot.Content = BuildDefaultArgsView(context);
+            Content = BuildDefaultArgsView();
         }
 
-        if (context.ApprovalResolved)
-            InnerContentSlot.IsEnabled = false;
+        if (_ctx.ApprovalResolved)
+        {
+            if (Content is View v)
+                v.IsEnabled = false;
+        }
     }
 
-    private static View BuildDefaultArgsView(ContentContext context)
+    private View BuildDefaultArgsView()
     {
-        var args = context.ApprovalArguments;
-        if (args is null || args.Count == 0)
+        if (_ctx?.Content is not ToolApprovalRequestContent approval ||
+            approval.ToolCall is not FunctionCallContent fc ||
+            fc.Arguments is null || fc.Arguments.Count == 0)
             return new Label { Text = "(no arguments)", FontSize = 12, TextColor = Colors.Gray };
 
         var stack = new VerticalStackLayout { Spacing = 4 };
-        foreach (var kvp in args)
+        foreach (var kvp in fc.Arguments)
         {
             var row = new HorizontalStackLayout { Spacing = 6 };
             row.Add(new Label
@@ -69,16 +170,10 @@ public partial class ToolApprovalView : ContentView
         return stack;
     }
 
-    private void OnApproveClicked(object? sender, EventArgs e) => Respond(true);
-    private void OnRejectClicked(object? sender, EventArgs e) => Respond(false);
-
     private void Respond(bool approved)
     {
-        if (BindingContext is not ContentContext context ||
-            context.Content is not ToolApprovalRequestContent request)
+        if (_ctx is null || _ctx.Content is not ToolApprovalRequestContent request)
             return;
-
-        InnerContentSlot.IsEnabled = false;
 
         var args = approved && request.ToolCall is FunctionCallContent fc ? fc.Arguments : null;
 
