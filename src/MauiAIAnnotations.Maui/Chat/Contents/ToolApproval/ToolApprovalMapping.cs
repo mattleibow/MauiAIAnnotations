@@ -14,8 +14,8 @@ public class ToolApprovalMapping : ContentTemplateMapping
     /// <summary>
     /// Optional custom inner content view type. When set, the approval wrapper
     /// creates this view in its content slot instead of the default args display.
-    /// The view should implement <see cref="IApprovalContentProvider"/> to
-    /// support editable arguments and read-only mode after resolution.
+    /// The view receives <see cref="ContentContext"/> as its BindingContext
+    /// and can modify <c>FunctionCallContent.Arguments</c> directly.
     /// </summary>
     public Type? InnerViewType { get; set; }
 

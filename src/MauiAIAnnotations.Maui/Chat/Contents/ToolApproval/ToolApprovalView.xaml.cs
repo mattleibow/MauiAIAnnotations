@@ -5,12 +5,11 @@ namespace MauiAIAnnotations.Maui.Chat;
 
 public partial class ToolApprovalView : ContentView
 {
-    private IApprovalContentProvider? _contentProvider;
-
     /// <summary>
     /// Optional inner content view type. When set, the wrapper creates this view
     /// in the content slot instead of the default argument list.
-    /// The inner view should implement <see cref="IApprovalContentProvider"/>.
+    /// The inner view receives <see cref="ContentContext"/> as its BindingContext
+    /// and can modify <c>FunctionCallContent.Arguments</c> directly.
     /// </summary>
     internal Type? InnerContentType { get; set; }
 
@@ -22,38 +21,26 @@ public partial class ToolApprovalView : ContentView
         if (BindingContext is not ContentContext context)
             return;
 
-        // Build inner content
         if (InnerContentType is not null)
         {
             var innerView = (View)Activator.CreateInstance(InnerContentType)!;
-            if (innerView is IApprovalContentProvider provider)
-            {
-                _contentProvider = provider;
-                provider.Initialize(context.ApprovalArguments);
-            }
+            innerView.BindingContext = context;
             InnerContentSlot.Content = innerView;
         }
         else
         {
-            // Default: show arguments as read-only key/value list
             InnerContentSlot.Content = BuildDefaultArgsView(context);
         }
 
-        // If already resolved (recycled cell), disable
         if (context.ApprovalResolved)
-            _contentProvider?.SetReadOnly(true);
+            InnerContentSlot.IsEnabled = false;
     }
 
     private static View BuildDefaultArgsView(ContentContext context)
     {
         var args = context.ApprovalArguments;
         if (args is null || args.Count == 0)
-            return new Label
-            {
-                Text = "(no arguments)",
-                FontSize = 12,
-                TextColor = Colors.Gray
-            };
+            return new Label { Text = "(no arguments)", FontSize = 12, TextColor = Colors.Gray };
 
         var stack = new VerticalStackLayout { Spacing = 4 };
         foreach (var kvp in args)
@@ -61,15 +48,12 @@ public partial class ToolApprovalView : ContentView
             var row = new HorizontalStackLayout { Spacing = 6 };
             row.Add(new Label
             {
-                Text = $"{kvp.Key}:",
-                FontSize = 12,
-                FontAttributes = FontAttributes.Bold,
-                TextColor = Color.FromArgb("#7A7062")
+                Text = $"{kvp.Key}:", FontSize = 12,
+                FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#7A7062")
             });
             row.Add(new Label
             {
-                Text = kvp.Value?.ToString() ?? "(null)",
-                FontSize = 12,
+                Text = kvp.Value?.ToString() ?? "(null)", FontSize = 12,
                 TextColor = Color.FromArgb("#2C2416")
             });
             stack.Add(row);
@@ -77,24 +61,22 @@ public partial class ToolApprovalView : ContentView
         return stack;
     }
 
-    private void OnApproveClicked(object? sender, EventArgs e)
-    {
-        var args = _contentProvider?.GetArguments();
-        Respond(true, args);
-    }
+    private void OnApproveClicked(object? sender, EventArgs e) => Respond(true);
+    private void OnRejectClicked(object? sender, EventArgs e) => Respond(false);
 
-    private void OnRejectClicked(object? sender, EventArgs e) => Respond(false, null);
-
-    private void Respond(bool approved, IDictionary<string, object?>? modifiedArgs)
+    private void Respond(bool approved)
     {
         if (BindingContext is not ContentContext context ||
             context.Content is not ToolApprovalRequestContent request)
             return;
 
-        _contentProvider?.SetReadOnly(true);
+        InnerContentSlot.IsEnabled = false;
+
+        // Read the (possibly modified) arguments directly from the FunctionCallContent
+        var args = approved && request.ToolCall is FunctionCallContent fc ? fc.Arguments : null;
 
         var chatVm = FindChatViewModel();
-        chatVm?.RespondToApproval(request, approved, modifiedArgs);
+        chatVm?.RespondToApproval(request, approved, args);
     }
 
     private ChatViewModel? FindChatViewModel()

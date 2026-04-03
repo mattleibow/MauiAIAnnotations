@@ -1,12 +1,13 @@
 using MauiAIAnnotations.Maui.Chat;
+using Microsoft.Extensions.AI;
 
 namespace MauiSampleApp.Chat;
 
 /// <summary>
 /// Content-only approval view for batch care events.
-/// Shows checkboxes for each care item — user unchecks ones they didn't do.
+/// Shows checkboxes for each care item. Modifies FunctionCallContent.Arguments directly.
 /// </summary>
-public partial class BatchCareApprovalView : ContentView, IApprovalContentProvider
+public partial class BatchCareApprovalView : ContentView
 {
     private readonly BatchCareApprovalViewModel _vm = new();
 
@@ -16,15 +17,16 @@ public partial class BatchCareApprovalView : ContentView, IApprovalContentProvid
         BindingContext = _vm;
     }
 
-    public void Initialize(IDictionary<string, object?>? arguments)
+    protected override void OnBindingContextChanged()
     {
-        _vm.LoadFromArguments(arguments);
-    }
-
-    public IDictionary<string, object?> GetArguments() => _vm.BuildArguments();
-
-    public void SetReadOnly(bool readOnly)
-    {
-        IsEnabled = !readOnly;
+        base.OnBindingContextChanged();
+        if (BindingContext is ContentContext context &&
+            context.Content is ToolApprovalRequestContent approval &&
+            approval.ToolCall is FunctionCallContent fc)
+        {
+            _vm.LoadFromArguments(fc.Arguments);
+            _vm.PropertyChanged += (_, _) => _vm.WriteTo(fc);
+            BindingContext = _vm;
+        }
     }
 }

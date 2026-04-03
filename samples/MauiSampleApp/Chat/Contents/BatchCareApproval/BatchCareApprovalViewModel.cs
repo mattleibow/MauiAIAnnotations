@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.AI;
 
 namespace MauiSampleApp.Chat;
 
@@ -51,5 +52,11 @@ public partial class BatchCareApprovalViewModel : ObservableObject
             ["plantNickname"] = PlantNickname,
             ["eventTypes"] = selected,
         };
+    }
+
+    /// <summary>Writes the selected items back to the FunctionCallContent.Arguments.</summary>
+    public void WriteTo(FunctionCallContent fc)
+    {
+        fc.Arguments = BuildArguments();
     }
 }
