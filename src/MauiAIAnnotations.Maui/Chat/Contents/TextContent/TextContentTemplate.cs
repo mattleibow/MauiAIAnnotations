@@ -15,7 +15,12 @@ public class TextContentTemplate : ContentTemplate
         if (ViewType is not null)
             return base.GetTemplate();
 
-        return _cachedTemplate ??= new DataTemplate(typeof(ChatMessageView));
+        return _cachedTemplate ??= new DataTemplate(() =>
+        {
+            var view = new ChatMessageView();
+            view.SetDynamicResource(ContentView.ControlTemplateProperty, "MauiAI.ChatMessageTemplate");
+            return view;
+        });
     }
 
     private DataTemplate? _cachedTemplate;

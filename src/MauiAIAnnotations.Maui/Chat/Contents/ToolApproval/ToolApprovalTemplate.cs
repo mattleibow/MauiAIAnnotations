@@ -20,11 +20,13 @@ public class ToolApprovalTemplate : ContentTemplate
 
     internal override DataTemplate GetTemplate()
     {
-        var innerType = ViewType; // null = default args view, set = custom inner content
+        var innerType = ViewType;
         return _cachedTemplate ??= new DataTemplate(() =>
         {
             var wrapper = new ToolApprovalView();
             wrapper.InnerContentType = innerType;
+            // Explicit template lookup — implicit styles may not resolve inside CollectionView
+            wrapper.SetDynamicResource(ContentView.ControlTemplateProperty, "MauiAI.ToolApprovalTemplate");
             return wrapper;
         });
     }
