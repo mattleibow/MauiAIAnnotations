@@ -104,7 +104,7 @@ public HomePage(ChatViewModel chatViewModel)
 
 ## Step 4: Add the Chat Overlay to Your Page
 
-Add the `ChatOverlayControl` to any XAML page. Include the namespace declarations and content template mappings:
+Add the `ChatSidebarControl` to any XAML page. Include the namespace declarations and content template mappings:
 
 ```xml
 xmlns:maui="clr-namespace:MauiAIAnnotations.Maui.Controls;assembly=MauiAIAnnotations.Maui"
@@ -112,8 +112,8 @@ xmlns:mauiChat="clr-namespace:MauiAIAnnotations.Maui.Chat;assembly=MauiAIAnnotat
 ```
 
 ```xml
-<maui:ChatOverlayControl ChatVM="{Binding ChatViewModel}">
-    <maui:ChatOverlayControl.ContentTemplates>
+<maui:ChatSidebarControl ChatVM="{Binding ChatViewModel}">
+    <maui:ChatSidebarControl.ContentTemplates>
         <mauiChat:TextContentMapping Role="User"
             ViewType="{x:Type mauiChat:UserTextView}" />
         <mauiChat:TextContentMapping Role="Assistant"
@@ -126,8 +126,8 @@ xmlns:mauiChat="clr-namespace:MauiAIAnnotations.Maui.Chat;assembly=MauiAIAnnotat
             ViewType="{x:Type mauiChat:ErrorView}" />
         <mauiChat:DefaultContentMapping
             ViewType="{x:Type mauiChat:DefaultContentView}" />
-    </maui:ChatOverlayControl.ContentTemplates>
-</maui:ChatOverlayControl>
+    </maui:ChatSidebarControl.ContentTemplates>
+</maui:ChatSidebarControl>
 ```
 
 Run the app and you'll see the chat interface:

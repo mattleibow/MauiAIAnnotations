@@ -36,7 +36,7 @@ maui-devflow MAUI fill <AutomationId> "text"
 
 ### Project Structure
 - `src/MauiAIAnnotations/` — Core library: `[ExportAIFunction]` attribute, `AddAITools()` DI extension, `DependencyInjectionAIFunction`
-- `src/MauiAIAnnotations.Maui/` — Reusable MAUI chat UI: `ChatOverlayControl`, `ChatPanelControl`, `ChatViewModel`, content template system
+- `src/MauiAIAnnotations.Maui/` — Reusable MAUI chat UI: `ChatSidebarControl`, `ChatPanelControl`, `ChatViewModel`, content template system
 - `samples/MauiSampleApp/` — Gardening helper demo app
 - `samples/MauiSampleApp.Core/` — Core services (PlantDataService, SpeciesService, SeasonsService)
 - `tests/` — xUnit test projects
@@ -51,7 +51,7 @@ maui-devflow MAUI fill <AutomationId> "text"
 
 **CommunityToolkit.Mvvm**: All ViewModels use `ObservableObject`, `[ObservableProperty]`, `[RelayCommand]`. No manual INotifyPropertyChanged.
 
-**Responsive chat**: `ChatOverlayControl` shows as sidebar (≥900px) or overlay (narrow). Both share the same `ChatVM` and content templates.
+**Permanent chat sidebar layout
 
 ### DI Registration (MauiProgram.cs should stay minimal)
 ```csharp
@@ -63,10 +63,10 @@ builder.Services.AddAITools(); // discovers [ExportAIFunction] methods automatic
 - HomePage: `PageTitle`, `AddPlantButton`, `PlantList`
 - AddPlantPage: `NicknameEntry`, `SpeciesEntry`, `LocationEntry`, `IndoorSwitch`, `SavePlantButton`
 - PlantDetailPage: `CareHistoryList`, `DeletePlantButton`
-- Chat: `ChatFabButton`, `ChatOverlayPanel`, `CloseChatButton`, `ClearChatButton`, `ChatMessages`, `ChatInput`, `SendMessageButton`, `ChatBusyIndicator`
-- Sidebar: `SidebarClearChatButton`, `SidebarCloseChatButton`
+- Chat: `ChatSidebar`, `ClearChatButton`, `ChatMessages`, `ChatInput`, `SendMessageButton`, `ChatBusyIndicator`
 - Approval (generic): `ApproveToolButton`, `RejectToolButton`
 - Approval (plant-specific): `ApprovalNicknameEntry`, `ApprovalSpeciesEntry`, `ApprovalLocationEntry`, `ApprovalIndoorSwitch`, `ApproveToolButton`, `RejectToolButton`
+- Approval (batch care): `BatchCareList`, `ApproveToolButton`, `RejectToolButton`
 
 ## Conventions
 - `TreatWarningsAsErrors` is enabled in `Directory.Build.props`
@@ -77,7 +77,7 @@ builder.Services.AddAITools(); // discovers [ExportAIFunction] methods automatic
 
 ## Documentation
 - `docs/README.md` — Project overview, features, quick example
-- `docs/getting-started.md` — Adding AI to an existing MAUI app (attributes → DI → chat overlay)
+- `docs/getting-started.md` — Adding AI to an existing MAUI app (attributes → DI → chat sidebar)
 - `docs/tool-rendering.md` — Custom content views for tool calls (PlantCardView example)
 - `docs/human-in-the-loop.md` — Approval flow with `[ExportAIFunction(ApprovalRequired = true)]`
 - `docs/images/` — Screenshots referenced by the docs

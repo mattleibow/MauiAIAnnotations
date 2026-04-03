@@ -7,9 +7,7 @@ namespace MauiAIAnnotations.Maui.Controls;
 
 /// <summary>
 /// A permanent chat sidebar that is always visible.
-/// Unlike <see cref="ChatOverlayControl"/>, this has no FAB button,
-/// no overlay, and no show/hide logic — it's just a chat panel with a header.
-/// Use it in a split layout (e.g. Grid with two columns).
+/// Place it in a split layout (e.g. Grid with two columns) alongside your main content.
 /// </summary>
 public partial class ChatSidebarControl : ContentView
 {
