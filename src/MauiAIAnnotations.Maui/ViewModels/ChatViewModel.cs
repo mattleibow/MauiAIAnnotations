@@ -11,12 +11,18 @@ public partial class ChatViewModel : ObservableObject
     private readonly IChatClient _chatClient;
     private readonly IList<AITool> _tools;
 
+    private TaskCompletionSource<List<ToolApprovalResponseContent>>? _approvalTcs;
+    private List<ToolApprovalRequestContent> _pendingApprovals = [];
+
     [ObservableProperty]
     public partial string UserInput { get; set; }
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SendCommand))]
     public partial bool IsBusy { get; set; }
+
+    [ObservableProperty]
+    public partial bool HasPendingApprovals { get; set; }
 
     public string SystemPrompt { get; set; } = """
         You are a friendly assistant. You help users with their tasks and answer questions.
@@ -43,6 +49,44 @@ public partial class ChatViewModel : ObservableObject
     [RelayCommand]
     private void Clear() => Messages.Clear();
 
+    /// <summary>
+    /// Respond to a pending tool approval request. Call this from approval UI views.
+    /// </summary>
+    /// <param name="request">The approval request to respond to.</param>
+    /// <param name="approved">Whether the user approved the tool call.</param>
+    /// <param name="modifiedArguments">Optional modified arguments (user can edit before approving).</param>
+    public void RespondToApproval(ToolApprovalRequestContent request, bool approved, IDictionary<string, object?>? modifiedArguments = null)
+    {
+        ToolApprovalResponseContent response;
+        if (approved && modifiedArguments is not null && request.ToolCall is FunctionCallContent originalCall)
+        {
+            // Create a new FunctionCallContent with modified arguments
+            var modifiedCall = new FunctionCallContent(originalCall.CallId, originalCall.Name, modifiedArguments);
+            response = new ToolApprovalResponseContent(request.RequestId, true, modifiedCall);
+        }
+        else
+        {
+            response = request.CreateResponse(approved, approved ? null : "User rejected");
+        }
+
+        // Collect the response
+        if (_approvalTcs is not null)
+        {
+            // Find and complete the pending approval batch
+            var responses = new List<ToolApprovalResponseContent>();
+            foreach (var pending in _pendingApprovals)
+            {
+                if (pending == request)
+                    responses.Add(response);
+                else
+                    responses.Add(pending.CreateResponse(true)); // Auto-approve others in batch
+            }
+            _pendingApprovals.Clear();
+            HasPendingApprovals = false;
+            _approvalTcs.TrySetResult(responses);
+        }
+    }
+
     [RelayCommand(CanExecute = nameof(CanSend))]
     private async Task SendAsync()
     {
@@ -56,23 +100,28 @@ public partial class ChatViewModel : ObservableObject
 
         try
         {
-            var history = new List<ChatMessage>();
-            if (!string.IsNullOrEmpty(SystemPrompt))
-                history.Add(new ChatMessage(ChatRole.System, SystemPrompt));
+            await RunStreamingLoopAsync();
+        }
+        catch (Exception ex)
+        {
+            Messages.Add(new ContentContext(new ErrorContent(ex.Message), "Error"));
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
 
-            foreach (var m in Messages)
-            {
-                if (m.Content is TextContent text)
-                {
-                    var role = m.Role == "User" ? ChatRole.User : ChatRole.Assistant;
-                    history.Add(new ChatMessage(role, text.Text ?? ""));
-                }
-            }
-
+    private async Task RunStreamingLoopAsync()
+    {
+        while (true)
+        {
+            var history = BuildHistory();
             var options = new ChatOptions { Tools = [.. AdditionalTools, .. _tools] };
 
             ContentContext? assistantCtx = null;
             var responseText = "";
+            var approvalRequests = new List<ToolApprovalRequestContent>();
 
             await foreach (var update in _chatClient.GetStreamingResponseAsync(history, options))
             {
@@ -80,6 +129,11 @@ public partial class ChatViewModel : ObservableObject
                 {
                     switch (content)
                     {
+                        case ToolApprovalRequestContent approval:
+                            approvalRequests.Add(approval);
+                            Messages.Add(new ContentContext(approval, "Approval"));
+                            break;
+
                         case FunctionCallContent call:
                             Messages.Add(new ContentContext(call, "Tool"));
                             break;
@@ -104,16 +158,49 @@ public partial class ChatViewModel : ObservableObject
                 }
             }
 
-            if (assistantCtx is null)
-                Messages.Add(new ContentContext(new TextContent("(no response)"), "Assistant"));
+            // If no approvals needed, we're done
+            if (approvalRequests.Count == 0)
+            {
+                if (assistantCtx is null)
+                    Messages.Add(new ContentContext(new TextContent("(no response)"), "Assistant"));
+                return;
+            }
+
+            // Wait for user to respond to approvals
+            _pendingApprovals = approvalRequests;
+            HasPendingApprovals = true;
+            _approvalTcs = new TaskCompletionSource<List<ToolApprovalResponseContent>>();
+            var responses = await _approvalTcs.Task;
+            _approvalTcs = null;
+
+            // Check if all were rejected
+            if (responses.All(r => !r.Approved))
+            {
+                Messages.Add(new ContentContext(new TextContent("Tool call was rejected."), "Assistant"));
+                return;
+            }
+
+            // Add approval responses to history and loop again
+            history.Add(new ChatMessage(ChatRole.Assistant, [.. approvalRequests]));
+            history.Add(new ChatMessage(ChatRole.User, [.. responses]));
         }
-        catch (Exception ex)
+    }
+
+    private List<ChatMessage> BuildHistory()
+    {
+        var history = new List<ChatMessage>();
+        if (!string.IsNullOrEmpty(SystemPrompt))
+            history.Add(new ChatMessage(ChatRole.System, SystemPrompt));
+
+        foreach (var m in Messages)
         {
-            Messages.Add(new ContentContext(new ErrorContent(ex.Message), "Error"));
+            if (m.Content is TextContent text)
+            {
+                var role = m.Role == "User" ? ChatRole.User : ChatRole.Assistant;
+                history.Add(new ChatMessage(role, text.Text ?? ""));
+            }
         }
-        finally
-        {
-            IsBusy = false;
-        }
+
+        return history;
     }
 }

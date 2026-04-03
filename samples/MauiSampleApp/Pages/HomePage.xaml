@@ -124,6 +124,8 @@
                 <mauiChat:TextContentMapping Role="User" ViewType="{x:Type mauiChat:UserTextView}" />
                 <mauiChat:TextContentMapping Role="Assistant" ViewType="{x:Type mauiChat:AssistantTextView}" />
                 <mauiChat:FunctionCallMapping ViewType="{x:Type mauiChat:FunctionCallView}" />
+                <local:PlantApprovalMapping ViewType="{x:Type local:PlantApprovalView}" />
+                <mauiChat:ToolApprovalMapping ViewType="{x:Type mauiChat:ToolApprovalView}" />
                 <local:PlantResultMapping ViewType="{x:Type local:PlantResultView}" />
                 <mauiChat:FunctionResultMapping ViewType="{x:Type mauiChat:FunctionResultView}" />
                 <mauiChat:ErrorContentMapping ViewType="{x:Type mauiChat:ErrorView}" />

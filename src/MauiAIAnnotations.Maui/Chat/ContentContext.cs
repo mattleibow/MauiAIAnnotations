@@ -15,6 +15,8 @@ public partial class ContentContext : ObservableObject
     [NotifyPropertyChangedFor(nameof(ErrorMessage))]
     [NotifyPropertyChangedFor(nameof(ResultText))]
     [NotifyPropertyChangedFor(nameof(DisplayText))]
+    [NotifyPropertyChangedFor(nameof(IsApprovalRequest))]
+    [NotifyPropertyChangedFor(nameof(ApprovalToolName))]
     public partial AIContent Content { get; set; }
 
     public string Role { get; }
@@ -41,4 +43,16 @@ public partial class ContentContext : ObservableObject
 
     /// <summary>Fallback display text for any content type.</summary>
     public string? DisplayText => Content?.ToString();
+
+    // Approval properties
+
+    /// <summary>True if this content is a tool approval request awaiting user decision.</summary>
+    public bool IsApprovalRequest => Content is ToolApprovalRequestContent;
+
+    /// <summary>The tool name for an approval request.</summary>
+    public string? ApprovalToolName => (Content as ToolApprovalRequestContent)?.ToolCall is FunctionCallContent fc ? fc.Name : null;
+
+    /// <summary>Gets the arguments dictionary from an approval request's tool call.</summary>
+    public IDictionary<string, object?>? ApprovalArguments =>
+        (Content as ToolApprovalRequestContent)?.ToolCall is FunctionCallContent fc ? fc.Arguments : null;
 }

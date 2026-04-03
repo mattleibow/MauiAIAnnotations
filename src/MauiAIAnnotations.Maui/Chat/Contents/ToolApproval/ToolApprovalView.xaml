@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:chat="clr-namespace:MauiAIAnnotations.Maui.Chat"
+             x:Class="MauiAIAnnotations.Maui.Chat.ToolApprovalView"
+             x:DataType="chat:ContentContext">
+    <Border Padding="14,12" Margin="0,6"
+            HorizontalOptions="Fill"
+            BackgroundColor="{AppThemeBinding Light=#FFF8E1, Dark=#302A18}"
+            Stroke="{AppThemeBinding Light=#E8D5A0, Dark=#5A4D2A}"
+            StrokeThickness="1">
+        <Border.StrokeShape><RoundRectangle CornerRadius="14" /></Border.StrokeShape>
+        <VerticalStackLayout Spacing="10">
+            <!-- Header -->
+            <HorizontalStackLayout Spacing="8">
+                <Label Text="⚠️" FontSize="18" VerticalOptions="Center" />
+                <Label Text="Approval Required" FontSize="15" FontAttributes="Bold"
+                       TextColor="{AppThemeBinding Light=#8B6F00, Dark=#E8C840}"
+                       VerticalOptions="Center" />
+            </HorizontalStackLayout>
+
+            <!-- Tool name -->
+            <HorizontalStackLayout Spacing="6">
+                <Label Text="Tool:" FontSize="13" FontAttributes="Bold"
+                       TextColor="{AppThemeBinding Light=#7A7062, Dark=#A69E90}" />
+                <Label Text="{Binding ApprovalToolName}" FontSize="13"
+                       TextColor="{AppThemeBinding Light=#2C2416, Dark=#EDE8DF}" />
+            </HorizontalStackLayout>
+
+            <!-- Approve / Reject buttons -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                <Button Text="✅ Approve"
+                        AutomationId="ApproveToolButton"
+                        Clicked="OnApproveClicked"
+                        BackgroundColor="#5B8C5A"
+                        TextColor="White"
+                        FontSize="14" FontAttributes="Bold"
+                        CornerRadius="10" HeightRequest="40" />
+                <Button Grid.Column="1" Text="❌ Reject"
+                        AutomationId="RejectToolButton"
+                        Clicked="OnRejectClicked"
+                        BackgroundColor="#C75050"
+                        TextColor="White"
+                        FontSize="14" FontAttributes="Bold"
+                        CornerRadius="10" HeightRequest="40" />
+            </Grid>
+        </VerticalStackLayout>
+    </Border>
+</ContentView>
