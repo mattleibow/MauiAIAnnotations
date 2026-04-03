@@ -2,7 +2,7 @@
 
 By default, function results appear as plain text in the chat. You can replace that with a rich, styled view — a plant card, a weather widget, a product tile — by creating a **content template mapping** that targets specific tool results.
 
-This guide walks through the sample app's `PlantCardView`: when the AI calls `get_plant`, a styled card appears instead of raw JSON.
+This guide walks through the sample app's `PlantCardView`: when the AI returns a `Plant` from any tool call (e.g. `get_plant`), a styled card appears instead of raw JSON.
 
 ## How Content Templates Work
 
@@ -22,6 +22,11 @@ ContentTemplateSelector
 Subclass `ContentTemplateMapping` and override `When()` to match the tool results you care about:
 
 ```csharp
+using System.Text.Json;
+using MauiAIAnnotations.Maui.Chat;
+using Microsoft.Extensions.AI;
+using MauiSampleApp.Core.Models;
+
 public class PlantResultMapping : ContentTemplateMapping
 {
     public override bool When(ContentContext context)
@@ -141,6 +146,8 @@ If `PlantResultMapping` appears after `FunctionResultMapping`, the generic mappi
 | Rich data cards | Plant info, weather, product details |
 | Interactive elements | Buttons, links, rating controls |
 | Custom visualizations | Charts, maps, progress indicators |
-| Tool-specific filtering | Only `get_plant` gets the card; other tools keep the generic view |
+| Tool-specific filtering | Match by tool name in `When()` to only show the card for specific tools |
 
 For even deeper customization — like intercepting a tool call **before** it executes and letting the user approve or reject it — see [Human-in-the-Loop Tool Approval](human-in-the-loop.md).
+
+> **Full sample code:** See `samples/MauiSampleApp/Chat/Contents/PlantResult/` for the complete PlantCardView implementation.

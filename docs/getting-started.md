@@ -45,13 +45,14 @@ public class PlantDataService
 }
 ```
 
-That's it — no manual JSON schema definitions or adapter classes needed. The source generator handles the rest at compile time.
+That's it — no manual JSON schema definitions or adapter classes needed. The library handles discovery via reflection at registration time.
 
 ## Step 3: Wire Up DI in MauiProgram.cs
 
 Register your services and the AI chat client in `MauiProgram.cs`:
 
 ```csharp
+using MauiAIAnnotations;
 using Microsoft.Extensions.AI;
 using Azure.AI.OpenAI;
 using System.ClientModel;
@@ -80,12 +81,33 @@ builder.Services.AddSingleton<IChatClient>(provider =>
 
 `AddAITools()` scans your registered services for `[ExportAIFunction]` attributes and makes them available as AI tools. `UseFunctionInvocation()` enables automatic function calling — the AI model can invoke your methods directly during a conversation.
 
+> **Note:** `endpoint`, `apiKey`, and `deploymentName` should come from configuration
+> (e.g. `builder.Configuration` or user secrets). See the sample app's `MauiProgram.cs`
+> for a full example using `AddJsonStream` for embedded secrets.
+
+You'll also need a `ChatViewModel` (or subclass) and page binding. The library provides
+`MauiAIAnnotations.Maui.ViewModels.ChatViewModel` — register it and bind in your page:
+
+```csharp
+builder.Services.AddSingleton<ChatViewModel>();
+builder.Services.AddTransient<HomePage>();
+```
+
+```csharp
+// HomePage.xaml.cs
+public HomePage(ChatViewModel chatViewModel)
+{
+    BindingContext = new { ChatViewModel = chatViewModel };
+    InitializeComponent();
+}
+```
+
 ## Step 4: Add the Chat Overlay to Your Page
 
 Add the `ChatOverlayControl` to any XAML page. Include the namespace declarations and content template mappings:
 
 ```xml
-xmlns:maui="clr-namespace:MauiAIAnnotations.Maui;assembly=MauiAIAnnotations.Maui"
+xmlns:maui="clr-namespace:MauiAIAnnotations.Maui.Controls;assembly=MauiAIAnnotations.Maui"
 xmlns:mauiChat="clr-namespace:MauiAIAnnotations.Maui.Chat;assembly=MauiAIAnnotations.Maui"
 ```
 
@@ -121,7 +143,7 @@ Ask the AI a question like *"Show me all my plants"* and watch it invoke your an
 - **Responsive layout** — on wide screens (≥900px), chat appears as a sidebar; on narrow screens, it's a floating overlay with a FAB button.
 - **Automatic function invocation** — `FunctionInvokingChatClient` intercepts tool-call responses from the model and dispatches them to your `[ExportAIFunction]` methods.
 - **Visual message templates** — each message type (user text, assistant text, function call, function result, error) gets its own visual template via the content mappings above.
-- **Source-generated tools** — `AddAITools()` discovers tool definitions created at compile time, so there's no reflection overhead at runtime.
+- **DI-integrated tools** — `AddAITools()` discovers tool definitions at registration time via reflection, respecting DI lifetimes for each invocation.
 
 ## Next Steps
 

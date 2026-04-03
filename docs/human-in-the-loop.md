@@ -29,12 +29,14 @@ Add `ApprovalRequired = true` to any tool that mutates data:
 ```csharp
 [ExportAIFunction("add_plant", Description = "Adds a new plant.", ApprovalRequired = true)]
 public async Task<Plant> AddPlantAsync(
-    string name,
-    string description,
-    PlantType type) { ... }
+    [Description("A friendly name for the plant")] string nickname,
+    [Description("The species name")] string species,
+    [Description("Where the plant is located")] string location,
+    [Description("Whether the plant is kept indoors")] bool isIndoor) { ... }
 
 [ExportAIFunction("remove_plant", Description = "Removes a plant.", ApprovalRequired = true)]
-public async Task RemovePlantAsync(int plantId) { ... }
+public async Task RemovePlantAsync(
+    [Description("The nickname of the plant to remove")] string nickname) { ... }
 ```
 
 That's it — no changes to `MauiProgram.cs` are needed. The discovery pipeline handles
@@ -61,56 +63,94 @@ edit individual arguments before approving.
 
 ### 1. Create a custom mapping
 
-Create a `PlantApprovalMapping` class that matches only the `add_plant` tool:
+Create a `PlantApprovalMapping` class that matches only the `add_plant` tool.
+It inherits from `ContentTemplateMapping` and overrides `When()`:
 
 ```csharp
-public class PlantApprovalMapping : ToolApprovalMapping
+using MauiAIAnnotations.Maui.Chat;
+using Microsoft.Extensions.AI;
+
+public class PlantApprovalMapping : ContentTemplateMapping
 {
-    public override bool Matches(ToolApprovalRequestContent request)
-        => request.FunctionCallContent.Name == "add_plant";
+    public override bool When(ContentContext context) =>
+        context.Content is ToolApprovalRequestContent approval &&
+        approval.ToolCall is FunctionCallContent fc &&
+        string.Equals(fc.Name, "add_plant", StringComparison.OrdinalIgnoreCase);
 }
 ```
 
 ### 2. Create a view-model with editable properties
 
 ```csharp
-public class PlantApprovalViewModel : ToolApprovalViewModel
-{
-    public string PlantName { get; set; }
-    public string Description { get; set; }
-    public PlantType Type { get; set; }
+using CommunityToolkit.Mvvm.ComponentModel;
+using MauiAIAnnotations.Maui.Chat;
+using Microsoft.Extensions.AI;
 
-    public override void LoadFromRequest(ToolApprovalRequestContent request)
+public partial class PlantApprovalViewModel : ObservableObject
+{
+    [ObservableProperty]
+    public partial string Nickname { get; set; }
+
+    [ObservableProperty]
+    public partial string Species { get; set; }
+
+    [ObservableProperty]
+    public partial string Location { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsIndoor { get; set; }
+
+    public ToolApprovalRequestContent? Request { get; private set; }
+
+    public void SetContext(ContentContext context)
     {
-        var args = request.FunctionCallContent.Arguments;
-        PlantName = args["name"]?.ToString();
-        Description = args["description"]?.ToString();
-        // ...
+        if (context.Content is not ToolApprovalRequestContent approval ||
+            approval.ToolCall is not FunctionCallContent fc)
+            return;
+
+        Request = approval;
+        var args = fc.Arguments;
+        if (args is null) return;
+
+        Nickname = args.TryGetValue("nickname", out var n) ? n?.ToString() ?? "" : "";
+        Species = args.TryGetValue("species", out var s) ? s?.ToString() ?? "" : "";
+        Location = args.TryGetValue("location", out var l) ? l?.ToString() ?? "" : "";
+        IsIndoor = args.TryGetValue("isIndoor", out var i) && i is true;
     }
 
-    public override IDictionary<string, object?> GetModifiedArguments()
-        => new Dictionary<string, object?>
-        {
-            ["name"] = PlantName,
-            ["description"] = Description,
-            ["type"] = Type,
-        };
+    public IDictionary<string, object?> BuildArguments() => new Dictionary<string, object?>
+    {
+        ["nickname"] = Nickname,
+        ["species"] = Species,
+        ["location"] = Location,
+        ["isIndoor"] = IsIndoor,
+    };
 }
 ```
 
 ### 3. Create the XAML view
 
+The view uses compiled bindings with `x:DataType` and walks the visual tree to find
+`ChatViewModel` for responding. See the full implementation in
+`samples/MauiSampleApp/Chat/Contents/PlantApproval/`.
+
 ```xml
-<ContentView x:Class="MyApp.PlantApprovalView">
-    <VerticalStackLayout Padding="12" Spacing="8">
-        <Label Text="Add Plant — Review &amp; Approve" FontAttributes="Bold" />
-        <Entry Text="{Binding PlantName}" Placeholder="Name" />
-        <Entry Text="{Binding Description}" Placeholder="Description" />
-        <HorizontalStackLayout Spacing="8">
-            <Button Text="Approve" Command="{Binding ApproveCommand}" />
-            <Button Text="Reject"  Command="{Binding RejectCommand}" />
-        </HorizontalStackLayout>
-    </VerticalStackLayout>
+<ContentView x:DataType="local:PlantApprovalViewModel">
+    <Border Padding="14,12" BackgroundColor="{AppThemeBinding Light=#FFF8E1, Dark=#302A18}">
+        <VerticalStackLayout Spacing="10">
+            <Label Text="🪴 Add Plant — Review &amp; Approve" FontAttributes="Bold" />
+            <Entry Text="{Binding Nickname}" AutomationId="ApprovalNicknameEntry" />
+            <Entry Text="{Binding Species}" AutomationId="ApprovalSpeciesEntry" />
+            <Entry Text="{Binding Location}" AutomationId="ApprovalLocationEntry" />
+            <Switch IsToggled="{Binding IsIndoor}" AutomationId="ApprovalIndoorSwitch" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                <Button Text="✅ Add Plant" AutomationId="ApproveToolButton"
+                        Clicked="OnApproveClicked" BackgroundColor="#5B8C5A" TextColor="White" />
+                <Button Grid.Column="1" Text="❌ Cancel" AutomationId="RejectToolButton"
+                        Clicked="OnRejectClicked" BackgroundColor="#C75050" TextColor="White" />
+            </Grid>
+        </VerticalStackLayout>
+    </Border>
 </ContentView>
 ```
 
@@ -146,3 +186,5 @@ rejection signal and acknowledges it in the conversation.
 - **Custom approval views** let users inspect and edit arguments before the tool runs.
 - **`ChatViewModel.RespondToApproval()`** supports passing modified arguments back to
   the tool invocation.
+
+> **Full sample code:** See `samples/MauiSampleApp/Chat/Contents/PlantApproval/` for the complete editable plant approval implementation.
