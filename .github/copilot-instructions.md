@@ -45,7 +45,7 @@ maui-devflow MAUI fill <AutomationId> "text"
 
 **Attribute-based tool discovery**: Decorate service methods with `[ExportAIFunction]`. `AddAITools()` scans assemblies and registers each as an `AITool` singleton in DI. `DependencyInjectionAIFunction` resolves the service from DI per-invocation, respecting lifetimes.
 
-**Content template system**: `ContentTemplateMapping` subclasses declare a `When(ContentContext)` predicate and a `ViewType`. `ContentTemplateSelector` picks the first match. Templates are declared in XAML and cached (MAUI requirement: same DataTemplate instance per call).
+**Content template system**: `ContentTemplate` subclasses declare a `When(ContentContext)` predicate and a `ViewType`. `ContentTemplateSelector` picks the first match. Templates are declared in XAML and cached (MAUI requirement: same DataTemplate instance per call).
 
 **Compiled bindings**: All chat content views use `x:DataType="chat:ContentContext"` for compiled bindings. Views bind directly to `ContentContext` computed properties (Text, FunctionName, ErrorMessage, ResultText, DisplayText). No intermediate ViewModels for library views.
 

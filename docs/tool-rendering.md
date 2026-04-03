@@ -6,20 +6,20 @@ This guide walks through the sample app's `PlantCardView`: when the AI returns a
 
 ## How Content Templates Work
 
-The chat UI uses a `ContentTemplateSelector` that holds an ordered list of `ContentTemplateMapping` objects. For each chat item it iterates the list and picks the **first** mapping whose `When()` predicate returns `true`.
+The chat UI uses a `ContentTemplateSelector` that holds an ordered list of `ContentTemplate` objects. For each chat item it iterates the list and picks the **first** mapping whose `When()` predicate returns `true`.
 
 ```
 ContentTemplateSelector
-  ├─ PlantResultMapping      → PlantResultView   ← matches Plant results
-  ├─ FunctionResultMapping   → FunctionResultView ← catches all other results
-  └─ DefaultContentMapping   → DefaultContentView
+  ├─ PlantResultTemplate      → PlantResultView   ← matches Plant results
+  ├─ FunctionResultTemplate   → FunctionResultView ← catches all other results
+  └─ DefaultContentTemplate   → DefaultContentView
 ```
 
 **Order matters.** Specific mappings must appear before generic ones, otherwise the generic mapping matches first and your custom view is never used.
 
-## Step 1: Create a ContentTemplateMapping
+## Step 1: Create a ContentTemplate
 
-Subclass `ContentTemplateMapping` and override `When()` to match the tool results you care about:
+Subclass `ContentTemplate` and override `When()` to match the tool results you care about:
 
 ```csharp
 using System.Text.Json;
@@ -27,7 +27,7 @@ using MauiAIAnnotations.Maui.Chat;
 using Microsoft.Extensions.AI;
 using MauiSampleApp.Core.Models;
 
-public class PlantResultMapping : ContentTemplateMapping
+public class PlantResultTemplate : ContentTemplate
 {
     public override bool When(ContentContext context)
     {
@@ -76,7 +76,7 @@ public partial class PlantResultViewModel : ObservableObject
     {
         if (context.Content is FunctionResultContent result)
         {
-            Plant = PlantResultMapping.TryGetPlant(result);
+            Plant = PlantResultTemplate.TryGetPlant(result);
         }
     }
 }
@@ -120,20 +120,20 @@ The `PlantCardView` inside is a normal MAUI control that binds to `Plant` proper
 
 ## Step 4: Register the Template
 
-Add your mapping to the `ContentTemplates` list in the page XAML. Place it **before** the generic `FunctionResultMapping`:
+Add your mapping to the `ContentTemplates` list in the page XAML. Place it **before** the generic `FunctionResultTemplate`:
 
 ```xml
 <maui:ChatPanelControl ChatVM="{Binding ChatViewModel}">
     <maui:ChatPanelControl.ContentTemplates>
         <!-- ... other mappings ... -->
-        <local:PlantResultMapping ViewType="{x:Type local:PlantResultView}" />
-        <mauiChat:FunctionResultMapping ViewType="{x:Type mauiChat:FunctionResultView}" />
+        <local:PlantResultTemplate ViewType="{x:Type local:PlantResultView}" />
+        <mauiChat:FunctionResultTemplate ViewType="{x:Type mauiChat:FunctionResultView}" />
         <!-- ... remaining mappings ... -->
     </maui:ChatPanelControl.ContentTemplates>
 </maui:ChatPanelControl>
 ```
 
-If `PlantResultMapping` appears after `FunctionResultMapping`, the generic mapping matches every `FunctionResultContent` first and the plant card never shows.
+If `PlantResultTemplate` appears after `FunctionResultTemplate`, the generic mapping matches every `FunctionResultContent` first and the plant card never shows.
 
 ## Result
 

@@ -2,7 +2,7 @@ using Microsoft.Extensions.AI;
 
 namespace MauiAIAnnotations.Maui.Chat;
 
-public class FunctionCallMapping : ContentTemplateMapping
+public class FunctionCallTemplate : ContentTemplate
 {
     public string? ToolName { get; set; }
 

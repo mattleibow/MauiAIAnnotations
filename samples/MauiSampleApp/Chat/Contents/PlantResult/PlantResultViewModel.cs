@@ -14,7 +14,7 @@ public partial class PlantResultViewModel : ObservableObject
     {
         if (context.Content is FunctionResultContent result)
         {
-            Plant = PlantResultMapping.TryGetPlant(result);
+            Plant = PlantResultTemplate.TryGetPlant(result);
         }
     }
 }

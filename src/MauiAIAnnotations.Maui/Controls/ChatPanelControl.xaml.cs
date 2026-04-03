@@ -20,9 +20,9 @@ public partial class ChatPanelControl : ContentView
         set => SetValue(ChatVMProperty, value);
     }
 
-    private readonly ObservableCollection<ContentTemplateMapping> _contentTemplates = [];
+    private readonly ObservableCollection<ContentTemplate> _contentTemplates = [];
 
-    public IList<ContentTemplateMapping> ContentTemplates => _contentTemplates;
+    public IList<ContentTemplate> ContentTemplates => _contentTemplates;
 
     public ChatPanelControl()
     {

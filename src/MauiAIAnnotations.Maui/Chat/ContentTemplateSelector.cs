@@ -6,7 +6,7 @@ public class ContentTemplateSelector : DataTemplateSelector
     private static readonly DataTemplate FallbackTemplate =
         new(() => new Label { Text = "?" });
 
-    public IList<ContentTemplateMapping> Templates { get; } = new List<ContentTemplateMapping>();
+    public IList<ContentTemplate> Templates { get; } = new List<ContentTemplate>();
 
     protected override DataTemplate OnSelectTemplate(object item, BindableObject container)
     {

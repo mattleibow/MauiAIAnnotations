@@ -114,17 +114,17 @@ xmlns:mauiChat="clr-namespace:MauiAIAnnotations.Maui.Chat;assembly=MauiAIAnnotat
 ```xml
 <maui:ChatPanelControl ChatVM="{Binding ChatViewModel}">
     <maui:ChatPanelControl.ContentTemplates>
-        <mauiChat:TextContentMapping Role="User"
+        <mauiChat:TextContentTemplate Role="User"
             ViewType="{x:Type mauiChat:UserTextView}" />
-        <mauiChat:TextContentMapping Role="Assistant"
+        <mauiChat:TextContentTemplate Role="Assistant"
             ViewType="{x:Type mauiChat:AssistantTextView}" />
-        <mauiChat:FunctionCallMapping
+        <mauiChat:FunctionCallTemplate
             ViewType="{x:Type mauiChat:FunctionCallView}" />
-        <mauiChat:FunctionResultMapping
+        <mauiChat:FunctionResultTemplate
             ViewType="{x:Type mauiChat:FunctionResultView}" />
-        <mauiChat:ErrorContentMapping
+        <mauiChat:ErrorContentTemplate
             ViewType="{x:Type mauiChat:ErrorView}" />
-        <mauiChat:DefaultContentMapping
+        <mauiChat:DefaultContentTemplate
             ViewType="{x:Type mauiChat:DefaultContentView}" />
     </maui:ChatPanelControl.ContentTemplates>
 </maui:ChatPanelControl>

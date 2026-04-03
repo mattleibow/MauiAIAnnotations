@@ -4,10 +4,10 @@ namespace MauiAIAnnotations.Maui.Chat;
 /// Maps a <see cref="ContentContext"/> to a view type via the <see cref="When"/> predicate.
 /// Declare in XAML inside ChatOverlayControl.ContentTemplates.
 /// </summary>
-public abstract class ContentTemplateMapping : BindableObject
+public abstract class ContentTemplate : BindableObject
 {
     public static readonly BindableProperty ViewTypeProperty =
-        BindableProperty.Create(nameof(ViewType), typeof(Type), typeof(ContentTemplateMapping));
+        BindableProperty.Create(nameof(ViewType), typeof(Type), typeof(ContentTemplate));
 
     public Type? ViewType
     {

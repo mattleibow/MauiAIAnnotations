@@ -7,10 +7,10 @@ namespace MauiSampleApp.Chat;
 
 /// <summary>
 /// Matches <see cref="FunctionResultContent"/> where the result is a <see cref="Plant"/> object.
-/// This template takes priority over the generic <see cref="FunctionResultMapping"/> when placed
+/// This template takes priority over the generic <see cref="FunctionResultTemplate"/> when placed
 /// before it in the template list, demonstrating tool-specific result rendering.
 /// </summary>
-public class PlantResultMapping : ContentTemplateMapping
+public class PlantResultTemplate : ContentTemplate
 {
     public override bool When(ContentContext context)
     {

@@ -5,10 +5,10 @@ namespace MauiAIAnnotations.Maui.Chat;
 /// <summary>
 /// Matches <see cref="ToolApprovalRequestContent"/> items in the chat.
 /// Optionally filters by tool name.
-/// Set <see cref="ContentTemplateMapping.ViewType"/> to a custom inner content view;
+/// Set <see cref="ContentTemplate.ViewType"/> to a custom inner content view;
 /// leave null for the default arguments display.
 /// </summary>
-public class ToolApprovalMapping : ContentTemplateMapping
+public class ToolApprovalTemplate : ContentTemplate
 {
     /// <summary>Filter to a specific tool name, or null to match all approval requests.</summary>
     public string? ToolName { get; set; }

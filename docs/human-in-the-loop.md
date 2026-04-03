@@ -48,7 +48,7 @@ The library ships with a generic `ToolApprovalView` that works for any tool. Reg
 it as a chat item template so the chat UI knows how to render approval requests:
 
 ```xml
-<mauiChat:ToolApprovalMapping ViewType="{x:Type mauiChat:ToolApprovalView}" />
+<mauiChat:ToolApprovalTemplate ViewType="{x:Type mauiChat:ToolApprovalView}" />
 ```
 
 This displays a card with the tool name, a read-only summary of the arguments, and
@@ -64,13 +64,13 @@ edit individual arguments before approving.
 ### 1. Create a custom mapping
 
 Create a `PlantApprovalMapping` class that matches only the `add_plant` tool.
-It inherits from `ContentTemplateMapping` and overrides `When()`:
+It inherits from `ContentTemplate` and overrides `When()`:
 
 ```csharp
 using MauiAIAnnotations.Maui.Chat;
 using Microsoft.Extensions.AI;
 
-public class PlantApprovalMapping : ContentTemplateMapping
+public class PlantApprovalMapping : ContentTemplate
 {
     public override bool When(ContentContext context) =>
         context.Content is ToolApprovalRequestContent approval &&
@@ -160,7 +160,7 @@ Order matters — more specific mappings must come first:
 
 ```xml
 <local:PlantApprovalMapping ViewType="{x:Type local:PlantApprovalView}" />
-<mauiChat:ToolApprovalMapping ViewType="{x:Type mauiChat:ToolApprovalView}" />
+<mauiChat:ToolApprovalTemplate ViewType="{x:Type mauiChat:ToolApprovalView}" />
 ```
 
 The custom approval view shows editable fields for the plant data:
@@ -206,10 +206,10 @@ public async Task<List<CareEvent>> LogBatchCareEventsAsync(
     string plantNickname, List<string> eventTypes) { ... }
 ```
 
-Register the checkbox view via `ToolApprovalMapping.InnerViewType`:
+Register the checkbox view via `ToolApprovalTemplate.InnerViewType`:
 
 ```xml
-<mauiChat:ToolApprovalMapping ToolName="log_batch_care_events"
+<mauiChat:ToolApprovalTemplate ToolName="log_batch_care_events"
     InnerViewType="{x:Type local:BatchCareApprovalView}"
     ViewType="{x:Type mauiChat:ToolApprovalView}" />
 ```
@@ -222,7 +222,7 @@ Register the checkbox view via `ToolApprovalMapping.InnerViewType`:
 - **Library owns the Approve/Reject buttons** — app views implement
   `IApprovalContentProvider` to provide editable content only.
 - **Cards stay after resolution** — inputs disabled, buttons replaced with status text.
-- **`ToolApprovalMapping.InnerViewType`** — declare custom content per tool name.
+- **`ToolApprovalTemplate.InnerViewType`** — declare custom content per tool name.
 - **`ChatViewModel.RespondToApproval()`** supports passing modified arguments back to
   the tool invocation.
 

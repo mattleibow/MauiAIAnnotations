@@ -1,6 +1,6 @@
 namespace MauiAIAnnotations.Maui.Chat;
 
-public class DefaultContentMapping : ContentTemplateMapping
+public class DefaultContentTemplate : ContentTemplate
 {
     public override bool When(ContentContext context) => true;
 }
