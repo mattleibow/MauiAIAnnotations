@@ -66,3 +66,11 @@ builder.Services.AddAITools(); // discovers [ExportAIFunction] methods automatic
 - XAML views in the library bind directly to `ContentContext` — no ViewModels unless doing real data transformation
 - Chat auto-scroll uses `Dispatcher.DispatchDelayed(50ms)` before `ScrollTo`
 - CollectionView items can't be tapped via MauiDevFlow (virtualization bounds are -1x-1)
+
+## Documentation
+- `docs/README.md` — Project overview, features, quick example
+- `docs/getting-started.md` — Adding AI to an existing MAUI app (attributes → DI → chat overlay)
+- `docs/tool-rendering.md` — Custom content views for tool calls (PlantCardView example)
+- `docs/human-in-the-loop.md` — Approval flow with `[ExportAIFunction(ApprovalRequired = true)]`
+- `docs/images/` — Screenshots referenced by the docs
+- When adding new features, update the relevant doc page and capture new screenshots via MauiDevFlow
