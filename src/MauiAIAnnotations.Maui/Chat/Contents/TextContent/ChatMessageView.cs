@@ -27,6 +27,7 @@ public class ChatMessageView : ContentView
     }
 
     private ContentContext? _ctx;
+    private VisualElement? _stateRoot;
 
     protected override void OnBindingContextChanged()
     {
@@ -47,20 +48,27 @@ public class ChatMessageView : ContentView
             Refresh();
     }
 
+    protected override void OnApplyTemplate()
+    {
+        base.OnApplyTemplate();
+        _stateRoot = GetTemplateChild("PART_Root") as VisualElement;
+        ApplyRoleState();
+    }
+
     private void Refresh()
     {
         if (_ctx is null)
             return;
         Text = (_ctx.Content as TextContent)?.Text;
         MessageRole = _ctx.Role;
-        if (Handler is not null)
-            VisualStateManager.GoToState(this, _ctx.Role);
+        ApplyRoleState();
     }
 
-    protected override void OnHandlerChanged()
+    private void ApplyRoleState()
     {
-        base.OnHandlerChanged();
-        if (_ctx is not null && Handler is not null)
-            VisualStateManager.GoToState(this, _ctx.Role);
+        if (_ctx?.Role is null)
+            return;
+
+        VisualStateManager.GoToState(_stateRoot ?? this, _ctx.Role);
     }
 }

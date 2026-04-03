@@ -60,6 +60,9 @@ public class ToolApprovalView : ContentView
     internal Type? InnerContentType { get; set; }
 
     private ContentContext? _ctx;
+    private ContentView? _contentSlot;
+    private View? _innerContent;
+    private VisualElement? _stateRoot;
 
     public ToolApprovalView()
     {
@@ -83,7 +86,7 @@ public class ToolApprovalView : ContentView
     private void OnCtxChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName is nameof(ContentContext.Content))
-            RefreshToolName();
+            Refresh();
         if (e.PropertyName is nameof(ContentContext.ApprovalResolved) or nameof(ContentContext.ApprovalResolutionText))
             RefreshApprovalState();
     }
@@ -91,8 +94,8 @@ public class ToolApprovalView : ContentView
     private void Refresh()
     {
         RefreshToolName();
-        RefreshApprovalState();
         BuildInnerContent();
+        RefreshApprovalState();
     }
 
     private void RefreshToolName()
@@ -109,8 +112,16 @@ public class ToolApprovalView : ContentView
         IsPending = _ctx is not null && !_ctx.ApprovalResolved;
         IsResolved = _ctx?.ApprovalResolved ?? false;
         ResolutionText = _ctx?.ApprovalResolutionText;
-        if (IsResolved)
-            VisualStateManager.GoToState(this, "Resolved");
+        ApplyVisualState();
+    }
+
+    protected override void OnApplyTemplate()
+    {
+        base.OnApplyTemplate();
+        _stateRoot = GetTemplateChild("PART_Root") as VisualElement;
+        _contentSlot = GetTemplateChild("PART_ContentSlot") as ContentView;
+        ApplyInnerContent();
+        ApplyVisualState();
     }
 
     private void BuildInnerContent()
@@ -118,30 +129,37 @@ public class ToolApprovalView : ContentView
         if (_ctx is null)
             return;
 
-        // Find the PART_ContentSlot in the ControlTemplate (if template applied)
-        // For now, build inner content and set as Content (visual child)
+        View innerView;
         if (InnerContentType is not null)
         {
             var services = Handler?.MauiContext?.Services;
-            var innerView = services is not null
+            innerView = services is not null
                 ? (View)(services.GetService(InnerContentType) ?? Activator.CreateInstance(InnerContentType)!)
                 : (View)Activator.CreateInstance(InnerContentType)!;
 
             var aware = innerView as IContentContextAware ?? innerView.BindingContext as IContentContextAware;
             aware?.ApplyContentContext(_ctx);
-
-            Content = innerView;
         }
         else
         {
-            Content = BuildDefaultArgsView();
+            innerView = BuildDefaultArgsView();
         }
 
-        if (_ctx.ApprovalResolved)
-        {
-            if (Content is View v)
-                v.IsEnabled = false;
-        }
+        _innerContent = innerView;
+        ApplyInnerContent();
+    }
+
+    private void ApplyInnerContent()
+    {
+        if (_contentSlot is null)
+            return;
+
+        _contentSlot.Content = _innerContent;
+    }
+
+    private void ApplyVisualState()
+    {
+        VisualStateManager.GoToState(_stateRoot ?? this, IsResolved ? "Resolved" : "Pending");
     }
 
     private View BuildDefaultArgsView()

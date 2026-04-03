@@ -28,7 +28,7 @@
     <!-- ControlTemplate: ChatMessageView (User + Assistant)           -->
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <ControlTemplate x:Key="MauiAI.ChatMessageTemplate">
-        <Grid Padding="0,4">
+        <Grid x:Name="PART_Root" Padding="0,4">
             <VisualStateManager.VisualStateGroups>
                 <VisualStateGroup x:Name="RoleStates">
                     <VisualState x:Name="User">
@@ -138,6 +138,90 @@
     </ControlTemplate>
 
     <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- ControlTemplate: ToolApprovalView                              -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <ControlTemplate x:Key="MauiAI.ToolApprovalTemplate">
+        <Border Padding="14,12" Margin="0,6" HorizontalOptions="Fill"
+                BackgroundColor="{DynamicResource MauiAI.Approval.Background}"
+                Stroke="{DynamicResource MauiAI.Approval.Border}"
+                StrokeThickness="1">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="14" />
+            </Border.StrokeShape>
+
+            <Grid x:Name="PART_Root" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="10">
+                <VisualStateManager.VisualStateGroups>
+                    <VisualStateGroup x:Name="ApprovalStates">
+                        <VisualState x:Name="Pending">
+                            <VisualState.Setters>
+                                <Setter TargetName="ButtonsRow" Property="Grid.IsVisible" Value="True" />
+                                <Setter TargetName="ResolutionLabel" Property="Label.IsVisible" Value="False" />
+                                <Setter TargetName="PART_ContentSlot" Property="ContentView.IsEnabled" Value="True" />
+                            </VisualState.Setters>
+                        </VisualState>
+                        <VisualState x:Name="Resolved">
+                            <VisualState.Setters>
+                                <Setter TargetName="ButtonsRow" Property="Grid.IsVisible" Value="False" />
+                                <Setter TargetName="ResolutionLabel" Property="Label.IsVisible" Value="True" />
+                                <Setter TargetName="PART_ContentSlot" Property="ContentView.IsEnabled" Value="False" />
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateManager.VisualStateGroups>
+
+                <Label Text="⚠️ Approval Required"
+                       FontSize="15"
+                       FontAttributes="Bold"
+                       TextColor="{DynamicResource MauiAI.Approval.HeaderColor}" />
+
+                <Label Grid.Row="1"
+                       Text="{TemplateBinding ToolName}"
+                       FontSize="14"
+                       FontAttributes="Bold"
+                       TextColor="{DynamicResource MauiAI.Assistant.TextColor}" />
+
+                <ContentView x:Name="PART_ContentSlot"
+                             Grid.Row="2" />
+
+                <Grid x:Name="ButtonsRow"
+                      Grid.Row="3"
+                      ColumnDefinitions="*,*"
+                      ColumnSpacing="10">
+                    <Button Text="Approve"
+                            AutomationId="ApproveToolButton"
+                            Command="{TemplateBinding ApproveCommand}"
+                            BackgroundColor="{DynamicResource MauiAI.Button.Approve}"
+                            TextColor="White"
+                            FontSize="14"
+                            FontAttributes="Bold"
+                            CornerRadius="10"
+                            HeightRequest="40" />
+                    <Button Grid.Column="1"
+                            Text="Reject"
+                            AutomationId="RejectToolButton"
+                            Command="{TemplateBinding RejectCommand}"
+                            BackgroundColor="{DynamicResource MauiAI.Button.Reject}"
+                            TextColor="White"
+                            FontSize="14"
+                            FontAttributes="Bold"
+                            CornerRadius="10"
+                            HeightRequest="40" />
+                </Grid>
+
+                <Label x:Name="ResolutionLabel"
+                       Grid.Row="3"
+                       IsVisible="False"
+                       Text="{TemplateBinding ResolutionText}"
+                       FontSize="14"
+                       FontAttributes="Bold"
+                       TextColor="{DynamicResource MauiAI.Approval.HeaderColor}"
+                       HorizontalOptions="Center"
+                       Padding="8,6" />
+            </Grid>
+        </Border>
+    </ControlTemplate>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
     <!-- Implicit Styles — wire ControlTemplate via DynamicResource     -->
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <Style TargetType="chat:ChatMessageView">
@@ -158,6 +242,10 @@
 
     <Style TargetType="chat:DefaultMessageView">
         <Setter Property="ControlTemplate" Value="{DynamicResource MauiAI.DefaultTemplate}" />
+    </Style>
+
+    <Style TargetType="chat:ToolApprovalView">
+        <Setter Property="ControlTemplate" Value="{DynamicResource MauiAI.ToolApprovalTemplate}" />
     </Style>
 
 </ResourceDictionary>
