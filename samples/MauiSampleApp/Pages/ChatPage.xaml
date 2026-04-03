@@ -37,14 +37,14 @@
             <maui:ChatPanelControl.ContentTemplates>
                 <mauiChat:TextContentTemplate Role="User" ViewType="{x:Type mauiChat:UserTextView}" />
                 <mauiChat:TextContentTemplate Role="Assistant" ViewType="{x:Type mauiChat:AssistantTextView}" />
-                <mauiChat:FunctionCallTemplate ViewType="{x:Type mauiChat:FunctionCallView}" />
+                <mauiChat:FunctionCallTemplate />
                 <mauiChat:ToolApprovalTemplate ToolName="add_plant" ViewType="{x:Type local:PlantApprovalView}" />
                 <mauiChat:ToolApprovalTemplate ToolName="log_batch_care_events" ViewType="{x:Type local:BatchCareApprovalView}" />
                 <mauiChat:ToolApprovalTemplate />
                 <local:PlantResultTemplate ViewType="{x:Type local:PlantResultView}" />
-                <mauiChat:FunctionResultTemplate ViewType="{x:Type mauiChat:FunctionResultView}" />
-                <mauiChat:ErrorContentTemplate ViewType="{x:Type mauiChat:ErrorView}" />
-                <mauiChat:DefaultContentTemplate ViewType="{x:Type mauiChat:DefaultContentView}" />
+                <mauiChat:FunctionResultTemplate />
+                <mauiChat:ErrorContentTemplate />
+                <mauiChat:DefaultContentTemplate />
             </maui:ChatPanelControl.ContentTemplates>
         </maui:ChatPanelControl>
     </Grid>

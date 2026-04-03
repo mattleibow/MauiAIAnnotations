@@ -53,7 +53,7 @@ public partial class PlantDetailViewModel(PlantDataService plantDataService, Spe
     private async Task LogCareAsync(string eventType)
     {
         if (Plant is null) return;
-        await plantDataService.LogCareEventAsync(Plant.Nickname, new MauiSampleApp.Core.Models.CareEventRequest { EventType = eventType });
+        await plantDataService.LogCareEventAsync(Plant.Nickname, new() { EventType = eventType });
 
         var history = await plantDataService.GetCareHistoryAsync(Plant.Nickname);
         CareHistory.Clear();
