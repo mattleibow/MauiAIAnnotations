@@ -60,8 +60,6 @@ public class ToolApprovalView : ContentView
     internal Type? InnerContentType { get; set; }
 
     private ContentContext? _ctx;
-    private ContentView? _contentSlot;
-    private View? _innerContent;
     private VisualElement? _stateRoot;
 
     public ToolApprovalView()
@@ -119,8 +117,6 @@ public class ToolApprovalView : ContentView
     {
         base.OnApplyTemplate();
         _stateRoot = GetTemplateChild("PART_Root") as VisualElement;
-        _contentSlot = GetTemplateChild("PART_ContentSlot") as ContentView;
-        ApplyInnerContent();
         ApplyVisualState();
     }
 
@@ -145,16 +141,11 @@ public class ToolApprovalView : ContentView
             innerView = BuildDefaultArgsView();
         }
 
-        _innerContent = innerView;
-        ApplyInnerContent();
-    }
+        if (_ctx.ApprovalResolved)
+            innerView.IsEnabled = false;
 
-    private void ApplyInnerContent()
-    {
-        if (_contentSlot is null)
-            return;
-
-        _contentSlot.Content = _innerContent;
+        // ContentPresenter in the ControlTemplate renders this
+        Content = innerView;
     }
 
     private void ApplyVisualState()

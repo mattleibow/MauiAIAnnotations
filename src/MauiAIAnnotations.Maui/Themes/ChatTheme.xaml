@@ -156,14 +156,12 @@
                             <VisualState.Setters>
                                 <Setter TargetName="ButtonsRow" Property="Grid.IsVisible" Value="True" />
                                 <Setter TargetName="ResolutionLabel" Property="Label.IsVisible" Value="False" />
-                                <Setter TargetName="PART_ContentSlot" Property="ContentView.IsEnabled" Value="True" />
                             </VisualState.Setters>
                         </VisualState>
                         <VisualState x:Name="Resolved">
                             <VisualState.Setters>
                                 <Setter TargetName="ButtonsRow" Property="Grid.IsVisible" Value="False" />
                                 <Setter TargetName="ResolutionLabel" Property="Label.IsVisible" Value="True" />
-                                <Setter TargetName="PART_ContentSlot" Property="ContentView.IsEnabled" Value="False" />
                             </VisualState.Setters>
                         </VisualState>
                     </VisualStateGroup>
@@ -180,8 +178,7 @@
                        FontAttributes="Bold"
                        TextColor="{DynamicResource MauiAI.Assistant.TextColor}" />
 
-                <ContentView x:Name="PART_ContentSlot"
-                             Grid.Row="2" />
+                <ContentPresenter Grid.Row="2" />
 
                 <Grid x:Name="ButtonsRow"
                       Grid.Row="3"
