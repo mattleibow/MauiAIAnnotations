@@ -123,14 +123,14 @@ The `PlantCardView` inside is a normal MAUI control that binds to `Plant` proper
 Add your mapping to the `ContentTemplates` list in the page XAML. Place it **before** the generic `FunctionResultMapping`:
 
 ```xml
-<maui:ChatSidebarControl ChatVM="{Binding ChatViewModel}">
-    <maui:ChatSidebarControl.ContentTemplates>
+<maui:ChatPanelControl ChatVM="{Binding ChatViewModel}">
+    <maui:ChatPanelControl.ContentTemplates>
         <!-- ... other mappings ... -->
         <local:PlantResultMapping ViewType="{x:Type local:PlantResultView}" />
         <mauiChat:FunctionResultMapping ViewType="{x:Type mauiChat:FunctionResultView}" />
         <!-- ... remaining mappings ... -->
-    </maui:ChatSidebarControl.ContentTemplates>
-</maui:ChatSidebarControl>
+    </maui:ChatPanelControl.ContentTemplates>
+</maui:ChatPanelControl>
 ```
 
 If `PlantResultMapping` appears after `FunctionResultMapping`, the generic mapping matches every `FunctionResultContent` first and the plant card never shows.

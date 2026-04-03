@@ -36,7 +36,7 @@ maui-devflow MAUI fill <AutomationId> "text"
 
 ### Project Structure
 - `src/MauiAIAnnotations/` — Core library: `[ExportAIFunction]` attribute, `AddAITools()` DI extension, `DependencyInjectionAIFunction`
-- `src/MauiAIAnnotations.Maui/` — Reusable MAUI chat UI: `ChatSidebarControl`, `ChatPanelControl`, `ChatViewModel`, content template system
+- `src/MauiAIAnnotations.Maui/` — Reusable MAUI chat UI: `ChatPanelControl`, `ChatPanelControl`, `ChatViewModel`, content template system
 - `samples/MauiSampleApp/` — Gardening helper demo app
 - `samples/MauiSampleApp.Core/` — Core services (PlantDataService, SpeciesService, SeasonsService)
 - `tests/` — xUnit test projects

@@ -9,12 +9,12 @@ A .NET 10 library that makes it easy to expose service methods as AI tools and b
 | Package | Description |
 |---------|-------------|
 | **MauiAIAnnotations** | Attribute-based AI tool discovery. Decorate methods with `[ExportAIFunction]` and call `AddAITools()` to register them in DI. |
-| **MauiAIAnnotations.Maui** | Reusable MAUI chat UI — `ChatSidebarControl`, content template system, and human-in-the-loop approval dialogs. |
+| **MauiAIAnnotations.Maui** | Reusable MAUI chat UI — `ChatPanelControl`, content template system, and human-in-the-loop approval dialogs. |
 
 ## Key Features
 
 - **Zero-config tool discovery** — Annotate methods with `[ExportAIFunction]` and scan assemblies automatically. No manual registration.
-- **Reusable chat sidebar/overlay** — Drop `ChatSidebarControl` into any MAUI page for a ready-made AI chat experience.
+- **Reusable chat sidebar/overlay** — Drop `ChatPanelControl` into any MAUI page for a ready-made AI chat experience.
 - **Pluggable content templates** — Register `DataTemplate` renderers for custom tool result types (e.g., plant cards, weather widgets).
 - **Human-in-the-loop approval** — Set `ApprovalRequired = true` on any tool to gate execution behind user confirmation.
 

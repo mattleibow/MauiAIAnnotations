@@ -104,8 +104,6 @@ public partial class ToolApprovalView : ContentView
         {
             if (current is Controls.ChatPanelControl panel)
                 return panel.ChatVM;
-            if (current is Controls.ChatSidebarControl sidebar)
-                return sidebar.ChatVM;
             current = current.Parent;
         }
         return null;

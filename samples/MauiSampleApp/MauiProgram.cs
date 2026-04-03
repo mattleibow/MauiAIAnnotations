@@ -2,6 +2,7 @@
 using System.Reflection;
 using Azure.AI.OpenAI;
 using MauiAIAnnotations;
+using MauiAIAnnotations.Maui;
 using MauiDevFlow.Agent;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
@@ -67,9 +68,11 @@ public static class MauiProgram
         // Register AI
         builder.AddOpenAIServices();
 
+        // Register AI chat
+        builder.Services.AddAIChat<GardenChatViewModel>();
+
         // Register ViewModels and Pages
         builder.Services.AddSingleton<HomePageViewModel>();
-        builder.Services.AddSingleton<GardenChatViewModel>();
         builder.Services.AddTransient<PlantDetailViewModel>();
         builder.Services.AddTransient<AddPlantViewModel>();
         builder.Services.AddTransient<DebugViewModel>();
