@@ -114,11 +114,11 @@ public partial class ChatViewModel : ObservableObject
 
     private async Task RunStreamingLoopAsync()
     {
+        var history = BuildHistory();
+        var options = new ChatOptions { Tools = [.. AdditionalTools, .. _tools] };
+
         while (true)
         {
-            var history = BuildHistory();
-            var options = new ChatOptions { Tools = [.. AdditionalTools, .. _tools] };
-
             ContentContext? assistantCtx = null;
             var responseText = "";
             var approvalRequests = new List<ToolApprovalRequestContent>();
@@ -161,7 +161,7 @@ public partial class ChatViewModel : ObservableObject
             // If no approvals needed, we're done
             if (approvalRequests.Count == 0)
             {
-                if (assistantCtx is null)
+                if (assistantCtx is null && responseText.Length == 0)
                     Messages.Add(new ContentContext(new TextContent("(no response)"), "Assistant"));
                 return;
             }
@@ -180,7 +180,7 @@ public partial class ChatViewModel : ObservableObject
                 return;
             }
 
-            // Add approval responses to history and loop again
+            // Append the approval exchange to history so the next iteration has full context
             history.Add(new ChatMessage(ChatRole.Assistant, [.. approvalRequests]));
             history.Add(new ChatMessage(ChatRole.User, [.. responses]));
         }
