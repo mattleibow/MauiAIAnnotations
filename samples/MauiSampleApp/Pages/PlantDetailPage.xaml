@@ -207,6 +207,7 @@
                 <mauiChat:TextContentMapping Role="Assistant" ViewType="{x:Type mauiChat:AssistantTextView}" />
                 <mauiChat:FunctionCallMapping ViewType="{x:Type mauiChat:FunctionCallView}" />
                 <mauiChat:ToolApprovalMapping ToolName="add_plant" InnerViewType="{x:Type local:PlantApprovalView}" ViewType="{x:Type mauiChat:ToolApprovalView}" />
+                <mauiChat:ToolApprovalMapping ToolName="log_batch_care_events" InnerViewType="{x:Type local:BatchCareApprovalView}" ViewType="{x:Type mauiChat:ToolApprovalView}" />
                 <mauiChat:ToolApprovalMapping ViewType="{x:Type mauiChat:ToolApprovalView}" />
                 <local:PlantResultMapping ViewType="{x:Type local:PlantResultView}" />
                 <mauiChat:FunctionResultMapping ViewType="{x:Type mauiChat:FunctionResultView}" />

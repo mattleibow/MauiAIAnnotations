@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:MauiSampleApp.Chat"
+             x:Class="MauiSampleApp.Chat.BatchCareApprovalView"
+             x:DataType="local:BatchCareApprovalViewModel">
+
+    <!-- Content-only: library wrapper provides header + buttons -->
+    <VerticalStackLayout Spacing="8">
+        <!-- Plant name -->
+        <HorizontalStackLayout Spacing="6">
+            <Label Text="Plant:" FontSize="13" FontAttributes="Bold"
+                   TextColor="{AppThemeBinding Light=#7A7062, Dark=#A69E90}" />
+            <Label Text="{Binding PlantNickname}" FontSize="13"
+                   TextColor="{AppThemeBinding Light=#2C2416, Dark=#EDE8DF}" />
+        </HorizontalStackLayout>
+
+        <Label Text="Select care events to log:" FontSize="12"
+               TextColor="{AppThemeBinding Light=#7A7062, Dark=#A69E90}" />
+
+        <!-- Checkboxes for each care item -->
+        <CollectionView ItemsSource="{Binding CareItems}"
+                        AutomationId="BatchCareList">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="local:CareItemViewModel">
+                    <HorizontalStackLayout Spacing="8" Padding="4,2">
+                        <CheckBox IsChecked="{Binding IsSelected}"
+                                  Color="#5B8C5A" />
+                        <Label Text="{Binding EventType}" FontSize="14"
+                               VerticalOptions="Center"
+                               TextColor="{AppThemeBinding Light=#2C2416, Dark=#EDE8DF}" />
+                    </HorizontalStackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </VerticalStackLayout>
+
+</ContentView>

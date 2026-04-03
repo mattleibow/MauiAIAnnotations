@@ -91,4 +91,32 @@ public class PlantDataService(IDocumentStore store, SpeciesService speciesServic
                   .OrderByDescending(e => e.Timestamp)
                   .ToList();
     }
+
+    [ExportAIFunction("log_batch_care_events",
+        Description = "Log multiple care events for a plant at once. Use when the user reports several activities. EventTypes must be from: Watered, Fertilized, Pruned, Repotted, TreatedForPest, Observed, Mulched, Weeded.",
+        ApprovalRequired = true)]
+    public async Task<List<CareEvent>> LogBatchCareEventsAsync(
+        [Description("The nickname of the plant")] string plantNickname,
+        [Description("Array of care event types to log")] List<string> eventTypes)
+    {
+        var plant = await GetPlantAsync(plantNickname);
+        if (plant is null)
+            return [];
+
+        var results = new List<CareEvent>();
+        foreach (var eventType in eventTypes)
+        {
+            var careEvent = new CareEvent
+            {
+                Id = Guid.NewGuid().ToString(),
+                PlantId = plant.Id,
+                EventType = eventType.Trim(),
+                Notes = "",
+                Timestamp = DateTime.UtcNow
+            };
+            await store.Insert(careEvent);
+            results.Add(careEvent);
+        }
+        return results;
+    }
 }
