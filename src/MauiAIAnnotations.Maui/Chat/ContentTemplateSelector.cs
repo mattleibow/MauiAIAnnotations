@@ -14,7 +14,7 @@ public class ContentTemplateSelector : DataTemplateSelector
         {
             foreach (var mapping in Templates)
             {
-                if (mapping.When(context) && mapping.ViewType is not null)
+                if (mapping.When(context))
                     return mapping.GetTemplate();
             }
         }
