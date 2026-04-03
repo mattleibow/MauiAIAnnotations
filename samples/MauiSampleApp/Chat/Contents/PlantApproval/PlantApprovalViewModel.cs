@@ -1,10 +1,14 @@
+using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
+using MauiAIAnnotations.Maui.Chat;
 using Microsoft.Extensions.AI;
 
 namespace MauiSampleApp.Chat;
 
-public partial class PlantApprovalViewModel : ObservableObject
+public partial class PlantApprovalViewModel : ObservableObject, IContentContextAware
 {
+    private IDictionary<string, object?>? _args;
+
     [ObservableProperty]
     public partial string Nickname { get; set; }
 
@@ -17,19 +21,38 @@ public partial class PlantApprovalViewModel : ObservableObject
     [ObservableProperty]
     public partial bool IsIndoor { get; set; }
 
-    public void LoadFrom(IDictionary<string, object?>? args)
+    public void ApplyContentContext(ContentContext context)
     {
-        if (args is null) return;
-        Nickname = args.TryGetValue("nickname", out var n) ? n?.ToString() ?? "" : "";
-        Species = args.TryGetValue("species", out var s) ? s?.ToString() ?? "" : "";
-        Location = args.TryGetValue("location", out var l) ? l?.ToString() ?? "" : "";
-        IsIndoor = args.TryGetValue("isIndoor", out var i) && i is true;
+        if (context.Content is not ToolApprovalRequestContent approval ||
+            approval.ToolCall is not FunctionCallContent fc)
+            return;
+
+        _args = fc.Arguments;
+        if (_args is null) return;
+
+        // MEAI sends structured args as: {"request": <JsonElement object>}
+        if (_args.TryGetValue("request", out var reqObj) && reqObj is JsonElement json &&
+            json.ValueKind == JsonValueKind.Object)
+        {
+            Nickname = json.TryGetProperty("nickname", out var n) ? n.GetString() ?? "" : "";
+            Species = json.TryGetProperty("species", out var s) ? s.GetString() ?? "" : "";
+            Location = json.TryGetProperty("location", out var l) ? l.GetString() ?? "" : "";
+            IsIndoor = json.TryGetProperty("isIndoor", out var i) && i.ValueKind == JsonValueKind.True;
+        }
     }
 
-    /// <summary>Writes the current values back to the FunctionCallContent.Arguments.</summary>
-    public void WriteTo(FunctionCallContent fc)
+    // Targeted writeback via OnXxxChanged partial hooks — updates only the changed key
+    partial void OnNicknameChanged(string value) => UpdateRequestArg("nickname", value);
+    partial void OnSpeciesChanged(string value) => UpdateRequestArg("species", value);
+    partial void OnLocationChanged(string value) => UpdateRequestArg("location", value);
+    partial void OnIsIndoorChanged(bool value) => UpdateRequestArg("isIndoor", value);
+
+    private void UpdateRequestArg(string key, object? value)
     {
-        fc.Arguments = new Dictionary<string, object?>
+        if (_args is null) return;
+
+        // Rebuild the request dict from current VM state (preserves the param name "request")
+        _args["request"] = new Dictionary<string, object?>
         {
             ["nickname"] = Nickname,
             ["species"] = Species,

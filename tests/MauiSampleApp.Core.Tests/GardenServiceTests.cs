@@ -142,7 +142,7 @@ public class PlantDataServiceTests : IDisposable
     [Fact]
     public async Task AddPlant_CreatesPlantAndSpecies()
     {
-        var plant = await _service.AddPlantAsync("My Tomato", "tomato", "Back garden", false);
+        var plant = await _service.AddPlantAsync(new NewPlantRequest { Nickname = "My Tomato", Species = "tomato", Location = "Back garden", IsIndoor = false });
 
         Assert.NotNull(plant);
         Assert.Equal("My Tomato", plant.Nickname);
@@ -154,7 +154,7 @@ public class PlantDataServiceTests : IDisposable
     [Fact]
     public async Task AddPlant_AppearsInGetPlants()
     {
-        await _service.AddPlantAsync("Basil Buddy", "basil", "Kitchen windowsill", true);
+        await _service.AddPlantAsync(new NewPlantRequest { Nickname = "Basil Buddy", Species = "basil", Location = "Kitchen windowsill", IsIndoor = true });
 
         var plants = await _service.GetPlantsAsync();
         Assert.Single(plants);
@@ -164,7 +164,7 @@ public class PlantDataServiceTests : IDisposable
     [Fact]
     public async Task GetPlant_FindsByNickname()
     {
-        await _service.AddPlantAsync("Rosie", "rose", "Front garden", false);
+        await _service.AddPlantAsync(new NewPlantRequest { Nickname = "Rosie", Species = "rose", Location = "Front garden", IsIndoor = false });
 
         var plant = await _service.GetPlantAsync("Rosie");
         Assert.NotNull(plant);
@@ -174,7 +174,7 @@ public class PlantDataServiceTests : IDisposable
     [Fact]
     public async Task GetPlant_CaseInsensitive()
     {
-        await _service.AddPlantAsync("Minty", "mint", "Balcony", false);
+        await _service.AddPlantAsync(new NewPlantRequest { Nickname = "Minty", Species = "mint", Location = "Balcony", IsIndoor = false });
 
         var plant = await _service.GetPlantAsync("minty");
         Assert.NotNull(plant);
@@ -191,7 +191,7 @@ public class PlantDataServiceTests : IDisposable
     [Fact]
     public async Task RemovePlant_RemovesFromStore()
     {
-        await _service.AddPlantAsync("Temporary", "fern", "Office", true);
+        await _service.AddPlantAsync(new NewPlantRequest { Nickname = "Temporary", Species = "fern", Location = "Office", IsIndoor = true });
         Assert.Single(await _service.GetPlantsAsync());
 
         await _service.RemovePlantAsync("Temporary");
@@ -207,9 +207,9 @@ public class PlantDataServiceTests : IDisposable
     [Fact]
     public async Task LogCareEvent_CreatesEvent()
     {
-        await _service.AddPlantAsync("Tomatoes", "tomato", "Garden", false);
+        await _service.AddPlantAsync(new NewPlantRequest { Nickname = "Tomatoes", Species = "tomato", Location = "Garden", IsIndoor = false });
 
-        var careEvent = await _service.LogCareEventAsync("Tomatoes", "Watered", "Gave a good soak");
+        var careEvent = await _service.LogCareEventAsync("Tomatoes", new CareEventRequest { EventType = "Watered", Notes = "Gave a good soak" });
 
         Assert.NotNull(careEvent);
         Assert.Equal("Watered", careEvent.EventType);
@@ -220,17 +220,17 @@ public class PlantDataServiceTests : IDisposable
     public async Task LogCareEvent_ThrowsForMissingPlant()
     {
         await Assert.ThrowsAsync<InvalidOperationException>(
-            () => _service.LogCareEventAsync("nonexistent", "Watered", ""));
+            () => _service.LogCareEventAsync("nonexistent", new CareEventRequest { EventType = "Watered", Notes = "" }));
     }
 
     [Fact]
     public async Task GetCareHistory_ReturnsEventsInOrder()
     {
-        await _service.AddPlantAsync("Herb", "basil", "Kitchen", true);
+        await _service.AddPlantAsync(new NewPlantRequest { Nickname = "Herb", Species = "basil", Location = "Kitchen", IsIndoor = true });
 
-        await _service.LogCareEventAsync("Herb", "Watered", "Morning water");
+        await _service.LogCareEventAsync("Herb", new CareEventRequest { EventType = "Watered", Notes = "Morning water" });
         await Task.Delay(10); // ensure different timestamps
-        await _service.LogCareEventAsync("Herb", "Fertilized", "Monthly feed");
+        await _service.LogCareEventAsync("Herb", new CareEventRequest { EventType = "Fertilized", Notes = "Monthly feed" });
 
         var history = await _service.GetCareHistoryAsync("Herb");
 
@@ -249,9 +249,10 @@ public class PlantDataServiceTests : IDisposable
     [Fact]
     public async Task AddPlant_MultiplePlantsShareSpecies()
     {
-        var plant1 = await _service.AddPlantAsync("Tom 1", "tomato", "Garden", false);
-        var plant2 = await _service.AddPlantAsync("Tom 2", "tomato", "Greenhouse", true);
+        var plant1 = await _service.AddPlantAsync(new NewPlantRequest { Nickname = "Tom 1", Species = "tomato", Location = "Garden", IsIndoor = false });
+        var plant2 = await _service.AddPlantAsync(new NewPlantRequest { Nickname = "Tom 2", Species = "tomato", Location = "Greenhouse", IsIndoor = true });
 
         Assert.Equal(plant1.SpeciesId, plant2.SpeciesId);
     }
 }
+

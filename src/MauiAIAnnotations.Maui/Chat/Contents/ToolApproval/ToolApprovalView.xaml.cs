@@ -6,10 +6,10 @@ namespace MauiAIAnnotations.Maui.Chat;
 public partial class ToolApprovalView : ContentView
 {
     /// <summary>
-    /// Optional inner content view type. When set, the wrapper creates this view
-    /// in the content slot instead of the default argument list.
-    /// The inner view receives <see cref="ContentContext"/> as its BindingContext
-    /// and can modify <c>FunctionCallContent.Arguments</c> directly.
+    /// Optional inner content view type. When set, the wrapper resolves this view
+    /// from DI (supporting constructor injection) and places it in the content slot.
+    /// The view or its BindingContext can implement <see cref="IContentContextAware"/>
+    /// to receive the <see cref="ContentContext"/> — like MAUI's IQueryAttributable.
     /// </summary>
     internal Type? InnerContentType { get; set; }
 
@@ -23,8 +23,16 @@ public partial class ToolApprovalView : ContentView
 
         if (InnerContentType is not null)
         {
-            var innerView = (View)Activator.CreateInstance(InnerContentType)!;
-            innerView.BindingContext = context;
+            // Resolve from DI (supports constructor injection for VMs)
+            var services = Handler?.MauiContext?.Services;
+            var innerView = services is not null
+                ? (View)(services.GetService(InnerContentType) ?? Activator.CreateInstance(InnerContentType)!)
+                : (View)Activator.CreateInstance(InnerContentType)!;
+
+            // IContentContextAware — check view then its BindingContext (like IQueryAttributable)
+            var aware = innerView as IContentContextAware ?? innerView.BindingContext as IContentContextAware;
+            aware?.ApplyContentContext(context);
+
             InnerContentSlot.Content = innerView;
         }
         else
@@ -72,7 +80,6 @@ public partial class ToolApprovalView : ContentView
 
         InnerContentSlot.IsEnabled = false;
 
-        // Read the (possibly modified) arguments directly from the FunctionCallContent
         var args = approved && request.ToolCall is FunctionCallContent fc ? fc.Arguments : null;
 
         var chatVm = FindChatViewModel();

@@ -1,4 +1,7 @@
+using System.Collections.ObjectModel;
+using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
+using MauiAIAnnotations.Maui.Chat;
 using Microsoft.Extensions.AI;
 
 namespace MauiSampleApp.Chat;
@@ -11,52 +14,72 @@ public partial class CareItemViewModel : ObservableObject
     [ObservableProperty]
     public partial string EventType { get; set; }
 
-    public CareItemViewModel(string eventType)
+    [ObservableProperty]
+    public partial string Notes { get; set; }
+
+    public CareItemViewModel(string eventType, string notes = "")
     {
         EventType = eventType;
+        Notes = notes;
         IsSelected = true;
     }
 }
 
-public partial class BatchCareApprovalViewModel : ObservableObject
+public partial class BatchCareApprovalViewModel : ObservableObject, IContentContextAware
 {
+    private IDictionary<string, object?>? _args;
+
     [ObservableProperty]
     public partial string PlantNickname { get; set; }
 
-    public System.Collections.ObjectModel.ObservableCollection<CareItemViewModel> CareItems { get; } = [];
+    public ObservableCollection<CareItemViewModel> CareItems { get; } = [];
 
-    public void LoadFromArguments(IDictionary<string, object?>? args)
+    public void ApplyContentContext(ContentContext context)
     {
-        if (args is null) return;
+        if (context.Content is not ToolApprovalRequestContent approval ||
+            approval.ToolCall is not FunctionCallContent fc)
+            return;
 
-        PlantNickname = args.TryGetValue("plantNickname", out var n) ? n?.ToString() ?? "" : "";
+        _args = fc.Arguments;
+        if (_args is null) return;
+
+        PlantNickname = _args.TryGetValue("plantNickname", out var n) && n is JsonElement nj
+            ? nj.GetString() ?? ""
+            : n?.ToString() ?? "";
 
         CareItems.Clear();
-        if (args.TryGetValue("eventTypes", out var eventsObj) && eventsObj is IEnumerable<object> events)
-        {
-            foreach (var e in events)
-                CareItems.Add(new CareItemViewModel(e?.ToString() ?? ""));
-        }
-        else if (eventsObj is System.Text.Json.JsonElement json && json.ValueKind == System.Text.Json.JsonValueKind.Array)
+        if (_args.TryGetValue("careEvents", out var eventsObj) && eventsObj is JsonElement json &&
+            json.ValueKind == JsonValueKind.Array)
         {
             foreach (var e in json.EnumerateArray())
-                CareItems.Add(new CareItemViewModel(e.GetString() ?? ""));
+            {
+                if (e.ValueKind == JsonValueKind.Object)
+                {
+                    CareItems.Add(new CareItemViewModel(
+                        e.TryGetProperty("eventType", out var et) ? et.GetString() ?? "" : "",
+                        e.TryGetProperty("notes", out var nt) ? nt.GetString() ?? "" : ""));
+                }
+                else
+                {
+                    CareItems.Add(new CareItemViewModel(e.GetString() ?? ""));
+                }
+            }
         }
+
+        // Write back when items change
+        foreach (var item in CareItems)
+            item.PropertyChanged += (_, _) => WriteBack();
     }
 
-    public IDictionary<string, object?> BuildArguments()
+    private void WriteBack()
     {
-        var selected = CareItems.Where(c => c.IsSelected).Select(c => c.EventType).ToList();
-        return new Dictionary<string, object?>
-        {
-            ["plantNickname"] = PlantNickname,
-            ["eventTypes"] = selected,
-        };
-    }
-
-    /// <summary>Writes the selected items back to the FunctionCallContent.Arguments.</summary>
-    public void WriteTo(FunctionCallContent fc)
-    {
-        fc.Arguments = BuildArguments();
+        if (_args is null) return;
+        _args["careEvents"] = CareItems.Where(c => c.IsSelected)
+            .Select(c => (object)new Dictionary<string, object?>
+            {
+                ["eventType"] = c.EventType,
+                ["notes"] = c.Notes
+            })
+            .ToList();
     }
 }

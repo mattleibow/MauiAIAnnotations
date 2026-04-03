@@ -36,7 +36,13 @@ public partial class AddPlantViewModel(PlantDataService plantDataService) : Obse
         StatusMessage = "Adding plant and looking up species info...";
         try
         {
-            await plantDataService.AddPlantAsync(Nickname, Species, Location, IsIndoor);
+            await plantDataService.AddPlantAsync(new MauiSampleApp.Core.Models.NewPlantRequest
+            {
+                Nickname = Nickname,
+                Species = Species,
+                Location = Location,
+                IsIndoor = IsIndoor
+            });
             await Shell.Current.GoToAsync("..");
         }
         catch (Exception ex)

@@ -22,22 +22,19 @@ public class PlantDataService(IDocumentStore store, SpeciesService speciesServic
         return all.FirstOrDefault(p => p.Nickname.Equals(nickname.Trim(), StringComparison.OrdinalIgnoreCase));
     }
 
-    [ExportAIFunction("add_plant", Description = "Adds a new plant. Requires nickname, species name, location, and whether it's indoors.", ApprovalRequired = true)]
+    [ExportAIFunction("add_plant", Description = "Adds a new plant to the garden.", ApprovalRequired = true)]
     public async Task<Plant> AddPlantAsync(
-        [Description("A friendly name for the plant")] string nickname,
-        [Description("The species name (e.g. 'tomato', 'basil')")] string species,
-        [Description("Where the plant is located (e.g. 'Back garden', 'Kitchen windowsill')")] string location,
-        [Description("Whether the plant is kept indoors")] bool isIndoor)
+        [Description("The plant details to add")] NewPlantRequest request)
     {
-        var speciesProfile = await speciesService.GetSpeciesAsync(species);
+        var speciesProfile = await speciesService.GetSpeciesAsync(request.Species);
 
         var plant = new Plant
         {
             Id = Guid.NewGuid().ToString(),
-            Nickname = nickname,
+            Nickname = request.Nickname,
             SpeciesId = speciesProfile.Id,
-            Location = location,
-            IsIndoor = isIndoor,
+            Location = request.Location,
+            IsIndoor = request.IsIndoor,
             DateAdded = DateTime.UtcNow
         };
 
@@ -56,26 +53,25 @@ public class PlantDataService(IDocumentStore store, SpeciesService speciesServic
         }
     }
 
-    [ExportAIFunction("log_care_event", Description = "Logs a care event for a plant. EventType must be one of: Watered, Fertilized, Pruned, Repotted, TreatedForPest, Observed.")]
+    [ExportAIFunction("log_care_event", Description = "Logs a care event for a plant.")]
     public async Task<CareEvent> LogCareEventAsync(
         [Description("The nickname of the plant")] string plantNickname,
-        [Description("The type of care performed (Watered, Fertilized, Pruned, Repotted, TreatedForPest, Observed)")] string eventType,
-        [Description("Optional notes about the care event")] string notes)
+        [Description("The care event details")] CareEventRequest careEvent)
     {
         var plant = await GetPlantAsync(plantNickname)
             ?? throw new InvalidOperationException($"Plant '{plantNickname}' not found.");
 
-        var careEvent = new CareEvent
+        var result = new CareEvent
         {
             Id = Guid.NewGuid().ToString(),
             PlantId = plant.Id,
             Timestamp = DateTime.UtcNow,
-            EventType = eventType,
-            Notes = notes
+            EventType = careEvent.EventType,
+            Notes = careEvent.Notes
         };
 
-        await store.Insert(careEvent);
-        return careEvent;
+        await store.Insert(result);
+        return result;
     }
 
     [ExportAIFunction("get_care_history", Description = "Gets the care history for a plant by its nickname.")]
@@ -93,25 +89,25 @@ public class PlantDataService(IDocumentStore store, SpeciesService speciesServic
     }
 
     [ExportAIFunction("log_batch_care_events",
-        Description = "Log multiple care events for a plant at once. Use when the user reports several activities. EventTypes must be from: Watered, Fertilized, Pruned, Repotted, TreatedForPest, Observed, Mulched, Weeded.",
+        Description = "Log multiple care events for a plant at once. Use when the user reports several activities.",
         ApprovalRequired = true)]
     public async Task<List<CareEvent>> LogBatchCareEventsAsync(
         [Description("The nickname of the plant")] string plantNickname,
-        [Description("Array of care event types to log")] List<string> eventTypes)
+        [Description("The care events to log")] List<CareEventRequest> careEvents)
     {
         var plant = await GetPlantAsync(plantNickname);
         if (plant is null)
             return [];
 
         var results = new List<CareEvent>();
-        foreach (var eventType in eventTypes)
+        foreach (var req in careEvents)
         {
             var careEvent = new CareEvent
             {
                 Id = Guid.NewGuid().ToString(),
                 PlantId = plant.Id,
-                EventType = eventType.Trim(),
-                Notes = "",
+                EventType = req.EventType.Trim(),
+                Notes = req.Notes,
                 Timestamp = DateTime.UtcNow
             };
             await store.Insert(careEvent);

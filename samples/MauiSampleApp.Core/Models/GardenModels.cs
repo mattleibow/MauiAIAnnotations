@@ -67,3 +67,31 @@ public class CareEvent
     [Description("Optional notes about the care event.")]
     public string Notes { get; set; } = string.Empty;
 }
+
+// Request types for AI tool arguments
+
+[Description("Request to add a new plant to the garden.")]
+public class NewPlantRequest
+{
+    [Description("A friendly name for the plant (e.g. 'My Tomatoes', 'Basil Buddy').")]
+    public string Nickname { get; set; } = "";
+
+    [Description("The species name (e.g. 'tomato', 'basil', 'rose').")]
+    public string Species { get; set; } = "";
+
+    [Description("Where the plant is located (e.g. 'Back garden', 'Kitchen windowsill').")]
+    public string Location { get; set; } = "";
+
+    [Description("Whether the plant is kept indoors.")]
+    public bool IsIndoor { get; set; }
+}
+
+[Description("A care event to log for a plant.")]
+public class CareEventRequest
+{
+    [Description("The type of care performed. Must be one of: Watered, Fertilized, Pruned, Repotted, TreatedForPest, Observed, Mulched, Weeded.")]
+    public string EventType { get; set; } = "";
+
+    [Description("Optional notes about the care event.")]
+    public string Notes { get; set; } = "";
+}

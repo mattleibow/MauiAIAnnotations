@@ -8,6 +8,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MauiSampleApp.Core.Services;
+using MauiSampleApp.Chat;
 using MauiSampleApp.Pages;
 using MauiSampleApp.Services;
 using MauiSampleApp.ViewModels;
@@ -76,10 +77,14 @@ public static class MauiProgram
         builder.Services.AddTransient<PlantDetailViewModel>();
         builder.Services.AddTransient<AddPlantViewModel>();
         builder.Services.AddTransient<DebugViewModel>();
+        builder.Services.AddTransient<PlantApprovalViewModel>();
+        builder.Services.AddTransient<BatchCareApprovalViewModel>();
         builder.Services.AddTransient<HomePage>();
         builder.Services.AddTransient<PlantDetailPage>();
         builder.Services.AddTransient<AddPlantPage>();
         builder.Services.AddTransient<ChatPage>();
+        builder.Services.AddTransient<PlantApprovalView>();
+        builder.Services.AddTransient<BatchCareApprovalView>();
         builder.Services.AddTransient<DebugPage>();
 
 #if DEBUG
