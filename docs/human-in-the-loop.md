@@ -54,7 +54,7 @@ it as a chat item template so the chat UI knows how to render approval requests:
 This displays a card with the tool name, a read-only summary of the arguments, and
 **Approve** / **Reject** buttons.
 
-![Approval Request](images/approval-request.png)
+![Generic Approval Card](images/approval-generic.png)
 
 ## Step 3: (Optional) Create a Custom Approval View
 
@@ -163,18 +163,23 @@ Order matters — more specific mappings must come first:
 <mauiChat:ToolApprovalMapping ViewType="{x:Type mauiChat:ToolApprovalView}" />
 ```
 
+The custom approval view shows editable fields for the plant data:
+
+![Custom Approval Card](images/approval-request.png)
+
 ## After Approval
 
-When the user edits arguments and taps **Approve**, the modified values are forwarded
-to the tool. In the screenshot below the user changed *"Sun Daisy"* to
-*"Golden Daisy"* before approving — the tool received the updated name.
+When the user edits arguments and taps **Approve**, the approval card is replaced
+with a normal function call bubble and the tool executes with the modified values.
+In the screenshot below the user changed *"Sun Daisy"* to
+*"Sunshine Daisy"* before approving — the tool received the updated name.
 
 ![After Approval](images/approval-approved.png)
 
 ## After Rejection
 
-When the user taps **Reject**, the tool is **not** invoked. The AI receives a
-rejection signal and acknowledges it in the conversation.
+When the user taps **Reject**, the approval card is replaced with a
+"❌ tool_name — rejected by user" note and the tool is **not** invoked.
 
 ![After Rejection](images/approval-rejected.png)
 
