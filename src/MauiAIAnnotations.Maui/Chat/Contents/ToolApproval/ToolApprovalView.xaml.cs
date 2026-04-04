@@ -9,6 +9,8 @@ namespace MauiAIAnnotations.Maui.Chat;
 /// Standalone C# ContentView for tool approval requests.
 /// Subscribes to ContentContext.PropertyChanged to track
 /// Content and ApprovalResolved changes. No XAML backing — styled via ControlTemplate.
+/// Custom templates can include a root named <c>PART_Root</c>; if omitted,
+/// the view falls back to applying visual states to itself.
 /// </summary>
 public class ToolApprovalView : ContentView
 {
@@ -128,10 +130,7 @@ public class ToolApprovalView : ContentView
         View innerView;
         if (InnerContentType is not null)
         {
-            var services = Handler?.MauiContext?.Services;
-            innerView = services is not null
-                ? (View)(services.GetService(InnerContentType) ?? Activator.CreateInstance(InnerContentType)!)
-                : (View)Activator.CreateInstance(InnerContentType)!;
+            innerView = ContentTemplate.CreateView(InnerContentType, Handler?.MauiContext?.Services);
 
             var aware = innerView as IContentContextAware ?? innerView.BindingContext as IContentContextAware;
             aware?.ApplyContentContext(_ctx);
@@ -185,20 +184,10 @@ public class ToolApprovalView : ContentView
             return;
 
         var args = approved && request.ToolCall is FunctionCallContent fc ? fc.Arguments : null;
+        if (_ctx.ApprovalResponder is null)
+            throw new InvalidOperationException(
+                "This approval view is not connected to a chat approval responder. Ensure the ContentContext was created by ChatViewModel.");
 
-        var chatVm = FindChatViewModel();
-        chatVm?.RespondToApproval(request, approved, args);
-    }
-
-    private ChatViewModel? FindChatViewModel()
-    {
-        Element? current = this;
-        while (current is not null)
-        {
-            if (current is Controls.ChatPanelControl panel)
-                return panel.ChatVM;
-            current = current.Parent;
-        }
-        return null;
+        _ctx.ApprovalResponder(request, approved, args);
     }
 }

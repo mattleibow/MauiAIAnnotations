@@ -5,6 +5,8 @@ namespace MauiAIAnnotations.Maui.Chat;
 /// <summary>
 /// Unified text message view for both User and Assistant roles.
 /// Uses VisualStateManager to switch styling based on <see cref="MessageRole"/>.
+/// Custom templates can include a root named <c>PART_Root</c>; if omitted,
+/// the view falls back to applying visual states to itself.
 /// </summary>
 public class ChatMessageView : ContentView
 {
@@ -60,15 +62,15 @@ public class ChatMessageView : ContentView
         if (_ctx is null)
             return;
         Text = (_ctx.Content as TextContent)?.Text;
-        MessageRole = _ctx.Role;
+        MessageRole = _ctx.Role.ToString();
         ApplyRoleState();
     }
 
     private void ApplyRoleState()
     {
-        if (_ctx?.Role is null)
+        if (_ctx is null)
             return;
 
-        VisualStateManager.GoToState(_stateRoot ?? this, _ctx.Role);
+        VisualStateManager.GoToState(_stateRoot ?? this, _ctx.Role.ToString());
     }
 }

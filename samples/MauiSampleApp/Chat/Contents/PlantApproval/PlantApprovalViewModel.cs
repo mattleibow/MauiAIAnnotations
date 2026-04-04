@@ -41,13 +41,12 @@ public partial class PlantApprovalViewModel : ObservableObject, IContentContextA
         }
     }
 
-    // Targeted writeback via OnXxxChanged partial hooks — updates only the changed key
-    partial void OnNicknameChanged(string value) => UpdateRequestArg("nickname", value);
-    partial void OnSpeciesChanged(string value) => UpdateRequestArg("species", value);
-    partial void OnLocationChanged(string value) => UpdateRequestArg("location", value);
-    partial void OnIsIndoorChanged(bool value) => UpdateRequestArg("isIndoor", value);
+    partial void OnNicknameChanged(string value) => WriteBack();
+    partial void OnSpeciesChanged(string value) => WriteBack();
+    partial void OnLocationChanged(string value) => WriteBack();
+    partial void OnIsIndoorChanged(bool value) => WriteBack();
 
-    private void UpdateRequestArg(string key, object? value)
+    private void WriteBack()
     {
         if (_args is null) return;
 

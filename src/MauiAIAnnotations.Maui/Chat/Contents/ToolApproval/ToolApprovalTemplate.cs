@@ -1,3 +1,4 @@
+using MauiAIAnnotations.Maui.Themes;
 using Microsoft.Extensions.AI;
 
 namespace MauiAIAnnotations.Maui.Chat;
@@ -14,9 +15,8 @@ public class ToolApprovalTemplate : ContentTemplate
     public string? ToolName { get; set; }
 
     public override bool When(ContentContext context) =>
-        context.Content is ToolApprovalRequestContent approval &&
-        (ToolName is null || (approval.ToolCall is FunctionCallContent fc &&
-            string.Equals(fc.Name, ToolName, StringComparison.OrdinalIgnoreCase)));
+        context.Content is ToolApprovalRequestContent &&
+        (ToolName is null || string.Equals(context.ToolName, ToolName, StringComparison.OrdinalIgnoreCase));
 
     internal override DataTemplate GetTemplate()
     {
@@ -26,10 +26,13 @@ public class ToolApprovalTemplate : ContentTemplate
             var wrapper = new ToolApprovalView();
             wrapper.InnerContentType = innerType;
             // Explicit template lookup — implicit styles may not resolve inside CollectionView
-            wrapper.SetDynamicResource(ContentView.ControlTemplateProperty, "MauiAI.ToolApprovalTemplate");
+            wrapper.SetDynamicResource(ContentView.ControlTemplateProperty, ChatThemeKeys.ToolApprovalTemplate);
             return wrapper;
         });
     }
+
+    internal override int GetPriority(ContentContext context) =>
+        base.GetPriority(context) + (ToolName is null ? -100 : 100);
 
     private DataTemplate? _cachedTemplate;
 }

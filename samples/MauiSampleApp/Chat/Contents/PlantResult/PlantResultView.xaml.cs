@@ -15,7 +15,7 @@ public partial class PlantResultView : ContentView
         {
             // Reuse the ViewModel instance across recycling
             _vm ??= new PlantResultViewModel();
-            _vm.SetContext(context);
+            _vm.ApplyContentContext(context);
             InnerContent.BindingContext = _vm;
         }
     }

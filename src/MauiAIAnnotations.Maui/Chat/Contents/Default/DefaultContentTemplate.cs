@@ -1,3 +1,5 @@
+using MauiAIAnnotations.Maui.Themes;
+
 namespace MauiAIAnnotations.Maui.Chat;
 
 public class DefaultContentTemplate : ContentTemplate
@@ -12,10 +14,13 @@ public class DefaultContentTemplate : ContentTemplate
         return _cachedTemplate ??= new DataTemplate(() =>
         {
             var view = new DefaultMessageView();
-            view.SetDynamicResource(ContentView.ControlTemplateProperty, "MauiAI.DefaultTemplate");
+            view.SetDynamicResource(ContentView.ControlTemplateProperty, ChatThemeKeys.DefaultTemplate);
             return view;
         });
     }
+
+    internal override int GetPriority(ContentContext context) =>
+        base.GetPriority(context) - 1000;
 
     private DataTemplate? _cachedTemplate;
 }

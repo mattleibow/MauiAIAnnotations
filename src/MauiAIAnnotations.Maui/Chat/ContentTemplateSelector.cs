@@ -4,20 +4,48 @@ namespace MauiAIAnnotations.Maui.Chat;
 public class ContentTemplateSelector : DataTemplateSelector
 {
     private static readonly DataTemplate FallbackTemplate =
-        new(() => new Label { Text = "?" });
+        new(() =>
+        {
+            var label = new Label
+            {
+                FontSize = 12,
+                Padding = new Thickness(4),
+                TextColor = Colors.Gray,
+            };
+
+            label.BindingContextChanged += (_, _) =>
+            {
+                label.Text = label.BindingContext is ContentContext context
+                    ? $"No content template registered for {context.Content.GetType().Name}."
+                    : "No content template registered.";
+            };
+
+            return label;
+        });
 
     public IList<ContentTemplate> Templates { get; } = new List<ContentTemplate>();
 
     protected override DataTemplate OnSelectTemplate(object item, BindableObject container)
     {
-        if (item is ContentContext context)
+        if (item is not ContentContext context)
+            return FallbackTemplate;
+
+        ContentTemplate? selectedTemplate = null;
+        var highestPriority = int.MinValue;
+
+        foreach (var template in Templates)
         {
-            foreach (var mapping in Templates)
+            if (!template.When(context))
+                continue;
+
+            var priority = template.GetPriority(context);
+            if (selectedTemplate is null || priority > highestPriority)
             {
-                if (mapping.When(context))
-                    return mapping.GetTemplate();
+                selectedTemplate = template;
+                highestPriority = priority;
             }
         }
-        return FallbackTemplate;
+
+        return selectedTemplate?.GetTemplate() ?? FallbackTemplate;
     }
 }

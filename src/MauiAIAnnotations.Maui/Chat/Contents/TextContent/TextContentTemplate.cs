@@ -1,14 +1,15 @@
+using MauiAIAnnotations.Maui.Themes;
 using Microsoft.Extensions.AI;
 
 namespace MauiAIAnnotations.Maui.Chat;
 
 public class TextContentTemplate : ContentTemplate
 {
-    public string? Role { get; set; }
+    public ContentRole? Role { get; set; }
 
     public override bool When(ContentContext context) =>
         context.Content is TextContent &&
-        (Role is null || string.Equals(context.Role, Role, StringComparison.OrdinalIgnoreCase));
+        (Role is null || context.Role == Role.Value);
 
     internal override DataTemplate GetTemplate()
     {
@@ -18,10 +19,13 @@ public class TextContentTemplate : ContentTemplate
         return _cachedTemplate ??= new DataTemplate(() =>
         {
             var view = new ChatMessageView();
-            view.SetDynamicResource(ContentView.ControlTemplateProperty, "MauiAI.ChatMessageTemplate");
+            view.SetDynamicResource(ContentView.ControlTemplateProperty, ChatThemeKeys.ChatMessageTemplate);
             return view;
         });
     }
+
+    internal override int GetPriority(ContentContext context) =>
+        base.GetPriority(context) + (Role is null ? 0 : 100);
 
     private DataTemplate? _cachedTemplate;
 }

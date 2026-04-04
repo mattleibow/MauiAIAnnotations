@@ -9,10 +9,26 @@ namespace MauiAIAnnotations.Maui.Chat;
 /// </summary>
 public partial class ContentContext : ObservableObject
 {
+    [NotifyPropertyChangedFor(nameof(ToolName))]
     [ObservableProperty]
     public partial AIContent Content { get; set; }
 
-    public string Role { get; }
+    public ContentRole Role { get; }
+
+    /// <summary>
+    /// Gets the associated tool name when this content represents a tool call,
+    /// approval request, or tool result.
+    /// </summary>
+    public string? ToolName => ToolNameOverride ?? Content switch
+    {
+        FunctionCallContent call => call.Name,
+        ToolApprovalRequestContent approval when approval.ToolCall is FunctionCallContent call => call.Name,
+        _ => null,
+    };
+
+    internal string? ToolNameOverride { get; init; }
+
+    internal Action<ToolApprovalRequestContent, bool, IDictionary<string, object?>?>? ApprovalResponder { get; init; }
 
     /// <summary>Whether the approval has been resolved (approved or rejected).</summary>
     [ObservableProperty]
@@ -22,9 +38,20 @@ public partial class ContentContext : ObservableObject
     [ObservableProperty]
     public partial string? ApprovalResolutionText { get; set; }
 
-    public ContentContext(AIContent content, string role)
+    public ContentContext(AIContent content, ContentRole role)
     {
         Content = content;
         Role = role;
     }
+
+    public ContentContext(AIContent content, string role)
+        : this(content, ParseRole(role))
+    {
+    }
+
+    private static ContentRole ParseRole(string role) =>
+        Enum.TryParse<ContentRole>(role, ignoreCase: true, out var parsedRole)
+            ? parsedRole
+            : throw new ArgumentOutOfRangeException(nameof(role), role,
+                $"Unknown content role '{role}'.");
 }

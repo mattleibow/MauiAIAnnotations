@@ -20,31 +20,26 @@ maui-devflow MAUI tree
 - `PageTitle` label shows "My Garden"
 - `AddPlantButton` is visible
 - `PlantList` CollectionView is visible
-- `ChatFabButton` is visible at bottom-right
+- The `AI Chat` tab is visible in the Shell tab bar
 
-**Pass criteria:** All 4 AutomationIds present in tree output.
+**Pass criteria:** Home page elements and the `AI Chat` tab are present in tree output.
 
 ---
 
-## Scenario 2: Chat Sidebar Opens (Wide Screen)
+## Scenario 2: Chat Tab Opens
 
 **Steps:**
 ```bash
-maui-devflow MAUI tap ChatFabButton
+maui-devflow MAUI tap Tab_IMPL_ChatPage
 maui-devflow MAUI tree
 ```
 
-**Expected (window ≥ 900px wide):**
-- `SidebarPanel` border is visible (not hidden)
-- `ChatFabButton` is hidden
-- `SidebarClearChatButton` and `SidebarCloseChatButton` visible
+**Expected:**
+- `ChatPage` is visible
+- `ClearChatButton` is visible in the header
 - `ChatMessages` CollectionView visible
 - `ChatInput` Entry visible
 - `SendMessageButton` visible
-
-**Expected (window < 900px):**
-- `ChatOverlayPanel` grid is visible
-- `CloseChatButton` and `ClearChatButton` visible
 
 **Pass criteria:** Chat panel elements visible in tree.
 
@@ -116,7 +111,7 @@ maui-devflow MAUI tree
 
 **Steps:**
 ```bash
-maui-devflow MAUI tap SidebarClearChatButton   # or ClearChatButton for overlay mode
+maui-devflow MAUI tap ClearChatButton
 maui-devflow MAUI screenshot
 ```
 
@@ -128,7 +123,7 @@ maui-devflow MAUI screenshot
 
 ---
 
-## Scenario 7: Close and Reopen Chat
+## Scenario 7: Switch Tabs and Return to Chat
 
 **Steps:**
 ```bash
@@ -136,16 +131,16 @@ maui-devflow MAUI screenshot
 maui-devflow MAUI fill ChatInput "Hi"
 maui-devflow MAUI tap SendMessageButton
 # Wait 5s
-maui-devflow MAUI tap SidebarCloseChatButton
-# Verify FAB is back
+maui-devflow MAUI tap Tab_IMPL_HomePage
+# Verify home page is back
 maui-devflow MAUI tree
-maui-devflow MAUI tap ChatFabButton
+maui-devflow MAUI tap Tab_IMPL_ChatPage
 maui-devflow MAUI screenshot
 ```
 
 **Expected:**
-- After close: `ChatFabButton` visible, sidebar hidden
-- After reopen: Previous messages still present (session persistence)
+- After switching away: Home page is visible
+- After returning: Previous messages still present (session persistence)
 
 **Pass criteria:** Messages persist across close/reopen.
 
@@ -192,11 +187,11 @@ maui-devflow MAUI tree
 
 ## Scenario 10a: Custom Approval — Add Plant (Approve with Edits)
 
-**Prerequisites:** `add_plant` is `ApprovalRequired = true` and has a custom `PlantApprovalMapping`
+**Prerequisites:** `add_plant` is `ApprovalRequired = true` and has a custom `ToolApprovalTemplate`
 
 **Steps:**
 ```bash
-maui-devflow MAUI tap ChatFabButton
+maui-devflow MAUI tap Tab_IMPL_ChatPage
 maui-devflow MAUI fill ChatInput "Add a new plant called Sun Daisy, species daisy, balcony, outdoor"
 maui-devflow MAUI tap SendMessageButton
 # Wait 18 seconds for AI to propose the tool call
@@ -235,11 +230,11 @@ maui-devflow MAUI tree
 
 ## Scenario 10b: Generic Approval — Remove Plant (Approve)
 
-**Prerequisites:** `remove_plant` is `ApprovalRequired = true` and has NO custom mapping (uses generic `ToolApprovalView`)
+**Prerequisites:** `remove_plant` is `ApprovalRequired = true` and has NO custom template (uses generic `ToolApprovalView`)
 
 **Steps:**
 ```bash
-maui-devflow MAUI tap SidebarClearChatButton
+maui-devflow MAUI tap ClearChatButton
 maui-devflow MAUI fill ChatInput "Remove the plant called Golden Daisy"
 maui-devflow MAUI tap SendMessageButton
 # Wait 18 seconds
@@ -275,7 +270,7 @@ maui-devflow MAUI screenshot
 
 **Steps:**
 ```bash
-maui-devflow MAUI tap SidebarClearChatButton
+maui-devflow MAUI tap ClearChatButton
 maui-devflow MAUI fill ChatInput "Remove the plant called Sunny Basil"
 maui-devflow MAUI tap SendMessageButton
 # Wait 18 seconds

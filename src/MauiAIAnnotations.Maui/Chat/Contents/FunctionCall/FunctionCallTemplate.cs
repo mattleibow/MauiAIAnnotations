@@ -1,3 +1,4 @@
+using MauiAIAnnotations.Maui.Themes;
 using Microsoft.Extensions.AI;
 
 namespace MauiAIAnnotations.Maui.Chat;
@@ -18,10 +19,13 @@ public class FunctionCallTemplate : ContentTemplate
         return _cachedTemplate ??= new DataTemplate(() =>
         {
             var view = new FunctionCallMessageView();
-            view.SetDynamicResource(ContentView.ControlTemplateProperty, "MauiAI.FunctionCallTemplate");
+            view.SetDynamicResource(ContentView.ControlTemplateProperty, ChatThemeKeys.FunctionCallTemplate);
             return view;
         });
     }
+
+    internal override int GetPriority(ContentContext context) =>
+        base.GetPriority(context) + (ToolName is null ? -100 : 100);
 
     private DataTemplate? _cachedTemplate;
 }

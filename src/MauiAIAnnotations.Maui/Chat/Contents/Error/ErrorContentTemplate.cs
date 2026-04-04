@@ -1,3 +1,4 @@
+using MauiAIAnnotations.Maui.Themes;
 using Microsoft.Extensions.AI;
 
 namespace MauiAIAnnotations.Maui.Chat;
@@ -15,7 +16,7 @@ public class ErrorContentTemplate : ContentTemplate
         return _cachedTemplate ??= new DataTemplate(() =>
         {
             var view = new ErrorMessageView();
-            view.SetDynamicResource(ContentView.ControlTemplateProperty, "MauiAI.ErrorTemplate");
+            view.SetDynamicResource(ContentView.ControlTemplateProperty, ChatThemeKeys.ErrorTemplate);
             return view;
         });
     }

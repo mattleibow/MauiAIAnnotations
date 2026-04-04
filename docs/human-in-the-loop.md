@@ -206,12 +206,11 @@ public async Task<List<CareEvent>> LogBatchCareEventsAsync(
     string plantNickname, List<string> eventTypes) { ... }
 ```
 
-Register the checkbox view via `ToolApprovalTemplate.InnerViewType`:
+Register the checkbox view via `ToolApprovalTemplate.ViewType`:
 
 ```xml
 <mauiChat:ToolApprovalTemplate ToolName="log_batch_care_events"
-    InnerViewType="{x:Type local:BatchCareApprovalView}"
-    ViewType="{x:Type mauiChat:ToolApprovalView}" />
+    ViewType="{x:Type local:BatchCareApprovalView}" />
 ```
 
 ## Key Points
@@ -222,7 +221,7 @@ Register the checkbox view via `ToolApprovalTemplate.InnerViewType`:
 - **Library owns the Approve/Reject buttons** — app views implement
   `IApprovalContentProvider` to provide editable content only.
 - **Cards stay after resolution** — inputs disabled, buttons replaced with status text.
-- **`ToolApprovalTemplate.InnerViewType`** — declare custom content per tool name.
+- **`ToolApprovalTemplate.ViewType`** — declare custom content per tool name. The library still wraps it in the built-in approval shell.
 - **`ChatViewModel.RespondToApproval()`** supports passing modified arguments back to
   the tool invocation.
 

@@ -1,13 +1,18 @@
+using Microsoft.Extensions.DependencyInjection;
+
 namespace MauiAIAnnotations.Maui.Chat;
 
 /// <summary>
 /// Maps a <see cref="ContentContext"/> to a view type via the <see cref="When"/> predicate.
-/// Declare in XAML inside ChatOverlayControl.ContentTemplates.
+/// Declare in XAML inside <c>ChatPanelControl.ContentTemplates</c>.
 /// </summary>
 public abstract class ContentTemplate : BindableObject
 {
     public static readonly BindableProperty ViewTypeProperty =
         BindableProperty.Create(nameof(ViewType), typeof(Type), typeof(ContentTemplate));
+
+    public static readonly BindableProperty PriorityProperty =
+        BindableProperty.Create(nameof(Priority), typeof(int), typeof(ContentTemplate), 0);
 
     public Type? ViewType
     {
@@ -15,7 +20,17 @@ public abstract class ContentTemplate : BindableObject
         set => SetValue(ViewTypeProperty, value);
     }
 
-    /// <summary>Return true if this mapping should handle the given content.</summary>
+    /// <summary>
+    /// Gets the selection priority for this template. Higher priorities win over lower priorities.
+    /// Templates with the same priority preserve declaration order.
+    /// </summary>
+    public int Priority
+    {
+        get => (int)GetValue(PriorityProperty);
+        set => SetValue(PriorityProperty, value);
+    }
+
+    /// <summary>Return true if this template should handle the given content.</summary>
     public abstract bool When(ContentContext context);
 
     private DataTemplate? _cachedTemplate;
@@ -28,6 +43,41 @@ public abstract class ContentTemplate : BindableObject
     internal virtual DataTemplate GetTemplate()
     {
         var type = ViewType ?? throw new InvalidOperationException($"{GetType().Name} has no ViewType set.");
-        return _cachedTemplate ??= new DataTemplate(type);
+        return _cachedTemplate ??= new DataTemplate(() => CreateView(type));
+    }
+
+    internal virtual int GetPriority(ContentContext context) => Priority;
+
+    internal static View CreateView(Type type, IServiceProvider? services = null)
+    {
+        if (!typeof(View).IsAssignableFrom(type))
+            throw new InvalidOperationException($"{type.Name} must derive from {nameof(View)}.");
+
+        services ??= Application.Current?.Handler?.MauiContext?.Services;
+
+        if (services is not null)
+        {
+            try
+            {
+                return (View)ActivatorUtilities.CreateInstance(services, type);
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+            {
+                throw new InvalidOperationException(
+                    $"Could not create '{type.Name}'. Register the view and any constructor dependencies in DI, or provide a public parameterless constructor.",
+                    ex);
+            }
+        }
+
+        try
+        {
+            return (View)Activator.CreateInstance(type)!;
+        }
+        catch (MissingMethodException ex)
+        {
+            throw new InvalidOperationException(
+                $"Could not create '{type.Name}' because the MAUI service provider is unavailable and the view has no public parameterless constructor.",
+                ex);
+        }
     }
 }

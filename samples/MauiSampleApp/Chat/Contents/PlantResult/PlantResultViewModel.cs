@@ -5,12 +5,12 @@ using Microsoft.Extensions.AI;
 
 namespace MauiSampleApp.Chat;
 
-public partial class PlantResultViewModel : ObservableObject
+public partial class PlantResultViewModel : ObservableObject, IContentContextAware
 {
     [ObservableProperty]
     public partial Plant? Plant { get; set; }
 
-    public void SetContext(ContentContext context)
+    public void ApplyContentContext(ContentContext context)
     {
         if (context.Content is FunctionResultContent result)
         {
