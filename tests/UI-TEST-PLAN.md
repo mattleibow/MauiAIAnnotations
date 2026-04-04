@@ -130,6 +130,27 @@ maui-devflow MAUI tree
 
 ---
 
+## Scenario 5c: Missing Plant Shows Friendly Empty State
+
+**Steps:**
+```bash
+maui-devflow MAUI tap ChatTrayToggleButton
+maui-devflow MAUI fill ChatInput "Show me all my tomato plants"
+maui-devflow MAUI tap SendMessageButton
+# Wait 15 seconds
+maui-devflow MAUI tree
+```
+
+**Expected:**
+- AI uses `get_plants` with a tomato-oriented query
+- If there are no matching plants, the chat renders `PlantEmptyState`
+- The UI shows a friendly message such as "No plants matched that request."
+- The chat does **not** fall back to a raw `[]` function-result bubble
+
+**Pass criteria:** Missing plant queries render the plant empty state instead of raw JSON/text output.
+
+---
+
 ## Scenario 6: Clear Chat
 
 **Steps:**

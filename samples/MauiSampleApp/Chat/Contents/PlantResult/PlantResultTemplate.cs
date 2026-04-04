@@ -6,11 +6,14 @@ using Microsoft.Extensions.AI;
 namespace MauiSampleApp.Chat;
 
 /// <summary>
-/// Matches <see cref="FunctionResultContent"/> where the result is a <see cref="Plant"/>
-/// or a list of <see cref="Plant"/> objects.
+/// Matches plant-oriented tool results and renders either a single plant,
+/// a multi-plant preview, or a friendly empty state when nothing matched.
 /// </summary>
-public class PlantResultTemplate : ContentTemplate
+public class PlantResultTemplate : FunctionResultTemplate
 {
+    public const string GetPlantToolName = "get_plant";
+    public const string GetPlantsToolName = "get_plants";
+
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
         PropertyNameCaseInsensitive = true
@@ -18,10 +21,10 @@ public class PlantResultTemplate : ContentTemplate
 
     public override bool When(ContentContext context)
     {
-        if (context.Content is not FunctionResultContent result)
+        if (!base.When(context) || context.Content is not FunctionResultContent result)
             return false;
 
-        return TryGetPlants(result).Count > 0;
+        return IsPlantTool(context.ToolName) || TryGetPlants(result).Count > 0;
     }
 
     public static Plant? TryGetPlant(FunctionResultContent result) =>
@@ -99,4 +102,8 @@ public class PlantResultTemplate : ContentTemplate
     private static bool IsValidPlant(Plant? plant) =>
         plant is not null &&
         !string.IsNullOrWhiteSpace(plant.Nickname);
+
+    private static bool IsPlantTool(string? toolName) =>
+        string.Equals(toolName, GetPlantToolName, StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(toolName, GetPlantsToolName, StringComparison.OrdinalIgnoreCase);
 }

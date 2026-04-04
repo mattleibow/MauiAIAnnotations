@@ -13,6 +13,21 @@
                    FontAttributes="Bold"
                    TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
 
+            <Border IsVisible="{Binding HasNoPlants}"
+                    AutomationId="PlantEmptyState"
+                    Padding="12,10"
+                    Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
+                    StrokeThickness="1"
+                    BackgroundColor="{AppThemeBinding Light=#F6FBF5, Dark=#233226}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12" />
+                </Border.StrokeShape>
+                <Label Text="{Binding EmptyStateText}"
+                       FontSize="13"
+                       LineBreakMode="WordWrap"
+                       TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+            </Border>
+
             <ContentView IsVisible="{Binding HasSinglePlant}"
                          HorizontalOptions="Start">
                 <controls:PlantCardView BindingContext="{Binding Plant}"
