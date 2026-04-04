@@ -184,7 +184,8 @@
                       Grid.Row="3"
                       ColumnDefinitions="*,*"
                       ColumnSpacing="10">
-                    <Button Text="Approve"
+                    <Button x:Name="PART_ApproveButton"
+                            Text="Approve"
                             AutomationId="ApproveToolButton"
                             Command="{TemplateBinding ApproveCommand}"
                             BackgroundColor="{DynamicResource MauiAI.Button.Approve}"
@@ -193,7 +194,8 @@
                             FontAttributes="Bold"
                             CornerRadius="10"
                             HeightRequest="40" />
-                    <Button Grid.Column="1"
+                    <Button x:Name="PART_RejectButton"
+                            Grid.Column="1"
                             Text="Reject"
                             AutomationId="RejectToolButton"
                             Command="{TemplateBinding RejectCommand}"

@@ -14,6 +14,9 @@ namespace MauiAIAnnotations.Maui.Chat;
 /// </summary>
 public class ToolApprovalView : ContentView
 {
+    private const string ActiveApproveAutomationId = "ApproveToolButton";
+    private const string ActiveRejectAutomationId = "RejectToolButton";
+
     public static readonly BindableProperty ToolNameProperty =
         BindableProperty.Create(nameof(ToolName), typeof(string), typeof(ToolApprovalView));
 
@@ -63,6 +66,8 @@ public class ToolApprovalView : ContentView
 
     private ContentContext? _ctx;
     private VisualElement? _stateRoot;
+    private Button? _approveButton;
+    private Button? _rejectButton;
 
     public ToolApprovalView()
     {
@@ -113,13 +118,17 @@ public class ToolApprovalView : ContentView
         IsResolved = _ctx?.ApprovalResolved ?? false;
         ResolutionText = _ctx?.ApprovalResolutionText;
         ApplyVisualState();
+        RefreshAutomationIds();
     }
 
     protected override void OnApplyTemplate()
     {
         base.OnApplyTemplate();
         _stateRoot = GetTemplateChild("PART_Root") as VisualElement;
+        _approveButton = GetTemplateChild("PART_ApproveButton") as Button;
+        _rejectButton = GetTemplateChild("PART_RejectButton") as Button;
         ApplyVisualState();
+        RefreshAutomationIds();
     }
 
     private void BuildInnerContent()
@@ -150,6 +159,61 @@ public class ToolApprovalView : ContentView
     private void ApplyVisualState()
     {
         VisualStateManager.GoToState(_stateRoot ?? this, IsResolved ? "Resolved" : "Pending");
+    }
+
+    private void RefreshAutomationIds()
+    {
+        var suffix = GetApprovalAutomationSuffix();
+
+        if (_approveButton is not null)
+            _approveButton.AutomationId = IsResolved ? $"{ActiveApproveAutomationId}_{suffix}" : ActiveApproveAutomationId;
+
+        if (_rejectButton is not null)
+            _rejectButton.AutomationId = IsResolved ? $"{ActiveRejectAutomationId}_{suffix}" : ActiveRejectAutomationId;
+
+        if (IsResolved && Content is not null)
+            SuffixAutomationIds(Content, suffix);
+    }
+
+    private string GetApprovalAutomationSuffix()
+    {
+        if (_ctx?.Content is ToolApprovalRequestContent request && !string.IsNullOrWhiteSpace(request.RequestId))
+            return request.RequestId[..Math.Min(8, request.RequestId.Length)];
+
+        return "resolved";
+    }
+
+    private static void SuffixAutomationIds(Element element, string suffix)
+    {
+        if (element is VisualElement visual &&
+            !string.IsNullOrWhiteSpace(visual.AutomationId) &&
+            !visual.AutomationId.EndsWith($"_{suffix}", StringComparison.Ordinal))
+        {
+            visual.AutomationId = $"{visual.AutomationId}_{suffix}";
+        }
+
+        switch (element)
+        {
+            case Border border when border.Content is not null:
+                SuffixAutomationIds(border.Content, suffix);
+                break;
+
+            case ContentView contentView when contentView.Content is not null:
+                SuffixAutomationIds(contentView.Content, suffix);
+                break;
+
+            case ScrollView scrollView when scrollView.Content is not null:
+                SuffixAutomationIds(scrollView.Content, suffix);
+                break;
+
+            case Layout layout:
+                foreach (var child in layout.Children)
+                {
+                    if (child is Element childElement)
+                        SuffixAutomationIds(childElement, suffix);
+                }
+                break;
+        }
     }
 
     private View BuildDefaultArgsView()

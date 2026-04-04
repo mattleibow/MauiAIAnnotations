@@ -76,17 +76,7 @@ public partial class ChatViewModel : ObservableObject
         if (_approvalResponses.ContainsKey(request))
             return;
 
-        ToolApprovalResponseContent response;
-
-        if (approved && modifiedArguments is not null && request.ToolCall is FunctionCallContent originalCall)
-        {
-            var modifiedCall = new FunctionCallContent(originalCall.CallId, originalCall.Name, modifiedArguments);
-            response = new ToolApprovalResponseContent(request.RequestId, true, modifiedCall);
-        }
-        else
-        {
-            response = request.CreateResponse(approved, approved ? null : "User rejected");
-        }
+        var response = CreateApprovalResponse(request, approved, modifiedArguments);
 
         // Mark the approval card as resolved in-place (don't replace — preserve chat history)
         var toolName = request.ToolCall is FunctionCallContent fc ? fc.Name : "Tool";
@@ -147,7 +137,13 @@ public partial class ChatViewModel : ObservableObject
 
     private async Task RunStreamingLoopAsync(CancellationToken cancellationToken)
     {
-        var options = new ChatOptions { Tools = [.. _tools] };
+        var options = new ChatOptions
+        {
+            Tools = [.. _tools],
+            // MEAI notes that when one call in a response needs approval, all tool calls in
+            // that same response enter the approval flow. Prefer one call at a time.
+            AllowMultipleToolCalls = false,
+        };
 
         while (true)
         {
@@ -219,7 +215,7 @@ public partial class ChatViewModel : ObservableObject
             _pendingApprovals = approvalRequests;
             HasPendingApprovals = true;
             _approvalResponses.Clear();
-            _approvalTcs = new TaskCompletionSource<List<ToolApprovalResponseContent>>();
+            _approvalTcs = new TaskCompletionSource<List<ToolApprovalResponseContent>>(TaskCreationOptions.RunContinuationsAsynchronously);
             var responses = await _approvalTcs.Task.WaitAsync(cancellationToken);
             _approvalTcs = null;
             _pendingApprovals.Clear();
@@ -227,16 +223,53 @@ public partial class ChatViewModel : ObservableObject
             HasPendingApprovals = false;
 
             AddToConversationHistory(ChatRole.User, responses);
+        }
+    }
 
-            // Check if all were rejected
-            if (responses.All(r => !r.Approved))
+    private static ToolApprovalResponseContent CreateApprovalResponse(
+        ToolApprovalRequestContent request,
+        bool approved,
+        IDictionary<string, object?>? modifiedArguments)
+    {
+        if (!approved)
+            return request.CreateResponse(approved: false, reason: "User rejected");
+
+        if (request.ToolCall is not FunctionCallContent originalCall ||
+            modifiedArguments is null ||
+            ArgumentsMatch(originalCall.Arguments, modifiedArguments))
+        {
+            return request.CreateResponse(approved: true);
+        }
+
+        var modifiedCall = new FunctionCallContent(
+            originalCall.CallId,
+            originalCall.Name,
+            new Dictionary<string, object?>(modifiedArguments));
+
+        // Preserve the MEAI approval contract by creating the response from a matching approval request.
+        return new ToolApprovalRequestContent(request.RequestId, modifiedCall).CreateResponse(approved: true);
+    }
+
+    private static bool ArgumentsMatch(
+        IDictionary<string, object?>? originalArguments,
+        IDictionary<string, object?> modifiedArguments)
+    {
+        if (originalArguments is null)
+            return modifiedArguments.Count == 0;
+
+        if (originalArguments.Count != modifiedArguments.Count)
+            return false;
+
+        foreach (var (key, value) in originalArguments)
+        {
+            if (!modifiedArguments.TryGetValue(key, out var modifiedValue) ||
+                !Equals(value, modifiedValue))
             {
-                var rejection = new TextContent("Tool call was rejected.");
-                Messages.Add(CreateContext(rejection, ContentRole.Assistant));
-                AddToConversationHistory(ChatRole.Assistant, [rejection]);
-                return;
+                return false;
             }
         }
+
+        return true;
     }
 
     private List<ChatMessage> BuildHistory()
