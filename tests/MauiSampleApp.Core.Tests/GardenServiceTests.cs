@@ -162,6 +162,23 @@ public class PlantDataServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task GetPlants_WithQuery_FiltersBySpeciesNicknameAndLocation()
+    {
+        await _service.AddPlantAsync(new NewPlantRequest { Nickname = "Patio Tomatoes", Species = "tomato", Location = "Patio", IsIndoor = false });
+        await _service.AddPlantAsync(new NewPlantRequest { Nickname = "Kitchen Basil", Species = "basil", Location = "Kitchen", IsIndoor = true });
+        await _service.AddPlantAsync(new NewPlantRequest { Nickname = "Cherry Tomato", Species = "tomato", Location = "Greenhouse", IsIndoor = true });
+
+        var tomatoPlants = await _service.GetPlantsAsync("tomato");
+        var patioPlants = await _service.GetPlantsAsync("patio");
+
+        Assert.Equal(2, tomatoPlants.Count);
+        Assert.Contains(tomatoPlants, plant => plant.Nickname == "Patio Tomatoes");
+        Assert.Contains(tomatoPlants, plant => plant.Nickname == "Cherry Tomato");
+        Assert.Single(patioPlants);
+        Assert.Equal("Patio Tomatoes", patioPlants[0].Nickname);
+    }
+
+    [Fact]
     public async Task GetPlant_FindsByNickname()
     {
         await _service.AddPlantAsync(new NewPlantRequest { Nickname = "Rosie", Species = "rose", Location = "Front garden", IsIndoor = false });

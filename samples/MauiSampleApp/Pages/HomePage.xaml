@@ -1,15 +1,21 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:maui="clr-namespace:MauiAIAnnotations.Maui.Controls;assembly=MauiAIAnnotations.Maui"
+             xmlns:mauiChat="clr-namespace:MauiAIAnnotations.Maui.Chat;assembly=MauiAIAnnotations.Maui"
              xmlns:vm="clr-namespace:MauiSampleApp.ViewModels"
              xmlns:models="clr-namespace:MauiSampleApp.Core.Models;assembly=MauiSampleApp.Core"
+             xmlns:local="clr-namespace:MauiSampleApp.Chat"
              x:Class="MauiSampleApp.Pages.HomePage"
+             x:Name="ThisPage"
+             x:DataType="vm:HomePageViewModel"
              Title="My Garden"
              Shell.NavBarIsVisible="False"
              BackgroundColor="{AppThemeBinding Light={StaticResource PageBg}, Dark={StaticResource PageBgDark}}"
              Shell.BackgroundColor="{StaticResource AccentGreen}">
 
-    <Grid RowDefinitions="Auto,*" RowSpacing="0">
+    <Grid>
+        <Grid RowDefinitions="Auto,*" RowSpacing="0">
 
             <!-- Hero Header -->
             <Border Grid.Row="0"
@@ -52,12 +58,13 @@
                             AutomationId="PlantList"
                             SelectionMode="Single"
                             SelectionChanged="OnPlantSelected"
-                            Margin="16,16,16,0">
+                            Margin="16,16,16,96">
                 <CollectionView.EmptyView>
                     <VerticalStackLayout Spacing="12" VerticalOptions="Center" HorizontalOptions="Center" Padding="40">
                         <Label Text="&#x1F331;" FontSize="56" HorizontalOptions="Center" />
                         <Label Text="No plants yet"
-                               FontSize="20" FontAttributes="Bold"
+                               FontSize="20"
+                               FontAttributes="Bold"
                                HorizontalOptions="Center"
                                TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
                         <Label Text="Tap + to add your first plant, or ask the AI assistant!"
@@ -78,8 +85,8 @@
                                 <RoundRectangle CornerRadius="16" />
                             </Border.StrokeShape>
                             <Grid ColumnDefinitions="52,*,Auto" ColumnSpacing="14">
-                                <!-- Plant avatar -->
-                                <Border WidthRequest="52" HeightRequest="52"
+                                <Border WidthRequest="52"
+                                        HeightRequest="52"
                                         BackgroundColor="{StaticResource BadgeOutdoor}"
                                         StrokeThickness="0"
                                         VerticalOptions="Center">
@@ -88,7 +95,7 @@
                                     </Border.StrokeShape>
                                     <Label Text="&#x1FAB4;" FontSize="26" HorizontalOptions="Center" VerticalOptions="Center" />
                                 </Border>
-                                <!-- Info -->
+
                                 <VerticalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
                                     <Label Text="{Binding Nickname}"
                                            FontSize="17"
@@ -100,8 +107,10 @@
                                                TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
                                     </HorizontalStackLayout>
                                 </VerticalStackLayout>
-                                <!-- Chevron -->
-                                <Label Grid.Column="2" Text="&#x203A;" FontSize="28"
+
+                                <Label Grid.Column="2"
+                                       Text="&#x203A;"
+                                       FontSize="28"
                                        VerticalOptions="Center"
                                        TextColor="{AppThemeBinding Light={StaticResource Gray300}, Dark={StaticResource Gray600}}" />
                             </Grid>
@@ -109,6 +118,128 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
+        </Grid>
+
+        <BoxView x:Name="ChatTrayScrim"
+                 AutomationId="ChatTrayScrim"
+                 BackgroundColor="#80000000"
+                 IsVisible="False"
+                 InputTransparent="True"
+                 Opacity="0" >
+            <BoxView.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnChatTrayScrimTapped" />
+            </BoxView.GestureRecognizers>
+        </BoxView>
+
+        <Border x:Name="HomeChatTray"
+                AutomationId="HomeChatTray"
+                VerticalOptions="End"
+                Margin="12,0,12,12"
+                Padding="0"
+                HeightRequest="84"
+                BackgroundColor="{AppThemeBinding Light={StaticResource CardBg}, Dark={StaticResource CardBgDark}}"
+                Stroke="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}"
+                StrokeThickness="1">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="24" />
+            </Border.StrokeShape>
+            <Grid RowDefinitions="Auto,Auto,*" RowSpacing="0">
+                <Grid x:Name="ChatTrayHeader"
+                      AutomationId="ChatTrayHeader"
+                      Padding="14,10,14,12">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnChatTrayHeaderTapped" />
+                        <PanGestureRecognizer PanUpdated="OnChatTrayPanUpdated" />
+                    </Grid.GestureRecognizers>
+
+                    <VerticalStackLayout Spacing="10">
+                        <Border WidthRequest="48"
+                                HeightRequest="4"
+                                HorizontalOptions="Center"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource Gray300}, Dark={StaticResource Gray600}}"
+                                StrokeThickness="0" />
+
+                        <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="10">
+                            <Border WidthRequest="36"
+                                    HeightRequest="36"
+                                    VerticalOptions="Center"
+                                    BackgroundColor="#E3F2E3"
+                                    StrokeThickness="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="18" />
+                                </Border.StrokeShape>
+                                <Label Text="&#x1F4AC;"
+                                       FontSize="18"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center" />
+                            </Border>
+
+                            <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                <Label x:Name="ChatTrayTitleLabel"
+                                       Text="Garden AI chat"
+                                       FontSize="16"
+                                       FontAttributes="Bold"
+                                       TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
+                                <Label x:Name="ChatTraySubtitleLabel"
+                                       Text="Pull up to ask about care, seasons, and tasks."
+                                       FontSize="12"
+                                       LineBreakMode="TailTruncation"
+                                       TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                            </VerticalStackLayout>
+
+                            <Button Grid.Column="2"
+                                    x:Name="ChatTrayToggleButton"
+                                    AutomationId="ChatTrayToggleButton"
+                                    Text="Open"
+                                    Clicked="OnChatTrayToggleClicked"
+                                    BackgroundColor="#E3F2E3"
+                                    TextColor="{StaticResource AccentGreen}"
+                                    FontSize="13"
+                                    FontAttributes="Bold"
+                                    CornerRadius="16"
+                                    Padding="12,6"
+                                    VerticalOptions="Center" />
+
+                            <Button Grid.Column="3"
+                                    Text="&#x1F5D1;"
+                                    FontSize="16"
+                                    AutomationId="ClearChatButton"
+                                    BackgroundColor="Transparent"
+                                    TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"
+                                    Command="{Binding Source={x:Reference ThisPage}, Path=ChatViewModel.ClearCommand}"
+                                    Padding="8,4"
+                                    MinimumWidthRequest="44"
+                                    VerticalOptions="Center"
+                                    ToolTipProperties.Text="Clear chat" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Grid>
+
+                <BoxView Grid.Row="1"
+                         HeightRequest="1"
+                         BackgroundColor="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}" />
+
+                <Grid x:Name="ChatTrayBody"
+                      Grid.Row="2"
+                      IsVisible="False"
+                      Padding="12,8,12,12">
+                    <maui:ChatPanelControl ChatVM="{Binding Source={x:Reference ThisPage}, Path=ChatViewModel}">
+                        <maui:ChatPanelControl.ContentTemplates>
+                            <mauiChat:TextContentTemplate Role="User" />
+                            <mauiChat:TextContentTemplate Role="Assistant" />
+                            <mauiChat:FunctionCallTemplate />
+                            <mauiChat:ToolApprovalTemplate ToolName="add_plant" ViewType="{x:Type local:PlantApprovalView}" />
+                            <mauiChat:ToolApprovalTemplate ToolName="log_batch_care_events" ViewType="{x:Type local:BatchCareApprovalView}" />
+                            <mauiChat:ToolApprovalTemplate />
+                            <local:PlantResultTemplate ViewType="{x:Type local:PlantResultView}" />
+                            <mauiChat:FunctionResultTemplate />
+                            <mauiChat:ErrorContentTemplate />
+                            <mauiChat:DefaultContentTemplate />
+                        </maui:ChatPanelControl.ContentTemplates>
+                    </maui:ChatPanelControl>
+                </Grid>
+            </Grid>
+        </Border>
     </Grid>
 
 </ContentPage>

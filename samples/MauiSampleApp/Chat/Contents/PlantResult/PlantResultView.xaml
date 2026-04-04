@@ -2,10 +2,41 @@
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:controls="clr-namespace:MauiSampleApp.Controls"
+             xmlns:models="clr-namespace:MauiSampleApp.Core.Models;assembly=MauiSampleApp.Core"
+             xmlns:chat="clr-namespace:MauiSampleApp.Chat"
              x:Class="MauiSampleApp.Chat.PlantResultView">
     <Grid x:Name="InnerContent" Padding="0,4">
-        <controls:PlantCardView BindingContext="{Binding Plant}"
-                                HorizontalOptions="Start"
-                                MaximumWidthRequest="320" />
+        <VerticalStackLayout Spacing="8" x:DataType="chat:PlantResultViewModel">
+            <Label Text="{Binding PreviewTitle}"
+                   IsVisible="{Binding HasMultiplePlants}"
+                   FontSize="14"
+                   FontAttributes="Bold"
+                   TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
+
+            <ContentView IsVisible="{Binding HasSinglePlant}"
+                         HorizontalOptions="Start">
+                <controls:PlantCardView BindingContext="{Binding Plant}"
+                                        HorizontalOptions="Start"
+                                        MaximumWidthRequest="320" />
+            </ContentView>
+
+            <CollectionView ItemsSource="{Binding Plants}"
+                            IsVisible="{Binding HasMultiplePlants}"
+                            AutomationId="PlantPreviewList"
+                            SelectionMode="None"
+                            HeightRequest="118"
+                            HorizontalScrollBarVisibility="Never">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Horizontal" ItemSpacing="12" />
+                </CollectionView.ItemsLayout>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Plant">
+                        <controls:PlantCardView BindingContext="{Binding .}"
+                                                WidthRequest="240"
+                                                Margin="0,0,4,0" />
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
     </Grid>
 </ContentView>

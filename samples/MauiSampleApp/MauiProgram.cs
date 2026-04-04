@@ -82,7 +82,6 @@ public static class MauiProgram
         builder.Services.AddTransient<HomePage>();
         builder.Services.AddTransient<PlantDetailPage>();
         builder.Services.AddTransient<AddPlantPage>();
-        builder.Services.AddTransient<ChatPage>();
         builder.Services.AddTransient<PlantApprovalView>();
         builder.Services.AddTransient<BatchCareApprovalView>();
         builder.Services.AddTransient<DebugPage>();

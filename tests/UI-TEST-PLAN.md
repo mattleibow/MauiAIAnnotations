@@ -20,28 +20,30 @@ maui-devflow MAUI tree
 - `PageTitle` label shows "My Garden"
 - `AddPlantButton` is visible
 - `PlantList` CollectionView is visible
-- The `AI Chat` tab is visible in the Shell tab bar
+- The collapsed `HomeChatTray` is visible at the bottom
+- `ChatTrayToggleButton` is visible
 
-**Pass criteria:** Home page elements and the `AI Chat` tab are present in tree output.
+**Pass criteria:** Home page elements and the collapsed chat tray are present in tree output.
 
 ---
 
-## Scenario 2: Chat Tab Opens
+## Scenario 2: Chat Tray Opens
 
 **Steps:**
 ```bash
-maui-devflow MAUI tap Tab_IMPL_ChatPage
+maui-devflow MAUI tap ChatTrayToggleButton
 maui-devflow MAUI tree
 ```
 
 **Expected:**
-- `ChatPage` is visible
-- `ClearChatButton` is visible in the header
+- `HomeChatTray` expands to most of the page height
+- `ChatTrayScrim` becomes visible behind it
+- `ClearChatButton` is visible in the tray header
 - `ChatMessages` CollectionView visible
 - `ChatInput` Entry visible
 - `SendMessageButton` visible
 
-**Pass criteria:** Chat panel elements visible in tree.
+**Pass criteria:** Expanded tray and chat panel elements are visible in tree.
 
 ---
 
@@ -107,6 +109,27 @@ maui-devflow MAUI tree
 
 ---
 
+## Scenario 5b: Multi-Plant Preview Renders
+
+**Steps:**
+```bash
+maui-devflow MAUI tap ChatTrayToggleButton
+maui-devflow MAUI fill ChatInput "Show me all my tomato plants"
+maui-devflow MAUI tap SendMessageButton
+# Wait 15 seconds
+maui-devflow MAUI tree
+```
+
+**Expected:**
+- AI uses `get_plants` with a tomato-oriented query
+- `PlantResultView` renders a **horizontal CollectionView** rather than a single card
+- Tree contains `PlantPreviewList` under `ChatMessages`
+- Multiple `PlantCardView` items appear in the horizontal strip
+
+**Pass criteria:** `PlantPreviewList` and multiple plant cards are visible in the tree.
+
+---
+
 ## Scenario 6: Clear Chat
 
 **Steps:**
@@ -123,7 +146,7 @@ maui-devflow MAUI screenshot
 
 ---
 
-## Scenario 7: Switch Tabs and Return to Chat
+## Scenario 7: Collapse and Reopen Chat Tray
 
 **Steps:**
 ```bash
@@ -131,18 +154,18 @@ maui-devflow MAUI screenshot
 maui-devflow MAUI fill ChatInput "Hi"
 maui-devflow MAUI tap SendMessageButton
 # Wait 5s
-maui-devflow MAUI tap Tab_IMPL_HomePage
-# Verify home page is back
+maui-devflow MAUI tap ChatTrayToggleButton
+# Verify the tray is collapsed
 maui-devflow MAUI tree
-maui-devflow MAUI tap Tab_IMPL_ChatPage
+maui-devflow MAUI tap ChatTrayToggleButton
 maui-devflow MAUI screenshot
 ```
 
 **Expected:**
-- After switching away: Home page is visible
-- After returning: Previous messages still present (session persistence)
+- After collapsing: Home page stays visible
+- After reopening: Previous messages still present (session persistence)
 
-**Pass criteria:** Messages persist across close/reopen.
+**Pass criteria:** Messages persist across tray collapse/reopen.
 
 ---
 
@@ -191,7 +214,7 @@ maui-devflow MAUI tree
 
 **Steps:**
 ```bash
-maui-devflow MAUI tap Tab_IMPL_ChatPage
+maui-devflow MAUI tap ChatTrayToggleButton
 maui-devflow MAUI fill ChatInput "Add a new plant called Sun Daisy, species daisy, balcony, outdoor"
 maui-devflow MAUI tap SendMessageButton
 # Wait 18 seconds for AI to propose the tool call

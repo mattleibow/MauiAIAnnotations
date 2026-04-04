@@ -7,11 +7,28 @@ namespace MauiSampleApp.Core.Services;
 
 public class PlantDataService(IDocumentStore store, SpeciesService speciesService)
 {
-    [ExportAIFunction("get_plants", Description = "Gets all plants the user has registered.")]
-    public async Task<List<Plant>> GetPlantsAsync()
+    [ExportAIFunction("get_plants", Description = "Gets the user's plants. Optionally pass a query to filter by species, nickname, or location for requests like 'all my tomatoes' or 'plants on the balcony'.")]
+    public async Task<List<Plant>> GetPlantsAsync(
+        [Description("Optional search text to filter plants by species, nickname, or location. Leave blank to return all plants.")] string? query = null)
     {
-        var result = await store.Query<Plant>().ToList();
-        return result.ToList();
+        var plants = (await store.Query<Plant>().ToList()).ToList();
+        if (string.IsNullOrWhiteSpace(query))
+            return plants;
+
+        var normalizedQuery = query.Trim();
+        var speciesMatches = (await store.Query<SpeciesProfile>().ToList())
+            .Where(profile =>
+                Matches(profile.CommonName, normalizedQuery) ||
+                Matches(profile.ScientificName, normalizedQuery))
+            .Select(profile => profile.Id)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        return plants
+            .Where(plant =>
+                Matches(plant.Nickname, normalizedQuery) ||
+                Matches(plant.Location, normalizedQuery) ||
+                speciesMatches.Contains(plant.SpeciesId))
+            .ToList();
     }
 
     [ExportAIFunction("get_plant", Description = "Gets a specific plant by its nickname.")]
@@ -115,4 +132,8 @@ public class PlantDataService(IDocumentStore store, SpeciesService speciesServic
         }
         return results;
     }
+
+    private static bool Matches(string? value, string query) =>
+        !string.IsNullOrWhiteSpace(value) &&
+        value.Contains(query, StringComparison.OrdinalIgnoreCase);
 }
