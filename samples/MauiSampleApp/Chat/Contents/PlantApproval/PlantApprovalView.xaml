@@ -6,30 +6,99 @@
              x:DataType="local:PlantApprovalViewModel">
 
     <!-- Content-only: no header, no buttons. The library wrapper provides those. -->
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="90,*" RowSpacing="8" ColumnSpacing="8">
-        <Label Text="Nickname:" VerticalOptions="Center" FontSize="13" FontAttributes="Bold"
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+          ColumnDefinitions="90,*"
+          RowSpacing="8"
+          ColumnSpacing="8">
+        <Label Grid.ColumnSpan="2"
+               Text="Review the proposed plant details. If something should change, reject and ask again."
+               FontSize="12"
+               LineBreakMode="WordWrap"
                TextColor="{AppThemeBinding Light=#7A7062, Dark=#A69E90}" />
-        <Entry x:Name="NicknameEntry" Grid.Column="1" Text="{Binding Nickname}" FontSize="13"
-               AutomationId="ApprovalNicknameEntry"
-               BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2A2721}" />
 
-        <Label Grid.Row="1" Text="Species:" VerticalOptions="Center" FontSize="13" FontAttributes="Bold"
+        <Label Grid.Row="1"
+               Text="Nickname:"
+               VerticalOptions="Center"
+               FontSize="13"
+               FontAttributes="Bold"
                TextColor="{AppThemeBinding Light=#7A7062, Dark=#A69E90}" />
-        <Entry x:Name="SpeciesEntry" Grid.Row="1" Grid.Column="1" Text="{Binding Species}" FontSize="13"
-               AutomationId="ApprovalSpeciesEntry"
-               BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2A2721}" />
+        <Border Grid.Row="1"
+                Grid.Column="1"
+                Padding="12,10"
+                AutomationId="ApprovalNicknameEntry"
+                BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2A2721}"
+                Stroke="{AppThemeBinding Light=#E8E0D4, Dark=#4A4337}"
+                StrokeThickness="1">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="10" />
+            </Border.StrokeShape>
+            <Label Text="{Binding NicknameDisplay}"
+                   FontSize="13"
+                   TextColor="{AppThemeBinding Light=#2C2416, Dark=#EDE8DF}" />
+        </Border>
 
-        <Label Grid.Row="2" Text="Location:" VerticalOptions="Center" FontSize="13" FontAttributes="Bold"
+        <Label Grid.Row="2"
+               Text="Species:"
+               VerticalOptions="Center"
+               FontSize="13"
+               FontAttributes="Bold"
                TextColor="{AppThemeBinding Light=#7A7062, Dark=#A69E90}" />
-        <Entry x:Name="LocationEntry" Grid.Row="2" Grid.Column="1" Text="{Binding Location}" FontSize="13"
-               AutomationId="ApprovalLocationEntry"
-               BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2A2721}" />
+        <Border Grid.Row="2"
+                Grid.Column="1"
+                Padding="12,10"
+                AutomationId="ApprovalSpeciesEntry"
+                BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2A2721}"
+                Stroke="{AppThemeBinding Light=#E8E0D4, Dark=#4A4337}"
+                StrokeThickness="1">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="10" />
+            </Border.StrokeShape>
+            <Label Text="{Binding SpeciesDisplay}"
+                   FontSize="13"
+                   TextColor="{AppThemeBinding Light=#2C2416, Dark=#EDE8DF}" />
+        </Border>
 
-        <Label Grid.Row="3" Text="Indoor:" VerticalOptions="Center" FontSize="13" FontAttributes="Bold"
+        <Label Grid.Row="3"
+               Text="Location:"
+               VerticalOptions="Center"
+               FontSize="13"
+               FontAttributes="Bold"
                TextColor="{AppThemeBinding Light=#7A7062, Dark=#A69E90}" />
-        <Switch x:Name="IndoorSwitch" Grid.Row="3" Grid.Column="1" IsToggled="{Binding IsIndoor}"
+        <Border Grid.Row="3"
+                Grid.Column="1"
+                Padding="12,10"
+                AutomationId="ApprovalLocationEntry"
+                BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2A2721}"
+                Stroke="{AppThemeBinding Light=#E8E0D4, Dark=#4A4337}"
+                StrokeThickness="1">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="10" />
+            </Border.StrokeShape>
+            <Label Text="{Binding LocationDisplay}"
+                   FontSize="13"
+                   TextColor="{AppThemeBinding Light=#2C2416, Dark=#EDE8DF}" />
+        </Border>
+
+        <Label Grid.Row="4"
+               Text="Indoor:"
+               VerticalOptions="Center"
+               FontSize="13"
+               FontAttributes="Bold"
+               TextColor="{AppThemeBinding Light=#7A7062, Dark=#A69E90}" />
+        <Border Grid.Row="4"
+                Grid.Column="1"
+                Padding="12,10"
                 AutomationId="ApprovalIndoorSwitch"
-                OnColor="#5B8C5A" />
+                BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2A2721}"
+                Stroke="{AppThemeBinding Light=#E8E0D4, Dark=#4A4337}"
+                StrokeThickness="1">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="10" />
+            </Border.StrokeShape>
+            <Label Text="{Binding IndoorDisplay}"
+                   FontSize="13"
+                   TextColor="{AppThemeBinding Light=#2C2416, Dark=#EDE8DF}" />
+        </Border>
     </Grid>
 
 </ContentView>

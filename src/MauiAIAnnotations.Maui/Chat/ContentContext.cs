@@ -28,7 +28,7 @@ public partial class ContentContext : ObservableObject
 
     internal string? ToolNameOverride { get; init; }
 
-    internal Action<ToolApprovalRequestContent, bool, IDictionary<string, object?>?>? ApprovalResponder { get; init; }
+    internal Action<ToolApprovalRequestContent, bool>? ApprovalResponder { get; init; }
 
     /// <summary>Whether the approval has been resolved (approved or rejected).</summary>
     [ObservableProperty]

@@ -7,29 +7,48 @@
 
     <!-- Content-only: library wrapper provides header + buttons -->
     <VerticalStackLayout Spacing="8">
-        <!-- Plant name -->
+        <Label Text="Review the proposed care log entries. If the set should change, reject and ask again."
+               FontSize="12"
+               LineBreakMode="WordWrap"
+               TextColor="{AppThemeBinding Light=#7A7062, Dark=#A69E90}" />
+
         <HorizontalStackLayout Spacing="6">
-            <Label Text="Plant:" FontSize="13" FontAttributes="Bold"
+            <Label Text="Plant:"
+                   FontSize="13"
+                   FontAttributes="Bold"
                    TextColor="{AppThemeBinding Light=#7A7062, Dark=#A69E90}" />
-            <Label Text="{Binding PlantNickname}" FontSize="13"
+            <Label Text="{Binding PlantNicknameDisplay}"
+                   FontSize="13"
                    TextColor="{AppThemeBinding Light=#2C2416, Dark=#EDE8DF}" />
         </HorizontalStackLayout>
 
-        <Label Text="Select care events to log:" FontSize="12"
+        <Label Text="Care events to log:"
+               FontSize="12"
                TextColor="{AppThemeBinding Light=#7A7062, Dark=#A69E90}" />
 
-        <!-- Checkboxes for each care item -->
         <CollectionView ItemsSource="{Binding CareItems}"
                         AutomationId="BatchCareList">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="local:CareItemViewModel">
-                    <HorizontalStackLayout Spacing="8" Padding="4,2">
-                        <CheckBox IsChecked="{Binding IsSelected}"
-                                  Color="#5B8C5A" />
-                        <Label Text="{Binding EventType}" FontSize="14"
-                               VerticalOptions="Center"
-                               TextColor="{AppThemeBinding Light=#2C2416, Dark=#EDE8DF}" />
-                    </HorizontalStackLayout>
+                    <Border Padding="10,8"
+                            Margin="0,2"
+                            BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2A2721}"
+                            Stroke="{AppThemeBinding Light=#E8E0D4, Dark=#4A4337}"
+                            StrokeThickness="1">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="10" />
+                        </Border.StrokeShape>
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="{Binding EventType}"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#2C2416, Dark=#EDE8DF}" />
+                            <Label Text="{Binding Notes}"
+                                   IsVisible="{Binding HasNotes}"
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#7A7062, Dark=#A69E90}" />
+                        </VerticalStackLayout>
+                    </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>

@@ -67,8 +67,7 @@ public partial class ChatViewModel : ObservableObject
     /// </summary>
     /// <param name="request">The approval request to respond to.</param>
     /// <param name="approved">Whether the user approved the tool call.</param>
-    /// <param name="modifiedArguments">Optional modified arguments (user can edit before approving).</param>
-    public void RespondToApproval(ToolApprovalRequestContent request, bool approved, IDictionary<string, object?>? modifiedArguments = null)
+    public void RespondToApproval(ToolApprovalRequestContent request, bool approved)
     {
         if (_approvalTcs is null || !_pendingApprovals.Contains(request))
             return;
@@ -76,7 +75,7 @@ public partial class ChatViewModel : ObservableObject
         if (_approvalResponses.ContainsKey(request))
             return;
 
-        var response = CreateApprovalResponse(request, approved, modifiedArguments);
+        var response = request.CreateResponse(approved, approved ? null : "User rejected");
 
         // Mark the approval card as resolved in-place (don't replace — preserve chat history)
         var toolName = request.ToolCall is FunctionCallContent fc ? fc.Name : "Tool";
@@ -224,52 +223,6 @@ public partial class ChatViewModel : ObservableObject
 
             AddToConversationHistory(ChatRole.User, responses);
         }
-    }
-
-    private static ToolApprovalResponseContent CreateApprovalResponse(
-        ToolApprovalRequestContent request,
-        bool approved,
-        IDictionary<string, object?>? modifiedArguments)
-    {
-        if (!approved)
-            return request.CreateResponse(approved: false, reason: "User rejected");
-
-        if (request.ToolCall is not FunctionCallContent originalCall ||
-            modifiedArguments is null ||
-            ArgumentsMatch(originalCall.Arguments, modifiedArguments))
-        {
-            return request.CreateResponse(approved: true);
-        }
-
-        var modifiedCall = new FunctionCallContent(
-            originalCall.CallId,
-            originalCall.Name,
-            new Dictionary<string, object?>(modifiedArguments));
-
-        // Preserve the MEAI approval contract by creating the response from a matching approval request.
-        return new ToolApprovalRequestContent(request.RequestId, modifiedCall).CreateResponse(approved: true);
-    }
-
-    private static bool ArgumentsMatch(
-        IDictionary<string, object?>? originalArguments,
-        IDictionary<string, object?> modifiedArguments)
-    {
-        if (originalArguments is null)
-            return modifiedArguments.Count == 0;
-
-        if (originalArguments.Count != modifiedArguments.Count)
-            return false;
-
-        foreach (var (key, value) in originalArguments)
-        {
-            if (!modifiedArguments.TryGetValue(key, out var modifiedValue) ||
-                !Equals(value, modifiedValue))
-            {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     private List<ChatMessage> BuildHistory()

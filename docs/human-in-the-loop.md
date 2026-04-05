@@ -79,7 +79,7 @@ public class PlantApprovalMapping : ContentTemplate
 }
 ```
 
-### 2. Create a view-model with editable properties
+### 2. Create a view-model with review properties
 
 ```csharp
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -118,13 +118,7 @@ public partial class PlantApprovalViewModel : ObservableObject
         IsIndoor = args.TryGetValue("isIndoor", out var i) && i is true;
     }
 
-    public IDictionary<string, object?> BuildArguments() => new Dictionary<string, object?>
-    {
-        ["nickname"] = Nickname,
-        ["species"] = Species,
-        ["location"] = Location,
-        ["isIndoor"] = IsIndoor,
-    };
+public string IndoorDisplay => IsIndoor ? "Yes" : "No";
 }
 ```
 
@@ -136,21 +130,13 @@ The view uses compiled bindings with `x:DataType` and walks the visual tree to f
 
 ```xml
 <ContentView x:DataType="local:PlantApprovalViewModel">
-    <Border Padding="14,12" BackgroundColor="{AppThemeBinding Light=#FFF8E1, Dark=#302A18}">
-        <VerticalStackLayout Spacing="10">
-            <Label Text="🪴 Add Plant — Review &amp; Approve" FontAttributes="Bold" />
-            <Entry Text="{Binding Nickname}" AutomationId="ApprovalNicknameEntry" />
-            <Entry Text="{Binding Species}" AutomationId="ApprovalSpeciesEntry" />
-            <Entry Text="{Binding Location}" AutomationId="ApprovalLocationEntry" />
-            <Switch IsToggled="{Binding IsIndoor}" AutomationId="ApprovalIndoorSwitch" />
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                <Button Text="✅ Add Plant" AutomationId="ApproveToolButton"
-                        Clicked="OnApproveClicked" BackgroundColor="#5B8C5A" TextColor="White" />
-                <Button Grid.Column="1" Text="❌ Cancel" AutomationId="RejectToolButton"
-                        Clicked="OnRejectClicked" BackgroundColor="#C75050" TextColor="White" />
-            </Grid>
-        </VerticalStackLayout>
-    </Border>
+    <VerticalStackLayout Spacing="10">
+        <Label Text="Review the proposed plant details. If something should change, reject and ask again." />
+        <Label Text="{Binding Nickname}" AutomationId="ApprovalNicknameEntry" />
+        <Label Text="{Binding Species}" AutomationId="ApprovalSpeciesEntry" />
+        <Label Text="{Binding Location}" AutomationId="ApprovalLocationEntry" />
+        <Label Text="{Binding IndoorDisplay}" AutomationId="ApprovalIndoorSwitch" />
+    </VerticalStackLayout>
 </ContentView>
 ```
 
@@ -163,16 +149,15 @@ Order matters — more specific mappings must come first:
 <mauiChat:ToolApprovalTemplate ViewType="{x:Type mauiChat:ToolApprovalView}" />
 ```
 
-The custom approval view shows editable fields for the plant data:
+The custom approval view shows review-only plant details:
 
 ![Custom Approval Card](images/approval-request.png)
 
 ## After Approval
 
-When the user edits arguments and taps **Approve**, the approval card is replaced
-with a normal function call bubble and the tool executes with the modified values.
-In the screenshot below the user changed *"Sun Daisy"* to
-*"Sunshine Daisy"* before approving — the tool received the updated name.
+When the user taps **Approve**, the tool executes with the proposed values and the
+approval card stays in chat with a resolved status. If something should change,
+the user rejects and asks again instead of mutating arguments inside the approval UI.
 
 ![After Approval](images/approval-approved.png)
 
@@ -190,9 +175,9 @@ When the user taps **Reject**, the buttons are replaced with
 
 ## Batch Approval with Checkboxes
 
-For tools that accept arrays (e.g. logging multiple care events at once), create
-a custom content view with checkboxes. The user can uncheck items they didn't do —
-only the selected items are submitted on approval.
+For tools that accept arrays (e.g. logging multiple care events at once), prefer
+a review-only approval card. If the proposed set should change, reject it and let
+the model issue a new tool call or a separate planning step.
 
 ![Batch Care Approval](images/approval-batch.png)
 
@@ -218,13 +203,14 @@ Register the checkbox view via `ToolApprovalTemplate.ViewType`:
 - **`ApprovalRequired = true`** is the only change needed in your service code.
 - **No `MauiProgram.cs` changes** — the discovery pipeline wraps the function
   automatically.
-- **Library owns the Approve/Reject buttons** — app views implement
-  `IApprovalContentProvider` to provide editable content only.
-- **Cards stay after resolution** — inputs disabled, buttons replaced with status text.
+- **Library owns the Approve/Reject buttons** — app views only provide the
+  read-only review content for the request.
+- **Cards stay after resolution** — the review details remain visible and the
+  buttons are replaced with a status message.
 - **`ToolApprovalTemplate.ViewType`** — declare custom content per tool name. The library still wraps it in the built-in approval shell.
-- **`ChatViewModel.RespondToApproval()`** supports passing modified arguments back to
-  the tool invocation.
+- **Approve/reject only** — if the proposed details need to change, reject and
+  let the model issue a new tool call rather than mutating arguments in the card.
 
 > **Full sample code:** See `samples/MauiSampleApp/Chat/Contents/PlantApproval/` for
-> the editable plant form and `samples/MauiSampleApp/Chat/Contents/BatchCareApproval/`
-> for the checkbox-based batch approval.
+> the review-only plant approval and `samples/MauiSampleApp/Chat/Contents/BatchCareApproval/`
+> for the review-only batch approval.

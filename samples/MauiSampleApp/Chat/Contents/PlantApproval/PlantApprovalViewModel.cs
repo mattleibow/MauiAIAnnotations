@@ -7,19 +7,26 @@ namespace MauiSampleApp.Chat;
 
 public partial class PlantApprovalViewModel : ObservableObject, IContentContextAware
 {
-    private IDictionary<string, object?>? _args;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(NicknameDisplay))]
+    public partial string Nickname { get; set; } = string.Empty;
 
     [ObservableProperty]
-    public partial string Nickname { get; set; }
+    [NotifyPropertyChangedFor(nameof(SpeciesDisplay))]
+    public partial string Species { get; set; } = string.Empty;
 
     [ObservableProperty]
-    public partial string Species { get; set; }
+    [NotifyPropertyChangedFor(nameof(LocationDisplay))]
+    public partial string Location { get; set; } = string.Empty;
 
     [ObservableProperty]
-    public partial string Location { get; set; }
-
-    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IndoorDisplay))]
     public partial bool IsIndoor { get; set; }
+
+    public string NicknameDisplay => FormatValue(Nickname);
+    public string SpeciesDisplay => FormatValue(Species);
+    public string LocationDisplay => FormatValue(Location);
+    public string IndoorDisplay => IsIndoor ? "Yes" : "No";
 
     public void ApplyContentContext(ContentContext context)
     {
@@ -27,11 +34,11 @@ public partial class PlantApprovalViewModel : ObservableObject, IContentContextA
             approval.ToolCall is not FunctionCallContent fc)
             return;
 
-        _args = fc.Arguments;
-        if (_args is null) return;
+        var args = fc.Arguments;
+        if (args is null) return;
 
         // MEAI sends structured args as: {"request": <JsonElement object>}
-        if (_args.TryGetValue("request", out var reqObj) && reqObj is JsonElement json &&
+        if (args.TryGetValue("request", out var reqObj) && reqObj is JsonElement json &&
             json.ValueKind == JsonValueKind.Object)
         {
             Nickname = json.TryGetProperty("nickname", out var n) ? n.GetString() ?? "" : "";
@@ -41,22 +48,6 @@ public partial class PlantApprovalViewModel : ObservableObject, IContentContextA
         }
     }
 
-    partial void OnNicknameChanged(string value) => WriteBack();
-    partial void OnSpeciesChanged(string value) => WriteBack();
-    partial void OnLocationChanged(string value) => WriteBack();
-    partial void OnIsIndoorChanged(bool value) => WriteBack();
-
-    private void WriteBack()
-    {
-        if (_args is null) return;
-
-        // Rebuild the request dict from current VM state (preserves the param name "request")
-        _args["request"] = new Dictionary<string, object?>
-        {
-            ["nickname"] = Nickname,
-            ["species"] = Species,
-            ["location"] = Location,
-            ["isIndoor"] = IsIndoor,
-        };
-    }
+    private static string FormatValue(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? "Not provided" : value;
 }

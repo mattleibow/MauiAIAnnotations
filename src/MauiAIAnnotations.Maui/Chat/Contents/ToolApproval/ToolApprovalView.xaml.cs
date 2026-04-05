@@ -247,11 +247,10 @@ public class ToolApprovalView : ContentView
         if (_ctx is null || _ctx.Content is not ToolApprovalRequestContent request)
             return;
 
-        var args = approved && request.ToolCall is FunctionCallContent fc ? fc.Arguments : null;
         if (_ctx.ApprovalResponder is null)
             throw new InvalidOperationException(
                 "This approval view is not connected to a chat approval responder. Ensure the ContentContext was created by ChatViewModel.");
 
-        _ctx.ApprovalResponder(request, approved, args);
+        _ctx.ApprovalResponder(request, approved);
     }
 }

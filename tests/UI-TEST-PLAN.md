@@ -229,7 +229,7 @@ maui-devflow MAUI tree
 
 ---
 
-## Scenario 10a: Custom Approval — Add Plant (Approve with Edits)
+## Scenario 10a: Custom Approval — Add Plant (Review and Approve)
 
 **Prerequisites:** `add_plant` is `ApprovalRequired = true` and has a custom `ToolApprovalTemplate`
 
@@ -245,17 +245,16 @@ maui-devflow MAUI tree
 
 **Expected:**
 - User message appears
-- **Custom approval card** (PlantApprovalView) with editable fields:
+- **Custom approval card** (PlantApprovalView) with review-only details:
   - Nickname: "Sun Daisy" — `ApprovalNicknameEntry`
   - Species: "daisy" — `ApprovalSpeciesEntry`
   - Location: "balcony" — `ApprovalLocationEntry`
-  - Indoor toggle — `ApprovalIndoorSwitch`
-  - ✅ Add Plant / ❌ Cancel buttons (`ApproveToolButton`, `RejectToolButton`)
+  - Indoor value — `ApprovalIndoorSwitch`
+  - ✅ Approve / ❌ Reject buttons (`ApproveToolButton`, `RejectToolButton`)
 - Tree contains `PlantApprovalView` (NOT `ToolApprovalView`) under ChatMessages
 
-**Approve with edits:**
+**Approve:**
 ```bash
-maui-devflow MAUI fill ApprovalNicknameEntry "Golden Daisy"
 maui-devflow MAUI tap ApproveToolButton
 # Wait 15 seconds for function execution + AI response
 maui-devflow MAUI screenshot
@@ -263,12 +262,13 @@ maui-devflow MAUI tree
 ```
 
 **Expected after approve:**
-- Approval card is **replaced** with ⚙️ "Calling add_plant..." function call bubble
-- PlantResultView card shows plant with modified name "Golden Daisy"
+- Approval card stays in the chat with a resolved state such as "✅ Approved — add_plant"
+- A ⚙️ "Calling add_plant..." function call bubble appears after approval
+- PlantResultView card shows the plant using the original proposed values
 - Assistant confirms the addition
-- Tree: no `PlantApprovalView` or `ToolApprovalView` under ChatMessages
+- Tree still contains the resolved `PlantApprovalView`, but only the active pending approval uses the plain button IDs
 
-**Pass criteria:** Custom approval form rendered, card replaced after approve, modified name used.
+**Pass criteria:** Custom approval card renders as review-only, approval succeeds, and the proposed plant is added.
 
 ---
 
@@ -302,7 +302,8 @@ maui-devflow MAUI screenshot
 ```
 
 **Expected after approve:**
-- Approval card is **replaced** with ⚙️ "Calling remove_plant..." function call bubble
+- Approval card stays in the chat with a resolved state such as "✅ Approved — remove_plant"
+- A ⚙️ "Calling remove_plant..." function call bubble appears after approval
 - Assistant confirms the removal
 - Close chat, verify plant is removed from PlantList
 
@@ -324,11 +325,11 @@ maui-devflow MAUI screenshot
 ```
 
 **Expected after reject:**
-- Approval card is **replaced** with "❌ remove_plant — rejected by user" text
-- "Tool call was rejected." message appears
+- Approval card stays in the chat with a resolved state such as "❌ Rejected — remove_plant"
+- Assistant explains that the removal was not carried out
 - Close chat, verify Sunny Basil is **still** in PlantList
 
-**Pass criteria:** Card replaced with rejection text, plant NOT removed.
+**Pass criteria:** Rejection state is shown, and the plant is NOT removed.
 
 ---
 
