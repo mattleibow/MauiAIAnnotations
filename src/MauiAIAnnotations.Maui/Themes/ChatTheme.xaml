@@ -154,14 +154,14 @@
                     <VisualStateGroup x:Name="ApprovalStates">
                         <VisualState x:Name="Pending">
                             <VisualState.Setters>
-                                <Setter TargetName="ButtonsRow" Property="Grid.IsVisible" Value="True" />
-                                <Setter TargetName="ResolutionLabel" Property="Label.IsVisible" Value="False" />
+                                <Setter TargetName="ButtonsRow" Property="IsVisible" Value="True" />
+                                <Setter TargetName="ResolutionLabel" Property="IsVisible" Value="False" />
                             </VisualState.Setters>
                         </VisualState>
                         <VisualState x:Name="Resolved">
                             <VisualState.Setters>
-                                <Setter TargetName="ButtonsRow" Property="Grid.IsVisible" Value="False" />
-                                <Setter TargetName="ResolutionLabel" Property="Label.IsVisible" Value="True" />
+                                <Setter TargetName="ButtonsRow" Property="IsVisible" Value="False" />
+                                <Setter TargetName="ResolutionLabel" Property="IsVisible" Value="True" />
                             </VisualState.Setters>
                         </VisualState>
                     </VisualStateGroup>

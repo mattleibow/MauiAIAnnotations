@@ -1,0 +1,41 @@
+using Microsoft.Extensions.AI;
+
+namespace MauiAIAnnotations;
+
+/// <summary>
+/// Coordinates approval-required tool calls between the chat pipeline and the app UI.
+/// </summary>
+public interface IToolApprovalCoordinator
+{
+    /// <summary>
+    /// Gets a value indicating whether there are approval requests currently waiting on a user decision.
+    /// </summary>
+    bool HasPendingApprovals { get; }
+
+    /// <summary>
+    /// Raised whenever <see cref="HasPendingApprovals"/> changes.
+    /// </summary>
+    event EventHandler? PendingApprovalsChanged;
+
+    /// <summary>
+    /// Waits until all supplied approval requests have been answered.
+    /// </summary>
+    /// <param name="requests">The pending approval requests.</param>
+    /// <param name="cancellationToken">A token used to cancel the wait.</param>
+    /// <returns>The approval responses in the same order as the incoming requests.</returns>
+    ValueTask<IReadOnlyList<ToolApprovalResponseContent>> WaitForApprovalAsync(
+        IReadOnlyList<ToolApprovalRequestContent> requests,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Attempts to submit an approval response for the currently pending request batch.
+    /// </summary>
+    /// <param name="response">The approval response to submit.</param>
+    /// <returns><see langword="true"/> if the response was accepted; otherwise, <see langword="false"/>.</returns>
+    bool TrySubmit(ToolApprovalResponseContent response);
+
+    /// <summary>
+    /// Cancels any approval requests that are currently waiting.
+    /// </summary>
+    void CancelPending();
+}

@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using MauiAIAnnotations;
 using Microsoft.Extensions.AI;
@@ -826,5 +827,137 @@ public class ApprovalRequiredTests
         Assert.IsType<ApprovalRequiredAIFunction>(wrapped);
         Assert.Equal("dangerous_write", wrapped.Name);
         Assert.Equal("A dangerous write tool", wrapped.Description);
+    }
+}
+
+public class ToolApprovalPipelineTests
+{
+    [Fact]
+    public async Task Approval_middleware_waits_for_response_and_replays_it_to_inner_client()
+    {
+        var request = new ToolApprovalRequestContent(
+            "approval-1",
+            new FunctionCallContent(
+                "call-1",
+                "add_plant",
+                new Dictionary<string, object?> { ["nickname"] = "Fern" }));
+
+        var innerClient = new SequenceChatClient(
+            [new ChatResponseUpdate(ChatRole.Assistant, [request])],
+            [new ChatResponseUpdate(ChatRole.Assistant, [new TextContent("Added Fern.")])]);
+
+        var coordinator = new ToolApprovalCoordinator();
+        var middleware = new ToolApprovalChatClient(innerClient, coordinator);
+
+        var responseTask = middleware.GetResponseAsync([new ChatMessage(ChatRole.User, "Add a fern")]);
+
+        await WaitForAsync(() => coordinator.HasPendingApprovals);
+        Assert.True(coordinator.TrySubmit(request.CreateResponse(approved: true)));
+
+        var response = await responseTask;
+
+        Assert.Equal(2, innerClient.ReceivedMessages.Count);
+        Assert.Contains(
+            innerClient.ReceivedMessages[1].SelectMany(static message => message.Contents),
+            static content => content is ToolApprovalResponseContent { Approved: true, RequestId: "approval-1" });
+
+        var allContents = response.Messages.SelectMany(static message => message.Contents).ToList();
+        Assert.Contains(allContents, static content => content is ToolApprovalRequestContent { RequestId: "approval-1" });
+        Assert.Contains(allContents, static content => content is ToolApprovalResponseContent { Approved: true, RequestId: "approval-1" });
+        Assert.Contains(allContents, static content => content is TextContent { Text: "Added Fern." });
+    }
+
+    [Fact]
+    public async Task Approval_middleware_preserves_edited_tool_call_arguments()
+    {
+        var originalCall = new FunctionCallContent(
+            "call-2",
+            "add_plant",
+            new Dictionary<string, object?> { ["nickname"] = "Old Name" });
+        var request = new ToolApprovalRequestContent("approval-2", originalCall);
+
+        var innerClient = new SequenceChatClient(
+            [new ChatResponseUpdate(ChatRole.Assistant, [request])],
+            [new ChatResponseUpdate(ChatRole.Assistant, [new TextContent("Updated nickname.")])]);
+
+        var coordinator = new ToolApprovalCoordinator();
+        var middleware = new ToolApprovalChatClient(innerClient, coordinator);
+
+        var responseTask = middleware.GetResponseAsync([new ChatMessage(ChatRole.User, "Add a plant")]);
+
+        await WaitForAsync(() => coordinator.HasPendingApprovals);
+
+        var editedResponse = new ToolApprovalResponseContent(
+            request.RequestId,
+            approved: true,
+            new FunctionCallContent(
+                originalCall.CallId,
+                originalCall.Name,
+                new Dictionary<string, object?> { ["nickname"] = "New Name" }));
+
+        Assert.True(coordinator.TrySubmit(editedResponse));
+        await responseTask;
+
+        var replayedResponse = Assert.IsType<ToolApprovalResponseContent>(
+            innerClient.ReceivedMessages[1]
+                .SelectMany(static message => message.Contents)
+                .Single(static content => content is ToolApprovalResponseContent));
+
+        var replayedCall = Assert.IsType<FunctionCallContent>(replayedResponse.ToolCall);
+        Assert.Equal("New Name", replayedCall.Arguments?["nickname"]?.ToString());
+    }
+
+    private static async Task WaitForAsync(Func<bool> predicate)
+    {
+        for (var i = 0; i < 50; i++)
+        {
+            if (predicate())
+            {
+                return;
+            }
+
+            await Task.Delay(20);
+        }
+
+        Assert.True(predicate(), "Timed out waiting for the expected approval state.");
+    }
+
+    private sealed class SequenceChatClient(params ChatResponseUpdate[][] responses) : IChatClient
+    {
+        private readonly Queue<ChatResponseUpdate[]> _responses = new(responses);
+
+        public List<List<ChatMessage>> ReceivedMessages { get; } = [];
+
+        public Task<ChatResponse> GetResponseAsync(
+            IEnumerable<ChatMessage> messages,
+            ChatOptions? options = null,
+            CancellationToken cancellationToken = default) =>
+            GetStreamingResponseAsync(messages, options, cancellationToken).ToChatResponseAsync(cancellationToken);
+
+        public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+            IEnumerable<ChatMessage> messages,
+            ChatOptions? options = null,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            ReceivedMessages.Add([.. messages]);
+
+            if (!_responses.TryDequeue(out var response))
+            {
+                yield break;
+            }
+
+            foreach (var update in response)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                yield return update;
+                await Task.Yield();
+            }
+        }
+
+        public object? GetService(Type serviceType, object? serviceKey = null) => null;
+
+        public void Dispose()
+        {
+        }
     }
 }

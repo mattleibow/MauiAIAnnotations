@@ -63,7 +63,7 @@ builder.Services.AddSingleton<PlantDataService>();
 // Discover all [ExportAIFunction] methods automatically
 builder.Services.AddAITools();
 
-// Set up the AI chat client with function invocation
+// Set up the AI chat client with function invocation + approval handling
 builder.Services.AddSingleton<IChatClient>(provider =>
 {
     var client = new AzureOpenAIClient(
@@ -74,22 +74,23 @@ builder.Services.AddSingleton<IChatClient>(provider =>
         .GetChatClient(deploymentName)
         .AsIChatClient()
         .AsBuilder()
+        .UseMauiToolApproval()
         .UseFunctionInvocation()
         .Build(provider);
 });
 ```
 
-`AddAITools()` scans your registered services for `[ExportAIFunction]` attributes and makes them available as AI tools. `UseFunctionInvocation()` enables automatic function calling — the AI model can invoke your methods directly during a conversation.
+`AddAITools()` scans your registered services for `[ExportAIFunction]` attributes and makes them available as AI tools. `UseFunctionInvocation()` enables automatic function calling, and `UseMauiToolApproval()` adds the built-in approval middleware for tools marked with `ApprovalRequired = true`. Keep `UseMauiToolApproval()` before `UseFunctionInvocation()` so the approval layer wraps the MEAI function invoker.
 
 > **Note:** `endpoint`, `apiKey`, and `deploymentName` should come from configuration
 > (e.g. `builder.Configuration` or user secrets). See the sample app's `MauiProgram.cs`
 > for a full example using `AddJsonStream` for embedded secrets.
 
 You'll also need a `ChatViewModel` (or subclass) and page binding. The library provides
-`MauiAIAnnotations.Maui.ViewModels.ChatViewModel` — register it and bind in your page:
+`MauiAIAnnotations.Maui.ViewModels.ChatViewModel` — `AddAIChat()` registers it along with the shared approval coordinator:
 
 ```csharp
-builder.Services.AddSingleton<ChatViewModel>();
+builder.Services.AddAIChat();
 builder.Services.AddTransient<HomePage>();
 ```
 

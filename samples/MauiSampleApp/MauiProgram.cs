@@ -139,6 +139,7 @@ public static class MauiProgram
             return chatClient.AsIChatClient()
                 .AsBuilder()
                 .UseLogging(lf)
+                .UseMauiToolApproval()
                 .UseFunctionInvocation()
                 .Build(provider);
         });

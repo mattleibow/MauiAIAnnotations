@@ -15,8 +15,8 @@ and then approve or reject the action.
    an `ApprovalRequiredAIFunction` (from `Microsoft.Extensions.AI`).
 3. **Chat client yields an approval request** — `FunctionInvokingChatClient` recognises
    the wrapper and emits a `ToolApprovalRequestContent` instead of auto-invoking.
-4. **ViewModel pauses the conversation** — `ChatViewModel` detects the approval request,
-   pauses streaming, and surfaces the request in the chat UI.
+4. **Approval middleware pauses the conversation** — `UseMauiToolApproval()` waits for the
+   app to answer the request while the chat UI continues to show the approval card.
 5. **User reviews & decides** — The user sees an approval card where they can inspect
    (and optionally edit) the arguments, then tap **Approve** or **Reject**.
 6. **Result flows back** — On approval the tool executes with the (possibly modified)
@@ -39,8 +39,26 @@ public async Task RemovePlantAsync(
     [Description("The nickname of the plant to remove")] string nickname) { ... }
 ```
 
-That's it — no changes to `MauiProgram.cs` are needed. The discovery pipeline handles
-the wrapping automatically.
+The discovery pipeline handles the wrapping automatically, but your chat client should
+include the approval middleware so the request can pause and resume cleanly:
+
+```csharp
+builder.Services.AddSingleton<IChatClient>(provider =>
+{
+    var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
+
+    return openAiChatClient
+        .AsIChatClient()
+        .AsBuilder()
+        .UseLogging(loggerFactory)
+        .UseMauiToolApproval()
+        .UseFunctionInvocation()
+        .Build(provider);
+});
+```
+
+Keep `UseMauiToolApproval()` before `UseFunctionInvocation()` so the approval middleware
+wraps the MEAI function invoker.
 
 ## Step 2: Register the Approval Template
 
@@ -58,8 +76,9 @@ This displays a card with the tool name, a read-only summary of the arguments, a
 
 ## Step 3: (Optional) Create a Custom Approval View
 
-For a richer experience you can create tool-specific approval views that let the user
-edit individual arguments before approving.
+For a richer experience you can create tool-specific approval views. The built-in shell
+is still review-first by default, but a custom view or view-model can optionally return
+an edited `ToolApprovalResponseContent` if you want edit-before-run behavior.
 
 ### 1. Create a custom mapping
 
@@ -86,7 +105,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using MauiAIAnnotations.Maui.Chat;
 using Microsoft.Extensions.AI;
 
-public partial class PlantApprovalViewModel : ObservableObject
+public partial class PlantApprovalViewModel : ObservableObject, IContentContextAware
 {
     [ObservableProperty]
     public partial string Nickname { get; set; }
@@ -102,7 +121,7 @@ public partial class PlantApprovalViewModel : ObservableObject
 
     public ToolApprovalRequestContent? Request { get; private set; }
 
-    public void SetContext(ContentContext context)
+    public void ApplyContentContext(ContentContext context)
     {
         if (context.Content is not ToolApprovalRequestContent approval ||
             approval.ToolCall is not FunctionCallContent fc)
@@ -122,10 +141,42 @@ public string IndoorDisplay => IsIndoor ? "Yes" : "No";
 }
 ```
 
+If you want the custom view-model to submit edited values instead of the original tool
+call, implement `IToolApprovalResponseFactory` as well:
+
+```csharp
+using MauiAIAnnotations.Maui.Chat;
+using Microsoft.Extensions.AI;
+
+public ToolApprovalResponseContent CreateApprovalResponse(
+    ToolApprovalRequestContent request,
+    bool approved)
+{
+    var originalCall = (FunctionCallContent)request.ToolCall;
+    var editedCall = new FunctionCallContent(
+        originalCall.CallId,
+        originalCall.Name,
+        new Dictionary<string, object?>
+        {
+            ["nickname"] = Nickname,
+            ["species"] = Species,
+            ["location"] = Location,
+            ["isIndoor"] = IsIndoor,
+        });
+
+    return new ToolApprovalResponseContent(request.RequestId, approved, editedCall)
+    {
+        Reason = approved ? null : "User rejected"
+    };
+}
+```
+
 ### 3. Create the XAML view
 
-The view uses compiled bindings with `x:DataType` and walks the visual tree to find
-`ChatViewModel` for responding. See the full implementation in
+The view uses compiled bindings with `x:DataType`. The built-in `ToolApprovalView`
+continues to own the approve/reject buttons and approval submission; your custom view
+only needs to render the review fields (and optionally implement
+`IToolApprovalResponseFactory` if it wants to return edited arguments). See the full implementation in
 `samples/MauiSampleApp/Chat/Contents/PlantApproval/`.
 
 ```xml

@@ -53,14 +53,18 @@ public partial class ChatPanelControl : ContentView
     {
         if (ChatVM is not null && ChatVM.Messages.Count > 0)
         {
-            // Dispatch with a short delay so the layout pass completes before scrolling
-            Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(50), () =>
+            foreach (var delayMs in new[] { 50, 150, 300 })
             {
-                if (ChatVM is not null && ChatVM.Messages.Count > 0)
-                {
-                    ChatMessages.ScrollTo(ChatVM.Messages.Count - 1, position: ScrollToPosition.End, animate: true);
-                }
-            });
+                Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(delayMs), ScrollToLatestMessage);
+            }
         }
+    }
+
+    private void ScrollToLatestMessage()
+    {
+        if (ChatVM is null || ChatVM.Messages.Count == 0)
+            return;
+
+        ChatMessages.ScrollTo(ChatVM.Messages.Count - 1, position: ScrollToPosition.End, animate: false);
     }
 }

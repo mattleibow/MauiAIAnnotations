@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace MauiAIAnnotations;
 
@@ -14,6 +15,20 @@ namespace MauiAIAnnotations;
 /// </summary>
 public static class ServiceCollectionExtensions
 {
+    /// <summary>
+    /// Registers the shared approval coordinator used by the chat approval middleware and UI.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="lifetime">The lifetime for the coordinator service.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddToolApprovalCoordinator(
+        this IServiceCollection services,
+        ServiceLifetime lifetime = ServiceLifetime.Singleton)
+    {
+        services.TryAdd(new ServiceDescriptor(typeof(IToolApprovalCoordinator), typeof(ToolApprovalCoordinator), lifetime));
+        return services;
+    }
+
     /// <summary>
     /// Scans the calling assembly and its referenced assemblies for types containing methods
     /// annotated with <see cref="ExportAIFunctionAttribute"/> and registers the discovered

@@ -53,8 +53,23 @@ public class ToolApprovalView : ContentView
         set => SetValue(ResolutionTextProperty, value);
     }
 
-    public ICommand ApproveCommand { get; }
-    public ICommand RejectCommand { get; }
+    public static readonly BindableProperty ApproveCommandProperty =
+        BindableProperty.Create(nameof(ApproveCommand), typeof(ICommand), typeof(ToolApprovalView));
+
+    public ICommand ApproveCommand
+    {
+        get => (ICommand)GetValue(ApproveCommandProperty);
+        set => SetValue(ApproveCommandProperty, value);
+    }
+
+    public static readonly BindableProperty RejectCommandProperty =
+        BindableProperty.Create(nameof(RejectCommand), typeof(ICommand), typeof(ToolApprovalView));
+
+    public ICommand RejectCommand
+    {
+        get => (ICommand)GetValue(RejectCommandProperty);
+        set => SetValue(RejectCommandProperty, value);
+    }
 
     /// <summary>
     /// Optional inner content view type. When set, the wrapper resolves this view
@@ -66,6 +81,8 @@ public class ToolApprovalView : ContentView
 
     private ContentContext? _ctx;
     private VisualElement? _stateRoot;
+    private VisualElement? _buttonsRow;
+    private VisualElement? _resolutionLabel;
     private Button? _approveButton;
     private Button? _rejectButton;
 
@@ -117,6 +134,19 @@ public class ToolApprovalView : ContentView
         IsPending = _ctx is not null && !_ctx.ApprovalResolved;
         IsResolved = _ctx?.ApprovalResolved ?? false;
         ResolutionText = _ctx?.ApprovalResolutionText;
+
+        if (_buttonsRow is not null)
+        {
+            _buttonsRow.IsVisible = !IsResolved;
+            _buttonsRow.IsEnabled = !IsResolved;
+        }
+
+        if (_resolutionLabel is not null)
+            _resolutionLabel.IsVisible = IsResolved;
+
+        if (Content is View innerView)
+            innerView.IsEnabled = !IsResolved;
+
         ApplyVisualState();
         RefreshAutomationIds();
     }
@@ -125,8 +155,14 @@ public class ToolApprovalView : ContentView
     {
         base.OnApplyTemplate();
         _stateRoot = GetTemplateChild("PART_Root") as VisualElement;
+        _buttonsRow = GetTemplateChild("ButtonsRow") as VisualElement;
+        _resolutionLabel = GetTemplateChild("ResolutionLabel") as VisualElement;
         _approveButton = GetTemplateChild("PART_ApproveButton") as Button;
         _rejectButton = GetTemplateChild("PART_RejectButton") as Button;
+
+        if (_ctx is not null)
+            Refresh();
+
         ApplyVisualState();
         RefreshAutomationIds();
     }
@@ -152,7 +188,6 @@ public class ToolApprovalView : ContentView
         if (_ctx.ApprovalResolved)
             innerView.IsEnabled = false;
 
-        // ContentPresenter in the ControlTemplate renders this
         Content = innerView;
     }
 
@@ -163,57 +198,11 @@ public class ToolApprovalView : ContentView
 
     private void RefreshAutomationIds()
     {
-        var suffix = GetApprovalAutomationSuffix();
+        if (_approveButton is not null && string.IsNullOrWhiteSpace(_approveButton.AutomationId))
+            _approveButton.AutomationId = ActiveApproveAutomationId;
 
-        if (_approveButton is not null)
-            _approveButton.AutomationId = IsResolved ? $"{ActiveApproveAutomationId}_{suffix}" : ActiveApproveAutomationId;
-
-        if (_rejectButton is not null)
-            _rejectButton.AutomationId = IsResolved ? $"{ActiveRejectAutomationId}_{suffix}" : ActiveRejectAutomationId;
-
-        if (IsResolved && Content is not null)
-            SuffixAutomationIds(Content, suffix);
-    }
-
-    private string GetApprovalAutomationSuffix()
-    {
-        if (_ctx?.Content is ToolApprovalRequestContent request && !string.IsNullOrWhiteSpace(request.RequestId))
-            return request.RequestId[..Math.Min(8, request.RequestId.Length)];
-
-        return "resolved";
-    }
-
-    private static void SuffixAutomationIds(Element element, string suffix)
-    {
-        if (element is VisualElement visual &&
-            !string.IsNullOrWhiteSpace(visual.AutomationId) &&
-            !visual.AutomationId.EndsWith($"_{suffix}", StringComparison.Ordinal))
-        {
-            visual.AutomationId = $"{visual.AutomationId}_{suffix}";
-        }
-
-        switch (element)
-        {
-            case Border border when border.Content is not null:
-                SuffixAutomationIds(border.Content, suffix);
-                break;
-
-            case ContentView contentView when contentView.Content is not null:
-                SuffixAutomationIds(contentView.Content, suffix);
-                break;
-
-            case ScrollView scrollView when scrollView.Content is not null:
-                SuffixAutomationIds(scrollView.Content, suffix);
-                break;
-
-            case Layout layout:
-                foreach (var child in layout.Children)
-                {
-                    if (child is Element childElement)
-                        SuffixAutomationIds(childElement, suffix);
-                }
-                break;
-        }
+        if (_rejectButton is not null && string.IsNullOrWhiteSpace(_rejectButton.AutomationId))
+            _rejectButton.AutomationId = ActiveRejectAutomationId;
     }
 
     private View BuildDefaultArgsView()
@@ -249,8 +238,26 @@ public class ToolApprovalView : ContentView
 
         if (_ctx.ApprovalResponder is null)
             throw new InvalidOperationException(
-                "This approval view is not connected to a chat approval responder. Ensure the ContentContext was created by ChatViewModel.");
+                "This approval view is not connected to a tool approval coordinator. Ensure the chat client pipeline includes UseMauiToolApproval().");
 
-        _ctx.ApprovalResponder(request, approved);
+        var response = ResolveResponseFactory()?.CreateApprovalResponse(request, approved)
+            ?? request.CreateResponse(approved, approved ? null : "User rejected");
+
+        if (!_ctx.ApprovalResponder(response))
+            return;
+
+        var toolName = ToolName ?? "Tool";
+        _ctx.ApprovalResolved = true;
+        _ctx.ApprovalResolutionText = response.Approved
+            ? $"✅ Approved — {toolName}"
+            : $"❌ Rejected — {toolName}";
+    }
+
+    private IToolApprovalResponseFactory? ResolveResponseFactory()
+    {
+        if (Content is IToolApprovalResponseFactory viewFactory)
+            return viewFactory;
+
+        return (Content as BindableObject)?.BindingContext as IToolApprovalResponseFactory;
     }
 }

@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using MauiAIAnnotations;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MauiAIAnnotations.Maui.Chat;
@@ -9,13 +10,10 @@ namespace MauiAIAnnotations.Maui.ViewModels;
 public partial class ChatViewModel : ObservableObject
 {
     private readonly IChatClient _chatClient;
+    private readonly IToolApprovalCoordinator _toolApprovalCoordinator;
     private readonly IList<AITool> _tools;
     private readonly List<ChatMessage> _conversationHistory = [];
     private readonly Dictionary<string, string> _toolNamesByCallId = new(StringComparer.Ordinal);
-
-    private TaskCompletionSource<List<ToolApprovalResponseContent>>? _approvalTcs;
-    private List<ToolApprovalRequestContent> _pendingApprovals = [];
-    private readonly Dictionary<ToolApprovalRequestContent, ToolApprovalResponseContent> _approvalResponses = [];
     private CancellationTokenSource? _activeRequestCancellation;
 
     [ObservableProperty]
@@ -36,10 +34,19 @@ public partial class ChatViewModel : ObservableObject
 
     public ObservableCollection<ContentContext> Messages { get; } = [];
 
-    public ChatViewModel(IEnumerable<AITool> tools, IChatClient chatClient)
+    public ChatViewModel(
+        IEnumerable<AITool> tools,
+        IChatClient chatClient,
+        IToolApprovalCoordinator toolApprovalCoordinator)
     {
         _tools = tools.ToList();
         _chatClient = chatClient;
+        _toolApprovalCoordinator = toolApprovalCoordinator;
+        HasPendingApprovals = _toolApprovalCoordinator.HasPendingApprovals;
+        _toolApprovalCoordinator.PendingApprovalsChanged += (_, _) =>
+        {
+            HasPendingApprovals = _toolApprovalCoordinator.HasPendingApprovals;
+        };
     }
 
     private bool CanSend() => !IsBusy;
@@ -51,51 +58,12 @@ public partial class ChatViewModel : ObservableObject
         _activeRequestCancellation?.Dispose();
         _activeRequestCancellation = null;
 
-        _approvalTcs?.TrySetCanceled();
-        _approvalTcs = null;
-        _pendingApprovals.Clear();
-        _approvalResponses.Clear();
+        _toolApprovalCoordinator.CancelPending();
         _conversationHistory.Clear();
         _toolNamesByCallId.Clear();
 
         HasPendingApprovals = false;
         Messages.Clear();
-    }
-
-    /// <summary>
-    /// Respond to a pending tool approval request. Call this from approval UI views.
-    /// </summary>
-    /// <param name="request">The approval request to respond to.</param>
-    /// <param name="approved">Whether the user approved the tool call.</param>
-    public void RespondToApproval(ToolApprovalRequestContent request, bool approved)
-    {
-        if (_approvalTcs is null || !_pendingApprovals.Contains(request))
-            return;
-
-        if (_approvalResponses.ContainsKey(request))
-            return;
-
-        var response = request.CreateResponse(approved, approved ? null : "User rejected");
-
-        // Mark the approval card as resolved in-place (don't replace — preserve chat history)
-        var toolName = request.ToolCall is FunctionCallContent fc ? fc.Name : "Tool";
-        var approvalCtx = Messages.FirstOrDefault(m => ReferenceEquals(m.Content, request));
-        if (approvalCtx is not null)
-        {
-            approvalCtx.ApprovalResolved = true;
-            approvalCtx.ApprovalResolutionText = approved
-                ? $"✅ Approved — {toolName}"
-                : $"❌ Rejected — {toolName}";
-        }
-
-        _approvalResponses[request] = response;
-        HasPendingApprovals = _pendingApprovals.Any(p => !_approvalResponses.ContainsKey(p));
-
-        if (_approvalTcs is not null && _pendingApprovals.All(_approvalResponses.ContainsKey))
-        {
-            var responses = _pendingApprovals.Select(p => _approvalResponses[p]).ToList();
-            _approvalTcs.TrySetResult(responses);
-        }
     }
 
     [RelayCommand(CanExecute = nameof(CanSend))]
@@ -144,84 +112,73 @@ public partial class ChatViewModel : ObservableObject
             AllowMultipleToolCalls = false,
         };
 
-        while (true)
+        var history = BuildHistory();
+        ContentContext? assistantCtx = null;
+        var responseText = string.Empty;
+        var responseUpdates = new List<ChatResponseUpdate>();
+
+        await foreach (var update in _chatClient.GetStreamingResponseAsync(history, options, cancellationToken)
+            .WithCancellation(cancellationToken))
         {
-            var history = BuildHistory();
-            ContentContext? assistantCtx = null;
-            var responseText = "";
-            var assistantContents = new List<AIContent>();
-            var toolContents = new List<AIContent>();
-            var approvalRequests = new List<ToolApprovalRequestContent>();
+            responseUpdates.Add(update.Clone());
 
-            await foreach (var update in _chatClient.GetStreamingResponseAsync(history, options, cancellationToken))
+            foreach (var content in update.Contents)
             {
-                foreach (var content in update.Contents)
-                {
-                    switch (content)
-                    {
-                        case ToolApprovalRequestContent approval:
-                            approvalRequests.Add(approval);
-                            assistantContents.Add(approval);
-                            Messages.Add(CreateContext(approval, ContentRole.Approval));
-                            break;
-
-                        case FunctionCallContent call:
-                            assistantContents.Add(call);
-                            Messages.Add(CreateContext(call, ContentRole.Tool));
-                            break;
-
-                        case FunctionResultContent result:
-                            toolContents.Add(result);
-                            Messages.Add(CreateContext(result, ContentRole.Tool));
-                            break;
-
-                        case TextContent textContent when textContent.Text is not null:
-                            responseText += textContent.Text;
-                            if (assistantCtx is null)
-                            {
-                                assistantCtx = CreateContext(new TextContent(responseText), ContentRole.Assistant);
-                                Messages.Add(assistantCtx);
-                            }
-                            else
-                            {
-                                assistantCtx.Content = new TextContent(responseText);
-                            }
-                            break;
-                    }
-                }
+                ProcessResponseContent(content, ref assistantCtx, ref responseText);
             }
+        }
 
-            if (responseText.Length > 0)
-                assistantContents.Add(new TextContent(responseText));
-
-            AddToConversationHistory(ChatRole.Assistant, assistantContents);
-            AddToConversationHistory(ChatRole.Tool, toolContents);
-
-            // If no approvals needed, we're done
-            if (approvalRequests.Count == 0)
-            {
-                if (assistantCtx is null && responseText.Length == 0 && assistantContents.Count == 0 && toolContents.Count == 0)
-                {
-                    var noResponse = new TextContent("(no response)");
-                    Messages.Add(CreateContext(noResponse, ContentRole.Assistant));
-                    AddToConversationHistory(ChatRole.Assistant, [noResponse]);
-                }
-
-                return;
-            }
-
-            // Wait for user to respond to approvals
-            _pendingApprovals = approvalRequests;
-            HasPendingApprovals = true;
-            _approvalResponses.Clear();
-            _approvalTcs = new TaskCompletionSource<List<ToolApprovalResponseContent>>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var responses = await _approvalTcs.Task.WaitAsync(cancellationToken);
-            _approvalTcs = null;
-            _pendingApprovals.Clear();
-            _approvalResponses.Clear();
+        if (responseUpdates.Count > 0)
+        {
+            _conversationHistory.AddMessages(responseUpdates);
             HasPendingApprovals = false;
+            return;
+        }
 
-            AddToConversationHistory(ChatRole.User, responses);
+        if (assistantCtx is null && responseText.Length == 0)
+        {
+            var noResponse = new TextContent("(no response)");
+            Messages.Add(CreateContext(noResponse, ContentRole.Assistant));
+            _conversationHistory.Add(new ChatMessage(ChatRole.Assistant, [noResponse]));
+        }
+    }
+
+    private void ProcessResponseContent(
+        AIContent content,
+        ref ContentContext? assistantCtx,
+        ref string responseText)
+    {
+        switch (content)
+        {
+            case ToolApprovalRequestContent approval:
+                HasPendingApprovals = true;
+                Messages.Add(CreateContext(approval, ContentRole.Approval));
+                break;
+
+            case ToolApprovalResponseContent:
+                HasPendingApprovals = _toolApprovalCoordinator.HasPendingApprovals;
+                break;
+
+            case FunctionCallContent call:
+                Messages.Add(CreateContext(call, ContentRole.Tool));
+                break;
+
+            case FunctionResultContent result:
+                Messages.Add(CreateContext(result, ContentRole.Tool));
+                break;
+
+            case TextContent textContent when textContent.Text is not null:
+                responseText += textContent.Text;
+                if (assistantCtx is null)
+                {
+                    assistantCtx = CreateContext(new TextContent(responseText), ContentRole.Assistant);
+                    Messages.Add(assistantCtx);
+                }
+                else
+                {
+                    assistantCtx.Content = new TextContent(responseText);
+                }
+                break;
         }
     }
 
@@ -241,7 +198,7 @@ public partial class ChatViewModel : ObservableObject
         return new ContentContext(content, role)
         {
             ToolNameOverride = toolName,
-            ApprovalResponder = content is ToolApprovalRequestContent ? RespondToApproval : null,
+            ApprovalResponder = content is ToolApprovalRequestContent ? _toolApprovalCoordinator.TrySubmit : null,
         };
     }
 
@@ -267,14 +224,5 @@ public partial class ChatViewModel : ObservableObject
             default:
                 return null;
         }
-    }
-
-    private void AddToConversationHistory(ChatRole role, IEnumerable<AIContent> contents)
-    {
-        var materializedContents = contents.ToList();
-        if (materializedContents.Count == 0)
-            return;
-
-        _conversationHistory.Add(new ChatMessage(role, [.. materializedContents]));
     }
 }
