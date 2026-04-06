@@ -3,11 +3,20 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MauiSampleApp.Core.Models;
 using MauiSampleApp.Core.Services;
+using Microsoft.Maui.ApplicationModel;
 
 namespace MauiSampleApp.ViewModels;
 
-public partial class HomePageViewModel(PlantDataService plantDataService) : ObservableObject
+public partial class HomePageViewModel : ObservableObject, IDisposable
 {
+    private readonly PlantDataService _plantDataService;
+
+    public HomePageViewModel(PlantDataService plantDataService)
+    {
+        _plantDataService = plantDataService;
+        _plantDataService.PlantsChanged += OnPlantsChanged;
+    }
+
     public ObservableCollection<Plant> Plants { get; } = [];
 
     [ObservableProperty]
@@ -19,7 +28,7 @@ public partial class HomePageViewModel(PlantDataService plantDataService) : Obse
         IsLoading = true;
         try
         {
-            var plants = await plantDataService.GetPlantsAsync();
+            var plants = await _plantDataService.GetPlantsAsync();
             Plants.Clear();
             foreach (var plant in plants)
                 Plants.Add(plant);
@@ -28,5 +37,20 @@ public partial class HomePageViewModel(PlantDataService plantDataService) : Obse
         {
             IsLoading = false;
         }
+    }
+
+    private async void OnPlantsChanged(object? sender, EventArgs e)
+    {
+        if (IsLoading)
+        {
+            return;
+        }
+
+        await MainThread.InvokeOnMainThreadAsync(RefreshPlantsAsync);
+    }
+
+    public void Dispose()
+    {
+        _plantDataService.PlantsChanged -= OnPlantsChanged;
     }
 }

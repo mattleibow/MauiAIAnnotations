@@ -1,6 +1,12 @@
 # Getting Started with MauiAIAnnotations
 
-Add AI chat functionality to your existing .NET MAUI app in minutes. This guide walks you through the minimum steps to get a working AI chat sidebar with function calling.
+Add AI chat functionality to your existing .NET MAUI app in minutes. This is the **fastest path** to a working chat experience with function calling.
+
+## Choose Your Path
+
+- **You want the fastest working setup** - stay in this guide.
+- **You need approve/reject before writes or deletes run** - jump to [Human-in-the-Loop Approval](human-in-the-loop.md).
+- **You want rich cards or custom views for tool results** - jump to [Custom Tool Result Rendering](tool-rendering.md).
 
 ## Prerequisites
 
@@ -115,21 +121,18 @@ xmlns:mauiChat="clr-namespace:MauiAIAnnotations.Maui.Chat;assembly=MauiAIAnnotat
 ```xml
 <maui:ChatPanelControl ChatVM="{Binding ChatViewModel}">
     <maui:ChatPanelControl.ContentTemplates>
-        <mauiChat:TextContentTemplate Role="User"
-            ViewType="{x:Type mauiChat:UserTextView}" />
-        <mauiChat:TextContentTemplate Role="Assistant"
-            ViewType="{x:Type mauiChat:AssistantTextView}" />
-        <mauiChat:FunctionCallTemplate
-            ViewType="{x:Type mauiChat:FunctionCallView}" />
-        <mauiChat:FunctionResultTemplate
-            ViewType="{x:Type mauiChat:FunctionResultView}" />
-        <mauiChat:ErrorContentTemplate
-            ViewType="{x:Type mauiChat:ErrorView}" />
-        <mauiChat:DefaultContentTemplate
-            ViewType="{x:Type mauiChat:DefaultContentView}" />
+        <mauiChat:TextContentTemplate Role="User" />
+        <mauiChat:TextContentTemplate Role="Assistant" />
+        <mauiChat:FunctionCallTemplate />
+        <mauiChat:FunctionResultTemplate />
+        <mauiChat:ToolApprovalTemplate />
+        <mauiChat:ErrorContentTemplate />
+        <mauiChat:DefaultContentTemplate />
     </maui:ChatPanelControl.ContentTemplates>
 </maui:ChatPanelControl>
 ```
+
+The built-in templates already provide the default MAUI views, including the standard approve/reject card for `ApprovalRequired = true` tools. Set `ViewType` only when you want to swap in a custom renderer for a specific content type.
 
 Run the app and you'll see the chat interface:
 
@@ -141,7 +144,7 @@ Ask the AI a question like *"Show me all my plants"* and watch it invoke your an
 
 ## Step 5: How It Works
 
-- **Responsive layout** — on wide screens (≥900px), chat appears as a sidebar; on narrow screens, it's a floating overlay with a FAB button.
+- **Host-controlled layout** — place `ChatPanelControl` wherever it fits your page: inline, in a tray, or as a sidebar on wider screens.
 - **Automatic function invocation** — `FunctionInvokingChatClient` intercepts tool-call responses from the model and dispatches them to your `[ExportAIFunction]` methods.
 - **Visual message templates** — each message type (user text, assistant text, function call, function result, error) gets its own visual template via the content mappings above.
 - **DI-integrated tools** — `AddAITools()` discovers tool definitions at registration time via reflection, respecting DI lifetimes for each invocation.

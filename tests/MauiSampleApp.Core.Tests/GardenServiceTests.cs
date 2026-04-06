@@ -222,6 +222,28 @@ public class PlantDataServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RemovePlant_TrimsSurroundingPunctuation()
+    {
+        await _service.AddPlantAsync(new NewPlantRequest { Nickname = "Patio Rose", Species = "rose", Location = "Patio", IsIndoor = false });
+
+        await _service.RemovePlantAsync("\"Patio Rose.\"");
+
+        Assert.Empty(await _service.GetPlantsAsync());
+    }
+
+    [Fact]
+    public async Task AddAndRemovePlant_RaisePlantsChanged()
+    {
+        var changes = 0;
+        _service.PlantsChanged += (_, _) => changes++;
+
+        await _service.AddPlantAsync(new NewPlantRequest { Nickname = "Watcher", Species = "fern", Location = "Desk", IsIndoor = true });
+        await _service.RemovePlantAsync("Watcher");
+
+        Assert.Equal(2, changes);
+    }
+
+    [Fact]
     public async Task LogCareEvent_CreatesEvent()
     {
         await _service.AddPlantAsync(new NewPlantRequest { Nickname = "Tomatoes", Species = "tomato", Location = "Garden", IsIndoor = false });

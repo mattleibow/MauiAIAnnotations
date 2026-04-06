@@ -7,6 +7,8 @@ namespace MauiSampleApp.Core.Services;
 
 public class PlantDataService(IDocumentStore store, SpeciesService speciesService)
 {
+    public event EventHandler? PlantsChanged;
+
     [ExportAIFunction("get_plants", Description = "Gets the user's plants. Optionally pass a query to filter by species, nickname, or location for requests like 'all my tomatoes' or 'plants on the balcony'.")]
     public async Task<List<Plant>> GetPlantsAsync(
         [Description("Optional search text to filter plants by species, nickname, or location. Leave blank to return all plants.")] string? query = null)
@@ -35,8 +37,32 @@ public class PlantDataService(IDocumentStore store, SpeciesService speciesServic
     public async Task<Plant?> GetPlantAsync(
         [Description("The nickname of the plant to look up")] string nickname)
     {
+        var normalizedNickname = NormalizePlantLookup(nickname);
+        if (string.IsNullOrWhiteSpace(normalizedNickname))
+        {
+            return null;
+        }
+
         var all = await store.Query<Plant>().ToList();
-        return all.FirstOrDefault(p => p.Nickname.Equals(nickname.Trim(), StringComparison.OrdinalIgnoreCase));
+        var exactMatch = all.FirstOrDefault(p =>
+            string.Equals(NormalizePlantLookup(p.Nickname), normalizedNickname, StringComparison.OrdinalIgnoreCase));
+
+        if (exactMatch is not null)
+        {
+            return exactMatch;
+        }
+
+        var fallbackMatches = all
+            .Where(p =>
+            {
+                var plantNickname = NormalizePlantLookup(p.Nickname);
+                return !string.IsNullOrWhiteSpace(plantNickname) &&
+                       normalizedNickname.Contains(plantNickname, StringComparison.OrdinalIgnoreCase);
+            })
+            .Take(2)
+            .ToList();
+
+        return fallbackMatches.Count == 1 ? fallbackMatches[0] : null;
     }
 
     [ExportAIFunction("add_plant", Description = "Adds a new plant to the garden.", ApprovalRequired = true)]
@@ -56,6 +82,7 @@ public class PlantDataService(IDocumentStore store, SpeciesService speciesServic
         };
 
         await store.Insert(plant);
+        OnPlantsChanged();
         return plant;
     }
 
@@ -67,6 +94,7 @@ public class PlantDataService(IDocumentStore store, SpeciesService speciesServic
         if (plant is not null)
         {
             await store.Remove<Plant>(plant.Id);
+            OnPlantsChanged();
         }
     }
 
@@ -88,6 +116,7 @@ public class PlantDataService(IDocumentStore store, SpeciesService speciesServic
         };
 
         await store.Insert(result);
+        OnPlantsChanged();
         return result;
     }
 
@@ -130,10 +159,26 @@ public class PlantDataService(IDocumentStore store, SpeciesService speciesServic
             await store.Insert(careEvent);
             results.Add(careEvent);
         }
+
+        if (results.Count > 0)
+        {
+            OnPlantsChanged();
+        }
+
         return results;
     }
 
     private static bool Matches(string? value, string query) =>
         !string.IsNullOrWhiteSpace(value) &&
         value.Contains(query, StringComparison.OrdinalIgnoreCase);
+
+    private static string NormalizePlantLookup(string? value) =>
+        string.IsNullOrWhiteSpace(value)
+            ? string.Empty
+            : value.Trim()
+                .Trim('\"', '\'', '“', '”', '‘', '’')
+                .TrimEnd('.', ',', '!', '?', ';', ':')
+                .Trim();
+
+    private void OnPlantsChanged() => PlantsChanged?.Invoke(this, EventArgs.Empty);
 }

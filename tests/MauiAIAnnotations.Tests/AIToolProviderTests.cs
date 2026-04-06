@@ -120,6 +120,46 @@ public class AllApprovalService
     public string DoWork() => "done";
 }
 
+public sealed class ComplexPlantRequest
+{
+    [Description("friendly nickname shown to the user")]
+    public string Nickname { get; set; } = string.Empty;
+
+    [Description("botanical species or variety")]
+    public string Species { get; set; } = string.Empty;
+
+    [Description("current location of the plant")]
+    public string Location { get; set; } = string.Empty;
+
+    [Description("whether the plant lives indoors")]
+    public bool IsIndoor { get; set; }
+}
+
+public sealed class PlantToolResult
+{
+    [Description("stable identifier returned to the AI")]
+    public string Id { get; set; } = string.Empty;
+
+    [Description("nickname echoed back to the AI")]
+    public string Nickname { get; set; } = string.Empty;
+}
+
+public class ComplexSchemaService
+{
+    [ExportAIFunction(
+        "create_plant_profile",
+        Description = "Creates a plant profile from structured details.",
+        ApprovalRequired = true)]
+    public PlantToolResult CreatePlantProfile(
+        [Description("structured details for the plant profile")] ComplexPlantRequest profile,
+        [Description("whether to notify the user after creation")] bool notifyUser = true) =>
+        new()
+        {
+            Id = "plant-123",
+            Nickname = profile.Nickname,
+        };
+}
+
 #endregion
 
 public class AIToolProviderDiscoveryTests
@@ -506,6 +546,51 @@ public class AIToolProviderSchemaTests
 
         // Schemas should be equivalent
         Assert.Equal(directTool.JsonSchema.ToString(), diTool.JsonSchema.ToString());
+    }
+
+    [Fact]
+    public void Approval_wrapped_reflection_tool_preserves_full_ai_visible_schema()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<ComplexSchemaService>();
+        services.AddAITools(typeof(ComplexSchemaService));
+        var provider = services.BuildServiceProvider();
+
+        var reflectedTool = provider.GetRequiredService<IEnumerable<AITool>>()
+            .Single(t => t.Name == "create_plant_profile");
+
+        var reflectedFunction = Assert.IsAssignableFrom<AIFunction>(reflectedTool);
+        Assert.IsType<ApprovalRequiredAIFunction>(reflectedTool);
+        Assert.Equal("create_plant_profile", reflectedFunction.Name);
+        Assert.Equal("Creates a plant profile from structured details.", reflectedFunction.Description);
+
+        var method = typeof(ComplexSchemaService).GetMethod(nameof(ComplexSchemaService.CreatePlantProfile))!;
+        var directTool = AIFunctionFactory.Create(
+            method,
+            new ComplexSchemaService(),
+            new AIFunctionFactoryOptions
+            {
+                Name = "create_plant_profile",
+                Description = "Creates a plant profile from structured details.",
+            });
+
+        Assert.Equal(directTool.Name, reflectedFunction.Name);
+        Assert.Equal(directTool.Description, reflectedFunction.Description);
+        Assert.Equal(directTool.JsonSchema.ToString(), reflectedFunction.JsonSchema.ToString());
+        Assert.Equal(directTool.ReturnJsonSchema?.ToString(), reflectedFunction.ReturnJsonSchema?.ToString());
+
+        var inputSchema = reflectedFunction.JsonSchema.ToString();
+        Assert.Contains("structured details for the plant profile", inputSchema);
+        Assert.Contains("friendly nickname shown to the user", inputSchema);
+        Assert.Contains("botanical species or variety", inputSchema);
+        Assert.Contains("current location of the plant", inputSchema);
+        Assert.Contains("whether the plant lives indoors", inputSchema);
+        Assert.Contains("whether to notify the user after creation", inputSchema);
+
+        var returnSchema = reflectedFunction.ReturnJsonSchema?.ToString();
+        Assert.NotNull(returnSchema);
+        Assert.Contains("stable identifier returned to the AI", returnSchema!);
+        Assert.Contains("nickname echoed back to the AI", returnSchema!);
     }
 }
 
@@ -905,6 +990,34 @@ public class ToolApprovalPipelineTests
 
         var replayedCall = Assert.IsType<FunctionCallContent>(replayedResponse.ToolCall);
         Assert.Equal("New Name", replayedCall.Arguments?["nickname"]?.ToString());
+    }
+
+    [Fact]
+    public async Task Approval_middleware_rejects_edited_tool_call_identity_changes()
+    {
+        var originalCall = new FunctionCallContent(
+            "call-3",
+            "add_plant",
+            new Dictionary<string, object?> { ["nickname"] = "Original" });
+        var request = new ToolApprovalRequestContent("approval-3", originalCall);
+
+        var coordinator = new ToolApprovalCoordinator();
+        var waitTask = coordinator.WaitForApprovalAsync([request]).AsTask();
+
+        await WaitForAsync(() => coordinator.HasPendingApprovals);
+
+        var invalidResponse = new ToolApprovalResponseContent(
+            request.RequestId,
+            approved: true,
+            new FunctionCallContent(
+                originalCall.CallId,
+                "remove_plant",
+                new Dictionary<string, object?> { ["nickname"] = "Original" }));
+
+        Assert.False(coordinator.TrySubmit(invalidResponse));
+
+        coordinator.CancelPending();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await waitTask);
     }
 
     private static async Task WaitForAsync(Func<bool> predicate)

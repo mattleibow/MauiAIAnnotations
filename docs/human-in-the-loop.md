@@ -212,7 +212,7 @@ the user rejects and asks again instead of mutating arguments inside the approva
 
 ![After Approval](images/approval-approved.png)
 
-## After Rejection
+## After Resolution
 
 After approval or rejection, the card **stays visible but is disabled** — inputs become
 read-only and the buttons are replaced with a status message. Chat history is preserved.

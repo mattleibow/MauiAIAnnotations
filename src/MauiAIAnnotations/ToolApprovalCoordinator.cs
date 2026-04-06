@@ -107,13 +107,13 @@ public sealed class ToolApprovalCoordinator : IToolApprovalCoordinator
         private readonly TaskCompletionSource<IReadOnlyList<ToolApprovalResponseContent>> _taskCompletionSource =
             new(TaskCreationOptions.RunContinuationsAsynchronously);
         private readonly IReadOnlyList<ToolApprovalRequestContent> _requests;
-        private readonly HashSet<string> _requestIds;
+        private readonly Dictionary<string, ToolApprovalRequestContent> _requestsById;
         private readonly Dictionary<string, ToolApprovalResponseContent> _responses;
 
         public PendingApprovalBatch(IReadOnlyList<ToolApprovalRequestContent> requests)
         {
             _requests = requests.ToArray();
-            _requestIds = requests.Select(static request => request.RequestId).ToHashSet(StringComparer.Ordinal);
+            _requestsById = requests.ToDictionary(static request => request.RequestId, StringComparer.Ordinal);
             _responses = new Dictionary<string, ToolApprovalResponseContent>(StringComparer.Ordinal);
         }
 
@@ -121,7 +121,9 @@ public sealed class ToolApprovalCoordinator : IToolApprovalCoordinator
 
         public bool TryAddResponse(ToolApprovalResponseContent response)
         {
-            if (_taskCompletionSource.Task.IsCompleted || !_requestIds.Contains(response.RequestId))
+            if (_taskCompletionSource.Task.IsCompleted ||
+                !_requestsById.TryGetValue(response.RequestId, out var request) ||
+                !IsValidResponseForRequest(request, response))
             {
                 return false;
             }
@@ -143,5 +145,24 @@ public sealed class ToolApprovalCoordinator : IToolApprovalCoordinator
         }
 
         public void TrySetCanceled() => _taskCompletionSource.TrySetCanceled();
+
+        private static bool IsValidResponseForRequest(
+            ToolApprovalRequestContent request,
+            ToolApprovalResponseContent response)
+        {
+            if (response.ToolCall is null)
+            {
+                return true;
+            }
+
+            if (request.ToolCall is FunctionCallContent originalCall &&
+                response.ToolCall is FunctionCallContent editedCall)
+            {
+                return string.Equals(editedCall.CallId, originalCall.CallId, StringComparison.Ordinal) &&
+                       string.Equals(editedCall.Name, originalCall.Name, StringComparison.OrdinalIgnoreCase);
+            }
+
+            return request.ToolCall?.GetType() == response.ToolCall.GetType();
+        }
     }
 }

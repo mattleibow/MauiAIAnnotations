@@ -16,7 +16,9 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddAIChat(this IServiceCollection services, ServiceLifetime lifetime = ServiceLifetime.Singleton)
     {
-        services.AddToolApprovalCoordinator(lifetime);
+        // The approval middleware is typically attached to a singleton IChatClient pipeline,
+        // so the coordinator must stay shared even if the view-model lifetime is shortened.
+        services.AddToolApprovalCoordinator();
         services.TryAdd(new ServiceDescriptor(typeof(ChatViewModel), typeof(ChatViewModel), lifetime));
         return services;
     }
