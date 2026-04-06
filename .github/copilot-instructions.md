@@ -20,11 +20,17 @@ dotnet run --project samples/MauiSampleApp/MauiSampleApp.csproj -f net10.0-windo
 
 # UI testing with MauiDevFlow (after app is running)
 # ALL scenarios in tests/UI-TEST-PLAN.md MUST be run and confirmed passing before pushing
+maui-devflow update-skill
 maui-devflow MAUI tree
 maui-devflow MAUI screenshot
 maui-devflow MAUI tap <AutomationId>
 maui-devflow MAUI fill <AutomationId> "text"
 ```
+
+### MauiDevFlow skill usage
+- For MAUI UI debugging, inspection, and automation, use the bundled `maui-ai-debugging` skill together with direct `maui-devflow` actions.
+- Prefer `maui-devflow MAUI ...` for tree inspection, screenshots, taps, fills, property checks, and logs instead of ad-hoc platform-specific workarounds when the agent is available.
+- For Android, connect through MauiDevFlow as well: use `adb reverse tcp:19223 tcp:19223` plus `adb forward tcp:<agent-port> tcp:<agent-port>` when needed, then run `maui-devflow MAUI ... -p android`.
 
 ### Pre-Push Checklist
 1. `dotnet build MauiAIAnnotations.slnx` — 0 warnings, 0 errors

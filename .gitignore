@@ -74,6 +74,17 @@ project.lock.json
 project.fragment.lock.json
 artifacts/
 
+# Local MAUI UI validation captures kept at the repo root
+/api36-*.png
+/api36-*.xml
+/approval-*.png
+/empty-state-check.png
+/final-ui-smoke.png
+/hello-chat-check.png
+/screen-capture-approval.png
+/screenshot_*.png
+/tree-after-approval.txt
+
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
 
