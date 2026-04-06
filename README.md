@@ -7,7 +7,7 @@ Turn regular .NET MAUI services into AI-callable tools and add a reusable chat U
 
 | Windows | Android |
 | --- | --- |
-| ![Garden Helper App on Windows](docs/images/home-page.png) | ![Garden Helper App on Android](docs/images/home-page-android.png) |
+| <img src="docs/images/home-page.png" alt="Garden Helper App on Windows" width="300" /> | <img src="docs/images/home-page-android.png" alt="Garden Helper App on Android" width="300" /> |
 
 ## Start here
 
@@ -25,19 +25,19 @@ Choose the path that matches what you need:
 
 | Windows | Android |
 | --- | --- |
-| ![Chat Sidebar on Windows](docs/images/chat-sidebar.png) | ![Chat Sidebar on Android](docs/images/chat-sidebar-android.png) |
+| <img src="docs/images/chat-sidebar.png" alt="Open Chat Panel on Windows" width="300" /> | <img src="docs/images/chat-sidebar-android.png" alt="Open Chat Panel on Android" width="300" /> |
 
 **Approval flow - review before execution**
 
 | Windows | Android |
 | --- | --- |
-| ![Approval Card on Windows](docs/images/approval-approved.png) | ![Approval Card on Android](docs/images/approval-approved-android.png) |
+| <img src="docs/images/approval-approved.png" alt="Approval Card on Windows" width="300" /> | <img src="docs/images/approval-approved-android.png" alt="Approval Card on Android" width="300" /> |
 
 **Rich tool UI - custom result cards**
 
 | Windows | Android |
 | --- | --- |
-| ![Plant Card on Windows](docs/images/plant-card.png) | ![Plant Card on Android](docs/images/plant-card-android.png) |
+| <img src="docs/images/plant-card.png" alt="Plant Card on Windows" width="300" /> | <img src="docs/images/plant-card-android.png" alt="Plant Card on Android" width="300" /> |
 
 ## Quick start in 3 steps
 

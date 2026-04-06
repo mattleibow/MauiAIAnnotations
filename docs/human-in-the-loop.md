@@ -74,7 +74,7 @@ This displays a card with the tool name, a read-only summary of the arguments, a
 
 | Windows | Android |
 | --- | --- |
-| ![Generic Approval Card on Windows](images/approval-generic.png) | ![Generic Approval Card on Android](images/approval-generic-android.png) |
+| <img src="images/approval-generic.png" alt="Generic Approval Card on Windows" width="300" /> | <img src="images/approval-generic-android.png" alt="Generic Approval Card on Android" width="300" /> |
 
 ## Step 3: (Optional) Create a Custom Approval View
 
@@ -206,7 +206,7 @@ The custom approval view shows review-only plant details:
 
 | Windows | Android |
 | --- | --- |
-| ![Custom Approval Card on Windows](images/approval-request.png) | ![Custom Approval Card on Android](images/approval-request-android.png) |
+| <img src="images/approval-request.png" alt="Custom Approval Card on Windows" width="300" /> | <img src="images/approval-request-android.png" alt="Custom Approval Card on Android" width="300" /> |
 
 ## After Approval
 
@@ -216,7 +216,7 @@ the user rejects and asks again instead of mutating arguments inside the approva
 
 | Windows | Android |
 | --- | --- |
-| ![After Approval on Windows](images/approval-approved.png) | ![After Approval on Android](images/approval-approved-android.png) |
+| <img src="images/approval-approved.png" alt="After Approval on Windows" width="300" /> | <img src="images/approval-approved-android.png" alt="After Approval on Android" width="300" /> |
 
 ## After Resolution
 
@@ -230,7 +230,7 @@ When the user taps **Reject**, the buttons are replaced with
 
 | Windows | Android |
 | --- | --- |
-| ![After Rejection on Windows](images/approval-rejected.png) | ![After Rejection on Android](images/approval-rejected-android.png) |
+| <img src="images/approval-rejected.png" alt="After Rejection on Windows" width="300" /> | <img src="images/approval-rejected-android.png" alt="After Rejection on Android" width="300" /> |
 
 ## Batch Approval with Checkboxes
 
@@ -240,7 +240,7 @@ the model issue a new tool call or a separate planning step.
 
 | Windows | Android |
 | --- | --- |
-| ![Batch Care Approval on Windows](images/approval-batch.png) | ![Batch Care Approval on Android](images/approval-batch-android.png) |
+| <img src="images/approval-batch.png" alt="Batch Care Approval on Windows" width="300" /> | <img src="images/approval-batch-android.png" alt="Batch Care Approval on Android" width="300" /> |
 
 The batch care tool demonstrates this pattern:
 

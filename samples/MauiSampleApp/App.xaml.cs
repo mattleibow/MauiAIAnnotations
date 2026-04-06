@@ -11,6 +11,11 @@ public partial class App : Application
     {
         var window = new Window(new AppShell());
 
+#if WINDOWS
+        window.Width = 440;
+        window.Height = 920;
+#endif
+
         var debugButton = new Button
         {
             Text = "⚙",

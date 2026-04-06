@@ -139,7 +139,7 @@ If `PlantResultTemplate` appears after `FunctionResultTemplate`, the generic map
 
 | Windows | Android |
 | --- | --- |
-| ![Plant Card in Chat on Windows](images/plant-card.png) | ![Plant Card in Chat on Android](images/plant-card-android.png) |
+| <img src="images/plant-card.png" alt="Plant Card in Chat on Windows" width="300" /> | <img src="images/plant-card-android.png" alt="Plant Card in Chat on Android" width="300" /> |
 
 ## When to Use This Pattern
 

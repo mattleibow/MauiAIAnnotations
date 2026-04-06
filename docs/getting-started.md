@@ -138,13 +138,13 @@ Run the app and you'll see the chat interface:
 
 | Windows | Android |
 | --- | --- |
-| ![Chat Sidebar on Windows](images/chat-sidebar.png) | ![Chat Sidebar on Android](images/chat-sidebar-android.png) |
+| <img src="images/chat-sidebar.png" alt="Open Chat Panel on Windows" width="300" /> | <img src="images/chat-sidebar-android.png" alt="Open Chat Panel on Android" width="300" /> |
 
 Ask the AI a question like *"Show me all my plants"* and watch it invoke your annotated methods automatically:
 
 | Windows | Android |
 | --- | --- |
-| ![Function Calls on Windows](images/function-calls.png) | ![Function Calls on Android](images/function-calls-android.png) |
+| <img src="images/function-calls.png" alt="Function Calls on Windows" width="300" /> | <img src="images/function-calls-android.png" alt="Function Calls on Android" width="300" /> |
 
 ## Step 5: How It Works
 

@@ -4,7 +4,7 @@ A .NET 10 library that makes it easy to expose service methods as AI tools and b
 
 | Windows | Android |
 | --- | --- |
-| ![Garden Helper App on Windows](images/home-page.png) | ![Garden Helper App on Android](images/home-page-android.png) |
+| <img src="images/home-page.png" alt="Garden Helper App on Windows" width="300" /> | <img src="images/home-page-android.png" alt="Garden Helper App on Android" width="300" /> |
 
 ## Start here
 
@@ -22,19 +22,19 @@ Pick the path that matches your goal:
 
 | Windows | Android |
 | --- | --- |
-| ![Chat Sidebar on Windows](images/chat-sidebar.png) | ![Chat Sidebar on Android](images/chat-sidebar-android.png) |
+| <img src="images/chat-sidebar.png" alt="Open Chat Panel on Windows" width="300" /> | <img src="images/chat-sidebar-android.png" alt="Open Chat Panel on Android" width="300" /> |
 
 **Approval flow - review before execution**
 
 | Windows | Android |
 | --- | --- |
-| ![Approval Card on Windows](images/approval-approved.png) | ![Approval Card on Android](images/approval-approved-android.png) |
+| <img src="images/approval-approved.png" alt="Approval Card on Windows" width="300" /> | <img src="images/approval-approved-android.png" alt="Approval Card on Android" width="300" /> |
 
 **Rich tool UI - custom tool result cards**
 
 | Windows | Android |
 | --- | --- |
-| ![Plant Card in Chat on Windows](images/plant-card.png) | ![Plant Card in Chat on Android](images/plant-card-android.png) |
+| <img src="images/plant-card.png" alt="Plant Card in Chat on Windows" width="300" /> | <img src="images/plant-card-android.png" alt="Plant Card in Chat on Android" width="300" /> |
 
 ## Quick start in 3 steps
 
