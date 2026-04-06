@@ -3,6 +3,7 @@ using MauiAIAnnotations;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MauiAIAnnotations.Maui.Chat;
+using Microsoft.Maui.ApplicationModel;
 using Microsoft.Extensions.AI;
 
 namespace MauiAIAnnotations.Maui.ViewModels;
@@ -45,7 +46,10 @@ public partial class ChatViewModel : ObservableObject
         HasPendingApprovals = _toolApprovalCoordinator.HasPendingApprovals;
         _toolApprovalCoordinator.PendingApprovalsChanged += (_, _) =>
         {
-            HasPendingApprovals = _toolApprovalCoordinator.HasPendingApprovals;
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                HasPendingApprovals = _toolApprovalCoordinator.HasPendingApprovals;
+            });
         };
     }
 
@@ -85,7 +89,7 @@ public partial class ChatViewModel : ObservableObject
 
         try
         {
-            await RunStreamingLoopAsync(requestCancellation.Token);
+            await Task.Run(() => RunStreamingLoopAsync(requestCancellation.Token), requestCancellation.Token);
         }
         catch (OperationCanceledException) when (requestCancellation.IsCancellationRequested)
         {
@@ -118,27 +122,34 @@ public partial class ChatViewModel : ObservableObject
         var responseUpdates = new List<ChatResponseUpdate>();
 
         await foreach (var update in _chatClient.GetStreamingResponseAsync(history, options, cancellationToken)
-            .WithCancellation(cancellationToken))
+            .WithCancellation(cancellationToken)
+            .ConfigureAwait(false))
         {
             responseUpdates.Add(update.Clone());
 
             foreach (var content in update.Contents)
             {
-                ProcessResponseContent(content, ref assistantCtx, ref responseText);
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    ProcessResponseContent(content, ref assistantCtx, ref responseText);
+                });
             }
         }
 
         if (responseUpdates.Count > 0)
         {
             _conversationHistory.AddMessages(responseUpdates);
-            HasPendingApprovals = false;
+            await MainThread.InvokeOnMainThreadAsync(() => HasPendingApprovals = false);
             return;
         }
 
         if (assistantCtx is null && responseText.Length == 0)
         {
             var noResponse = new TextContent("(no response)");
-            Messages.Add(CreateContext(noResponse, ContentRole.Assistant));
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                Messages.Add(CreateContext(noResponse, ContentRole.Assistant));
+            });
             _conversationHistory.Add(new ChatMessage(ChatRole.Assistant, [noResponse]));
         }
     }

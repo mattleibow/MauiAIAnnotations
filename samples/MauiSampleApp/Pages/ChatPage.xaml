@@ -41,6 +41,7 @@
                 <mauiChat:ToolApprovalTemplate ToolName="add_plant" ViewType="{x:Type local:PlantApprovalView}" />
                 <mauiChat:ToolApprovalTemplate ToolName="log_batch_care_events" ViewType="{x:Type local:BatchCareApprovalView}" />
                 <mauiChat:ToolApprovalTemplate />
+                <local:PlantResultTemplate ToolName="add_plant" ViewType="{x:Type local:PlantResultView}" />
                 <local:PlantResultTemplate ToolName="get_plant" ViewType="{x:Type local:PlantResultView}" />
                 <local:PlantResultTemplate ToolName="get_plants" ViewType="{x:Type local:PlantResultView}" />
                 <mauiChat:FunctionResultTemplate />

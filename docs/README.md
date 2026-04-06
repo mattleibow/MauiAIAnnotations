@@ -2,7 +2,9 @@
 
 A .NET 10 library that makes it easy to expose service methods as AI tools and build chat-powered MAUI apps with a clean `Microsoft.Extensions.AI` pipeline.
 
-![Garden Helper App](images/home-page.png)
+| Windows | Android |
+| --- | --- |
+| ![Garden Helper App on Windows](images/home-page.png) | ![Garden Helper App on Android](images/home-page-android.png) |
 
 ## Start here
 
@@ -18,15 +20,21 @@ Pick the path that matches your goal:
 
 **Quick start - chat + tool calls**
 
-![Chat Sidebar](images/chat-sidebar.png)
+| Windows | Android |
+| --- | --- |
+| ![Chat Sidebar on Windows](images/chat-sidebar.png) | ![Chat Sidebar on Android](images/chat-sidebar-android.png) |
 
 **Approval flow - review before execution**
 
-![Approval Card](images/approval-approved.png)
+| Windows | Android |
+| --- | --- |
+| ![Approval Card on Windows](images/approval-approved.png) | ![Approval Card on Android](images/approval-approved-android.png) |
 
 **Rich tool UI - custom tool result cards**
 
-![Plant Card in Chat](images/plant-card.png)
+| Windows | Android |
+| --- | --- |
+| ![Plant Card in Chat on Windows](images/plant-card.png) | ![Plant Card in Chat on Android](images/plant-card-android.png) |
 
 ## Quick start in 3 steps
 

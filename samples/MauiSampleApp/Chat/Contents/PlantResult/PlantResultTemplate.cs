@@ -11,6 +11,7 @@ namespace MauiSampleApp.Chat;
 /// </summary>
 public class PlantResultTemplate : FunctionResultTemplate
 {
+    public const string AddPlantToolName = "add_plant";
     public const string GetPlantToolName = "get_plant";
     public const string GetPlantsToolName = "get_plants";
 
@@ -104,6 +105,7 @@ public class PlantResultTemplate : FunctionResultTemplate
         !string.IsNullOrWhiteSpace(plant.Nickname);
 
     private static bool IsPlantTool(string? toolName) =>
+        string.Equals(toolName, AddPlantToolName, StringComparison.OrdinalIgnoreCase) ||
         string.Equals(toolName, GetPlantToolName, StringComparison.OrdinalIgnoreCase) ||
         string.Equals(toolName, GetPlantsToolName, StringComparison.OrdinalIgnoreCase);
 }

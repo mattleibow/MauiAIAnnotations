@@ -136,11 +136,15 @@ The built-in templates already provide the default MAUI views, including the sta
 
 Run the app and you'll see the chat interface:
 
-![Chat Sidebar](images/chat-sidebar.png)
+| Windows | Android |
+| --- | --- |
+| ![Chat Sidebar on Windows](images/chat-sidebar.png) | ![Chat Sidebar on Android](images/chat-sidebar-android.png) |
 
 Ask the AI a question like *"Show me all my plants"* and watch it invoke your annotated methods automatically:
 
-![Function Calls](images/function-calls.png)
+| Windows | Android |
+| --- | --- |
+| ![Function Calls on Windows](images/function-calls.png) | ![Function Calls on Android](images/function-calls-android.png) |
 
 ## Step 5: How It Works
 

@@ -137,7 +137,9 @@ If `PlantResultTemplate` appears after `FunctionResultTemplate`, the generic map
 
 ## Result
 
-![Plant Card in Chat](images/plant-card.png)
+| Windows | Android |
+| --- | --- |
+| ![Plant Card in Chat on Windows](images/plant-card.png) | ![Plant Card in Chat on Android](images/plant-card-android.png) |
 
 ## When to Use This Pattern
 

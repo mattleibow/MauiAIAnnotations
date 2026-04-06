@@ -5,7 +5,9 @@ Turn regular .NET MAUI services into AI-callable tools and add a reusable chat U
 `MauiAIAnnotations` handles **reflection-based tool discovery** and schema generation.  
 `MauiAIAnnotations.Maui` adds the **chat panel, content templates, and approval UI**.
 
-![Garden Helper App](docs/images/home-page.png)
+| Windows | Android |
+| --- | --- |
+| ![Garden Helper App on Windows](docs/images/home-page.png) | ![Garden Helper App on Android](docs/images/home-page-android.png) |
 
 ## Start here
 
@@ -21,15 +23,21 @@ Choose the path that matches what you need:
 
 **Quick start - chat + tool calls**
 
-![Chat Sidebar](docs/images/chat-sidebar.png)
+| Windows | Android |
+| --- | --- |
+| ![Chat Sidebar on Windows](docs/images/chat-sidebar.png) | ![Chat Sidebar on Android](docs/images/chat-sidebar-android.png) |
 
 **Approval flow - review before execution**
 
-![Approval Card](docs/images/approval-approved.png)
+| Windows | Android |
+| --- | --- |
+| ![Approval Card on Windows](docs/images/approval-approved.png) | ![Approval Card on Android](docs/images/approval-approved-android.png) |
 
 **Rich tool UI - custom result cards**
 
-![Plant Card](docs/images/plant-card.png)
+| Windows | Android |
+| --- | --- |
+| ![Plant Card on Windows](docs/images/plant-card.png) | ![Plant Card on Android](docs/images/plant-card-android.png) |
 
 ## Quick start in 3 steps
 

@@ -72,7 +72,9 @@ it as a chat item template so the chat UI knows how to render approval requests:
 This displays a card with the tool name, a read-only summary of the arguments, and
 **Approve** / **Reject** buttons.
 
-![Generic Approval Card](images/approval-generic.png)
+| Windows | Android |
+| --- | --- |
+| ![Generic Approval Card on Windows](images/approval-generic.png) | ![Generic Approval Card on Android](images/approval-generic-android.png) |
 
 ## Step 3: (Optional) Create a Custom Approval View
 
@@ -202,7 +204,9 @@ Order matters — more specific mappings must come first:
 
 The custom approval view shows review-only plant details:
 
-![Custom Approval Card](images/approval-request.png)
+| Windows | Android |
+| --- | --- |
+| ![Custom Approval Card on Windows](images/approval-request.png) | ![Custom Approval Card on Android](images/approval-request-android.png) |
 
 ## After Approval
 
@@ -210,7 +214,9 @@ When the user taps **Approve**, the tool executes with the proposed values and t
 approval card stays in chat with a resolved status. If something should change,
 the user rejects and asks again instead of mutating arguments inside the approval UI.
 
-![After Approval](images/approval-approved.png)
+| Windows | Android |
+| --- | --- |
+| ![After Approval on Windows](images/approval-approved.png) | ![After Approval on Android](images/approval-approved-android.png) |
 
 ## After Resolution
 
@@ -222,7 +228,9 @@ read-only and the buttons are replaced with a status message. Chat history is pr
 When the user taps **Reject**, the buttons are replaced with
 "❌ Rejected — tool_name" and the tool is **not** invoked.
 
-![After Rejection](images/approval-rejected.png)
+| Windows | Android |
+| --- | --- |
+| ![After Rejection on Windows](images/approval-rejected.png) | ![After Rejection on Android](images/approval-rejected-android.png) |
 
 ## Batch Approval with Checkboxes
 
@@ -230,7 +238,9 @@ For tools that accept arrays (e.g. logging multiple care events at once), prefer
 a review-only approval card. If the proposed set should change, reject it and let
 the model issue a new tool call or a separate planning step.
 
-![Batch Care Approval](images/approval-batch.png)
+| Windows | Android |
+| --- | --- |
+| ![Batch Care Approval on Windows](images/approval-batch.png) | ![Batch Care Approval on Android](images/approval-batch-android.png) |
 
 The batch care tool demonstrates this pattern:
 
