@@ -4,9 +4,11 @@ namespace MauiSampleApp.Pages;
 
 public partial class ChatPage : ContentPage
 {
+    public ChatViewModel ChatViewModel { get; }
+
     public ChatPage(ChatViewModel chatViewModel)
     {
-        BindingContext = chatViewModel;
+        ChatViewModel = chatViewModel;
         InitializeComponent();
     }
 }

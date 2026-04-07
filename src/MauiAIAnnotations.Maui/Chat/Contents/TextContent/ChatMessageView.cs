@@ -8,7 +8,7 @@ namespace MauiAIAnnotations.Maui.Chat;
 /// Custom templates can include a root named <c>PART_Root</c>; if omitted,
 /// the view falls back to applying visual states to itself.
 /// </summary>
-public class ChatMessageView : ContentView
+public class ChatMessageView : ContentContextView
 {
     public static readonly BindableProperty TextProperty =
         BindableProperty.Create(nameof(Text), typeof(string), typeof(ChatMessageView));
@@ -28,26 +28,16 @@ public class ChatMessageView : ContentView
         set => SetValue(MessageRoleProperty, value);
     }
 
-    private ContentContext? _ctx;
     private VisualElement? _stateRoot;
 
-    protected override void OnBindingContextChanged()
+    protected override void RefreshFromContentContext()
     {
-        base.OnBindingContextChanged();
-        if (_ctx is not null)
-            _ctx.PropertyChanged -= OnContentContextChanged;
-        _ctx = BindingContext as ContentContext;
-        if (_ctx is not null)
-        {
-            _ctx.PropertyChanged += OnContentContextChanged;
-            Refresh();
-        }
-    }
+        if (ContentContext is null)
+            return;
 
-    private void OnContentContextChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(ContentContext.Content))
-            Refresh();
+        Text = (ContentContext.Content as TextContent)?.Text;
+        MessageRole = ContentContext.Role.ToString();
+        ApplyRoleState();
     }
 
     protected override void OnApplyTemplate()
@@ -57,20 +47,11 @@ public class ChatMessageView : ContentView
         ApplyRoleState();
     }
 
-    private void Refresh()
-    {
-        if (_ctx is null)
-            return;
-        Text = (_ctx.Content as TextContent)?.Text;
-        MessageRole = _ctx.Role.ToString();
-        ApplyRoleState();
-    }
-
     private void ApplyRoleState()
     {
-        if (_ctx is null)
+        if (ContentContext is null)
             return;
 
-        VisualStateManager.GoToState(_stateRoot ?? this, _ctx.Role.ToString());
+        VisualStateManager.GoToState(_stateRoot ?? this, ContentContext.Role.ToString());
     }
 }

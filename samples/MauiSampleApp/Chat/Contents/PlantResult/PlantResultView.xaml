@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:controls="clr-namespace:MauiSampleApp.Controls"
-             xmlns:models="clr-namespace:MauiSampleApp.Core.Models;assembly=MauiSampleApp.Core"
-             xmlns:chat="clr-namespace:MauiSampleApp.Chat"
-             x:Class="MauiSampleApp.Chat.PlantResultView">
+<maui:ContentContextView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                         xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                         xmlns:controls="clr-namespace:MauiSampleApp.Controls"
+                         xmlns:models="clr-namespace:MauiSampleApp.Core.Models;assembly=MauiSampleApp.Core"
+                         xmlns:chat="clr-namespace:MauiSampleApp.Chat"
+                         xmlns:maui="clr-namespace:MauiAIAnnotations.Maui.Chat;assembly=MauiAIAnnotations.Maui"
+                         x:Name="This"
+                         x:Class="MauiSampleApp.Chat.PlantResultView">
     <Grid x:Name="InnerContent" Padding="0,4">
-        <VerticalStackLayout Spacing="8" x:DataType="chat:PlantResultViewModel">
+        <VerticalStackLayout Spacing="8"
+                             BindingContext="{Binding ViewModel, Source={x:Reference This}}"
+                             x:DataType="chat:PlantResultViewModel">
             <Label Text="{Binding PreviewTitle}"
                    IsVisible="{Binding HasMultiplePlants}"
                    FontSize="14"
@@ -54,4 +58,4 @@
             </CollectionView>
         </VerticalStackLayout>
     </Grid>
-</ContentView>
+</maui:ContentContextView>

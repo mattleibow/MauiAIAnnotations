@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace MauiAIAnnotations.Maui.Chat;
 
 [ContentProperty(nameof(Templates))]
@@ -13,12 +15,9 @@ public class ContentTemplateSelector : DataTemplateSelector
                 TextColor = Colors.Gray,
             };
 
-            label.BindingContextChanged += (_, _) =>
-            {
-                label.Text = label.BindingContext is ContentContext context
-                    ? $"No content template registered for {context.Content.GetType().Name}."
-                    : "No content template registered.";
-            };
+            label.SetBinding(
+                Label.TextProperty,
+                new Binding(path: ".", converter: MissingTemplateTextConverter.Instance));
 
             return label;
         });
@@ -47,5 +46,18 @@ public class ContentTemplateSelector : DataTemplateSelector
         }
 
         return selectedTemplate?.GetTemplate() ?? FallbackTemplate;
+    }
+
+    private sealed class MissingTemplateTextConverter : IValueConverter
+    {
+        public static MissingTemplateTextConverter Instance { get; } = new();
+
+        public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+            value is ContentContext context
+                ? $"No content template registered for {context.Content.GetType().Name}."
+                : "No content template registered.";
+
+        public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+            throw new NotSupportedException();
     }
 }

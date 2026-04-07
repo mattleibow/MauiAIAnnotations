@@ -76,7 +76,10 @@ builder.Services.AddSingleton<IChatClient>(provider =>
 ### 3. Add `ChatPanelControl` to your page
 
 ```xml
-<maui:ChatPanelControl ChatVM="{Binding ChatViewModel}">
+<maui:ChatPanelControl ItemsSource="{Binding ChatViewModel.Messages}"
+                       Text="{Binding ChatViewModel.UserInput, Mode=TwoWay}"
+                       SendCommand="{Binding ChatViewModel.SendCommand}"
+                       IsBusy="{Binding ChatViewModel.IsBusy}">
     <maui:ChatPanelControl.ContentTemplates>
         <mauiChat:TextContentTemplate Role="User" />
         <mauiChat:TextContentTemplate Role="Assistant" />
@@ -89,7 +92,7 @@ builder.Services.AddSingleton<IChatClient>(provider =>
 </maui:ChatPanelControl>
 ```
 
-Keep `UseMauiToolApproval()` before `UseFunctionInvocation()` so approval-required tools can pause and resume cleanly.
+Keep `UseMauiToolApproval()` before `UseFunctionInvocation()` so approval-required tools can pause and resume cleanly. The chat panel uses normal bindable control properties, so you can wire it to `ChatViewModel` or your own state object.
 
 ## Next paths
 

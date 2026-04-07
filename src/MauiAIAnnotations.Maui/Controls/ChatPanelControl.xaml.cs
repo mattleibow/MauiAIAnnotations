@@ -1,23 +1,63 @@
+using System.Collections;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Windows.Input;
 using MauiAIAnnotations.Maui.Chat;
-using MauiAIAnnotations.Maui.ViewModels;
 
 namespace MauiAIAnnotations.Maui.Controls;
 
 public partial class ChatPanelControl : ContentView
 {
-    public static readonly BindableProperty ChatVMProperty =
+    public static readonly BindableProperty ItemsSourceProperty =
         BindableProperty.Create(
-            nameof(ChatVM),
-            typeof(ChatViewModel),
+            nameof(ItemsSource),
+            typeof(IEnumerable<ContentContext>),
             typeof(ChatPanelControl),
-            propertyChanged: OnChatVMChanged);
+            propertyChanged: OnItemsSourceChanged);
 
-    public ChatViewModel? ChatVM
+    public static readonly BindableProperty TextProperty =
+        BindableProperty.Create(
+            nameof(Text),
+            typeof(string),
+            typeof(ChatPanelControl),
+            default(string),
+            BindingMode.TwoWay);
+
+    public static readonly BindableProperty IsBusyProperty =
+        BindableProperty.Create(
+            nameof(IsBusy),
+            typeof(bool),
+            typeof(ChatPanelControl),
+            false);
+
+    public static readonly BindableProperty SendCommandProperty =
+        BindableProperty.Create(
+            nameof(SendCommand),
+            typeof(ICommand),
+            typeof(ChatPanelControl));
+
+    public IEnumerable<ContentContext>? ItemsSource
     {
-        get => (ChatViewModel?)GetValue(ChatVMProperty);
-        set => SetValue(ChatVMProperty, value);
+        get => (IEnumerable<ContentContext>?)GetValue(ItemsSourceProperty);
+        set => SetValue(ItemsSourceProperty, value);
+    }
+
+    public string? Text
+    {
+        get => (string?)GetValue(TextProperty);
+        set => SetValue(TextProperty, value);
+    }
+
+    public bool IsBusy
+    {
+        get => (bool)GetValue(IsBusyProperty);
+        set => SetValue(IsBusyProperty, value);
+    }
+
+    public ICommand? SendCommand
+    {
+        get => (ICommand?)GetValue(SendCommandProperty);
+        set => SetValue(SendCommandProperty, value);
     }
 
     private readonly ObservableCollection<ContentTemplate> _contentTemplates = [];
@@ -38,33 +78,44 @@ public partial class ChatPanelControl : ContentView
         ChatMessages.ItemTemplate = selector;
     }
 
-    private static void OnChatVMChanged(BindableObject bindable, object oldValue, object newValue)
+    private static void OnItemsSourceChanged(BindableObject bindable, object oldValue, object newValue)
     {
         var control = (ChatPanelControl)bindable;
 
-        if (oldValue is ChatViewModel oldVm)
-            oldVm.Messages.CollectionChanged -= control.OnMessagesCollectionChanged;
+        if (oldValue is INotifyCollectionChanged oldCollection)
+            oldCollection.CollectionChanged -= control.OnMessagesCollectionChanged;
 
-        if (newValue is ChatViewModel newVm)
-            newVm.Messages.CollectionChanged += control.OnMessagesCollectionChanged;
+        if (newValue is INotifyCollectionChanged newCollection)
+            newCollection.CollectionChanged += control.OnMessagesCollectionChanged;
+
+        control.ScrollToLatestMessage();
     }
 
     private void OnMessagesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        if (ChatVM is not null && ChatVM.Messages.Count > 0)
-        {
-            foreach (var delayMs in new[] { 50, 150, 300 })
-            {
-                Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(delayMs), ScrollToLatestMessage);
-            }
-        }
+        if (GetMessageCount() == 0)
+            return;
+
+        foreach (var delayMs in new[] { 50, 150, 300 })
+            Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(delayMs), ScrollToLatestMessage);
     }
 
     private void ScrollToLatestMessage()
     {
-        if (ChatVM is null || ChatVM.Messages.Count == 0)
+        var messageCount = GetMessageCount();
+        if (messageCount == 0)
             return;
 
-        ChatMessages.ScrollTo(ChatVM.Messages.Count - 1, position: ScrollToPosition.End, animate: false);
+        ChatMessages.ScrollTo(messageCount - 1, position: ScrollToPosition.End, animate: false);
     }
+
+    private int GetMessageCount() =>
+        ItemsSource switch
+        {
+            ICollection<ContentContext> genericCollection => genericCollection.Count,
+            IReadOnlyCollection<ContentContext> readOnlyCollection => readOnlyCollection.Count,
+            ICollection collection => collection.Count,
+            IEnumerable<ContentContext> enumerable => enumerable.Count(),
+            _ => 0,
+        };
 }

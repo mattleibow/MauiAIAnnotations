@@ -16,7 +16,10 @@ The default result view is built in. You do **not** need a custom renderer just 
 ### 1. Register the built-in templates
 
 ```xml
-<maui:ChatPanelControl ChatVM="{Binding ChatViewModel}">
+<maui:ChatPanelControl ItemsSource="{Binding ChatViewModel.Messages}"
+                       Text="{Binding ChatViewModel.UserInput, Mode=TwoWay}"
+                       SendCommand="{Binding ChatViewModel.SendCommand}"
+                       IsBusy="{Binding ChatViewModel.IsBusy}">
     <maui:ChatPanelControl.ContentTemplates>
         <mauiChat:TextContentTemplate Role="User" />
         <mauiChat:TextContentTemplate Role="Assistant" />
@@ -125,7 +128,7 @@ public partial class PlantResultViewModel : ObservableObject
     [ObservableProperty]
     public partial Plant? Plant { get; set; }
 
-    public void SetContext(ContentContext context)
+    public void ApplyContentContext(ContentContext context)
     {
         if (context.Content is FunctionResultContent result)
         {
@@ -137,34 +140,34 @@ public partial class PlantResultViewModel : ObservableObject
 
 ### Step 3: Create the XAML View
 
-The view receives a `ContentContext` as its `BindingContext`. The code-behind creates the ViewModel and wires it up:
+The view can receive a `ContentContext` explicitly by deriving from `ContentContextView`. The code-behind exposes a strongly typed `ViewModel` property, so the XAML can bind explicitly without depending on the ambient `BindingContext`:
 
 ```xml
-<ContentView x:Class="MauiSampleApp.Chat.PlantResultView">
-    <Grid x:Name="InnerContent" Padding="0,4">
-        <controls:PlantCardView BindingContext="{Binding Plant}"
-                                HorizontalOptions="Start"
-                                MaximumWidthRequest="320" />
+<maui:ContentContextView x:Class="MauiSampleApp.Chat.PlantResultView"
+                         x:Name="This">
+    <Grid Padding="0,4">
+        <VerticalStackLayout BindingContext="{Binding ViewModel, Source={x:Reference This}}"
+                             x:DataType="chat:PlantResultViewModel">
+            <controls:PlantCardView BindingContext="{Binding Plant}"
+                                    HorizontalOptions="Start"
+                                    MaximumWidthRequest="320" />
+        </VerticalStackLayout>
     </Grid>
-</ContentView>
+</maui:ContentContextView>
 ```
 
 ```csharp
-public partial class PlantResultView : ContentView
+public partial class PlantResultView : ContentContextView
 {
-    private PlantResultViewModel? _vm;
+    private readonly PlantResultViewModel _vm = new();
+    public PlantResultViewModel ViewModel => _vm;
 
     public PlantResultView() => InitializeComponent();
 
-    protected override void OnBindingContextChanged()
+    protected override void RefreshFromContentContext()
     {
-        base.OnBindingContextChanged();
-        if (BindingContext is ContentContext context)
-        {
-            _vm ??= new PlantResultViewModel();
-            _vm.SetContext(context);
-            InnerContent.BindingContext = _vm;
-        }
+        if (ContentContext is not null)
+            _vm.ApplyContentContext(ContentContext);
     }
 }
 ```
@@ -176,7 +179,10 @@ The `PlantCardView` inside is a normal MAUI control that binds to `Plant` proper
 Add your mapping to the `ContentTemplates` list in the page XAML. Place it **before** the generic `FunctionResultTemplate`:
 
 ```xml
-<maui:ChatPanelControl ChatVM="{Binding ChatViewModel}">
+<maui:ChatPanelControl ItemsSource="{Binding ChatViewModel.Messages}"
+                       Text="{Binding ChatViewModel.UserInput, Mode=TwoWay}"
+                       SendCommand="{Binding ChatViewModel.SendCommand}"
+                       IsBusy="{Binding ChatViewModel.IsBusy}">
     <maui:ChatPanelControl.ContentTemplates>
         <!-- ... other mappings ... -->
         <local:PlantResultTemplate ViewType="{x:Type local:PlantResultView}" />

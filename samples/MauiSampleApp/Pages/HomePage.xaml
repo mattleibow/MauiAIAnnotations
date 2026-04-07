@@ -223,7 +223,10 @@
                       Grid.Row="2"
                       IsVisible="False"
                       Padding="12,8,12,12">
-                    <maui:ChatPanelControl ChatVM="{Binding Source={x:Reference ThisPage}, Path=ChatViewModel}">
+                    <maui:ChatPanelControl ItemsSource="{Binding Source={x:Reference ThisPage}, Path=ChatViewModel.Messages}"
+                                           Text="{Binding Source={x:Reference ThisPage}, Path=ChatViewModel.UserInput, Mode=TwoWay}"
+                                           SendCommand="{Binding Source={x:Reference ThisPage}, Path=ChatViewModel.SendCommand}"
+                                           IsBusy="{Binding Source={x:Reference ThisPage}, Path=ChatViewModel.IsBusy}">
                         <maui:ChatPanelControl.ContentTemplates>
                             <mauiChat:TextContentTemplate Role="User" />
                             <mauiChat:TextContentTemplate Role="Assistant" />

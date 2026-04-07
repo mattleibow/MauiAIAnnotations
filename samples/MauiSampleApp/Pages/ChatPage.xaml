@@ -4,9 +4,8 @@
              xmlns:maui="clr-namespace:MauiAIAnnotations.Maui.Controls;assembly=MauiAIAnnotations.Maui"
              xmlns:mauiChat="clr-namespace:MauiAIAnnotations.Maui.Chat;assembly=MauiAIAnnotations.Maui"
              xmlns:local="clr-namespace:MauiSampleApp.Chat"
-             xmlns:vm="clr-namespace:MauiAIAnnotations.Maui.ViewModels;assembly=MauiAIAnnotations.Maui"
              x:Class="MauiSampleApp.Pages.ChatPage"
-             x:DataType="vm:ChatViewModel"
+             x:Name="ThisPage"
              Title="AI Chat"
              Shell.NavBarIsVisible="False"
              BackgroundColor="{AppThemeBinding Light={StaticResource PageBg}, Dark={StaticResource PageBgDark}}">
@@ -25,7 +24,7 @@
                         FontSize="16"
                         AutomationId="ClearChatButton"
                         BackgroundColor="Transparent" TextColor="#D4E8D4"
-                        Command="{Binding ClearCommand}"
+                        Command="{Binding Source={x:Reference ThisPage}, Path=ChatViewModel.ClearCommand}"
                         Padding="8,4" MinimumWidthRequest="44"
                         ToolTipProperties.Text="Clear chat" />
             </Grid>
@@ -33,7 +32,10 @@
 
         <!-- Chat Panel -->
         <maui:ChatPanelControl Grid.Row="1"
-                               ChatVM="{Binding}">
+                               ItemsSource="{Binding Source={x:Reference ThisPage}, Path=ChatViewModel.Messages}"
+                               Text="{Binding Source={x:Reference ThisPage}, Path=ChatViewModel.UserInput, Mode=TwoWay}"
+                               SendCommand="{Binding Source={x:Reference ThisPage}, Path=ChatViewModel.SendCommand}"
+                               IsBusy="{Binding Source={x:Reference ThisPage}, Path=ChatViewModel.IsBusy}">
             <maui:ChatPanelControl.ContentTemplates>
                 <mauiChat:TextContentTemplate Role="User" />
                 <mauiChat:TextContentTemplate Role="Assistant" />

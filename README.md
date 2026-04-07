@@ -84,7 +84,10 @@ builder.Services.AddSingleton<IChatClient>(provider =>
 ### 3. Drop the chat panel onto your page
 
 ```xml
-<maui:ChatPanelControl ChatVM="{Binding ChatViewModel}">
+<maui:ChatPanelControl ItemsSource="{Binding ChatViewModel.Messages}"
+                       Text="{Binding ChatViewModel.UserInput, Mode=TwoWay}"
+                       SendCommand="{Binding ChatViewModel.SendCommand}"
+                       IsBusy="{Binding ChatViewModel.IsBusy}">
     <maui:ChatPanelControl.ContentTemplates>
         <mauiChat:TextContentTemplate Role="User" />
         <mauiChat:TextContentTemplate Role="Assistant" />
@@ -97,7 +100,7 @@ builder.Services.AddSingleton<IChatClient>(provider =>
 </maui:ChatPanelControl>
 ```
 
-The built-in templates already provide the standard MAUI views. Add a custom `ViewType` only when you want a richer renderer for a specific tool or result.
+The control itself is now just a normal bindable MAUI control: `ItemsSource`, `Text`, `SendCommand`, and `IsBusy` can point at any state object. `ChatViewModel` is the convenience helper, not a required framework dependency.
 
 ## When you want more than the basics
 

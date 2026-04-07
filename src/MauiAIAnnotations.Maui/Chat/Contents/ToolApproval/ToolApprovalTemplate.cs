@@ -27,7 +27,7 @@ public class ToolApprovalTemplate : ContentTemplate
             wrapper.InnerContentType = innerType;
             // Explicit template lookup — implicit styles may not resolve inside CollectionView
             wrapper.SetDynamicResource(ContentView.ControlTemplateProperty, ChatThemeKeys.ToolApprovalTemplate);
-            return wrapper;
+            return PrepareDataTemplateView(wrapper);
         });
     }
 

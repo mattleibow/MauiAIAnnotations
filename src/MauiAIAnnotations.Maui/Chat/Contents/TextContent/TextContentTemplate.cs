@@ -20,7 +20,7 @@ public class TextContentTemplate : ContentTemplate
         {
             var view = new ChatMessageView();
             view.SetDynamicResource(ContentView.ControlTemplateProperty, ChatThemeKeys.ChatMessageTemplate);
-            return view;
+            return PrepareDataTemplateView(view);
         });
     }
 

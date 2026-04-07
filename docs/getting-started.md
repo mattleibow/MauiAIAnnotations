@@ -121,7 +121,10 @@ xmlns:mauiChat="clr-namespace:MauiAIAnnotations.Maui.Chat;assembly=MauiAIAnnotat
 ```
 
 ```xml
-<maui:ChatPanelControl ChatVM="{Binding ChatViewModel}">
+<maui:ChatPanelControl ItemsSource="{Binding ChatViewModel.Messages}"
+                       Text="{Binding ChatViewModel.UserInput, Mode=TwoWay}"
+                       SendCommand="{Binding ChatViewModel.SendCommand}"
+                       IsBusy="{Binding ChatViewModel.IsBusy}">
     <maui:ChatPanelControl.ContentTemplates>
         <mauiChat:TextContentTemplate Role="User" />
         <mauiChat:TextContentTemplate Role="Assistant" />
@@ -134,7 +137,7 @@ xmlns:mauiChat="clr-namespace:MauiAIAnnotations.Maui.Chat;assembly=MauiAIAnnotat
 </maui:ChatPanelControl>
 ```
 
-The built-in templates already provide the default MAUI views, including the standard approve/reject card for `ApprovalRequired = true` tools. Set `ViewType` only when you want to swap in a custom renderer for a specific content type. For both the default-view path and the custom-view path, see [Tool Rendering](tool-rendering.md).
+The built-in templates already provide the default MAUI views, including the standard approve/reject card for `ApprovalRequired = true` tools. `ChatViewModel` is just the starter state object; `ChatPanelControl` itself binds through `ItemsSource`, `Text`, `SendCommand`, and `IsBusy`. For both the default-view path and the custom-view path, see [Tool Rendering](tool-rendering.md).
 
 Run the app and you'll see the chat interface:
 

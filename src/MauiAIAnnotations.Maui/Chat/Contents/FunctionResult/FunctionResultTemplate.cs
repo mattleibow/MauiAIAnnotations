@@ -20,7 +20,7 @@ public class FunctionResultTemplate : ContentTemplate
         {
             var view = new FunctionResultMessageView();
             view.SetDynamicResource(ContentView.ControlTemplateProperty, ChatThemeKeys.FunctionResultTemplate);
-            return view;
+            return PrepareDataTemplateView(view);
         });
     }
 

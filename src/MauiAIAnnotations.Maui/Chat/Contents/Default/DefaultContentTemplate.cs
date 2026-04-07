@@ -15,7 +15,7 @@ public class DefaultContentTemplate : ContentTemplate
         {
             var view = new DefaultMessageView();
             view.SetDynamicResource(ContentView.ControlTemplateProperty, ChatThemeKeys.DefaultTemplate);
-            return view;
+            return PrepareDataTemplateView(view);
         });
     }
 

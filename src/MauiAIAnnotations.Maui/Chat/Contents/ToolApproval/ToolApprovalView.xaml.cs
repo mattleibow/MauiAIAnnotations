@@ -13,7 +13,7 @@ namespace MauiAIAnnotations.Maui.Chat;
 /// Custom templates can include a root named <c>PART_Root</c>; if omitted,
 /// the view falls back to applying visual states to itself.
 /// </summary>
-public class ToolApprovalView : ContentView
+public class ToolApprovalView : ContentContextView
 {
     private const string ActiveApproveAutomationId = "ApproveToolButton";
     private const string ActiveRejectAutomationId = "RejectToolButton";
@@ -80,7 +80,6 @@ public class ToolApprovalView : ContentView
     /// </summary>
     internal Type? InnerContentType { get; set; }
 
-    private ContentContext? _ctx;
     private VisualElement? _stateRoot;
     private VisualElement? _buttonsRow;
     private VisualElement? _resolutionLabel;
@@ -93,20 +92,12 @@ public class ToolApprovalView : ContentView
         RejectCommand = new Command(() => Respond(false));
     }
 
-    protected override void OnBindingContextChanged()
+    protected override void RefreshFromContentContext()
     {
-        base.OnBindingContextChanged();
-        if (_ctx is not null)
-            _ctx.PropertyChanged -= OnCtxChanged;
-        _ctx = BindingContext as ContentContext;
-        if (_ctx is not null)
-        {
-            _ctx.PropertyChanged += OnCtxChanged;
-            Refresh();
-        }
+        Refresh();
     }
 
-    private void OnCtxChanged(object? sender, PropertyChangedEventArgs e)
+    protected override void OnObservedContentContextPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName is nameof(ContentContext.Content))
             Refresh();
@@ -123,7 +114,7 @@ public class ToolApprovalView : ContentView
 
     private void RefreshToolName()
     {
-        if (_ctx?.Content is ToolApprovalRequestContent approval &&
+        if (ContentContext?.Content is ToolApprovalRequestContent approval &&
             approval.ToolCall is FunctionCallContent fc)
         {
             ToolName = fc.Name;
@@ -132,9 +123,9 @@ public class ToolApprovalView : ContentView
 
     private void RefreshApprovalState()
     {
-        IsPending = _ctx is not null && !_ctx.ApprovalResolved;
-        IsResolved = _ctx?.ApprovalResolved ?? false;
-        ResolutionText = _ctx?.ApprovalResolutionText;
+        IsPending = ContentContext is not null && !ContentContext.ApprovalResolved;
+        IsResolved = ContentContext?.ApprovalResolved ?? false;
+        ResolutionText = ContentContext?.ApprovalResolutionText;
 
         if (_buttonsRow is not null)
         {
@@ -161,7 +152,7 @@ public class ToolApprovalView : ContentView
         _approveButton = GetTemplateChild("PART_ApproveButton") as Button;
         _rejectButton = GetTemplateChild("PART_RejectButton") as Button;
 
-        if (_ctx is not null)
+        if (ContentContext is not null)
             Refresh();
 
         ApplyVisualState();
@@ -170,7 +161,7 @@ public class ToolApprovalView : ContentView
 
     private void BuildInnerContent()
     {
-        if (_ctx is null)
+        if (ContentContext is null)
             return;
 
         View innerView;
@@ -179,14 +170,14 @@ public class ToolApprovalView : ContentView
             innerView = ContentTemplate.CreateView(InnerContentType, Handler?.MauiContext?.Services);
 
             var aware = innerView as IContentContextAware ?? innerView.BindingContext as IContentContextAware;
-            aware?.ApplyContentContext(_ctx);
+            aware?.ApplyContentContext(ContentContext);
         }
         else
         {
             innerView = BuildDefaultArgsView();
         }
 
-        if (_ctx.ApprovalResolved)
+        if (ContentContext.ApprovalResolved)
             innerView.IsEnabled = false;
 
         Content = innerView;
@@ -208,7 +199,7 @@ public class ToolApprovalView : ContentView
 
     private View BuildDefaultArgsView()
     {
-        if (_ctx?.Content is not ToolApprovalRequestContent approval ||
+        if (ContentContext?.Content is not ToolApprovalRequestContent approval ||
             approval.ToolCall is not FunctionCallContent fc ||
             fc.Arguments is null || fc.Arguments.Count == 0)
         {
@@ -249,22 +240,22 @@ public class ToolApprovalView : ContentView
 
     private void Respond(bool approved)
     {
-        if (_ctx is null || _ctx.Content is not ToolApprovalRequestContent request)
+        if (ContentContext is null || ContentContext.Content is not ToolApprovalRequestContent request)
             return;
 
-        if (_ctx.ApprovalResponder is null)
+        if (ContentContext.ApprovalResponder is null)
             throw new InvalidOperationException(
                 "This approval view is not connected to a tool approval coordinator. Ensure the chat client pipeline includes UseMauiToolApproval().");
 
         var response = ResolveResponseFactory()?.CreateApprovalResponse(request, approved)
             ?? request.CreateResponse(approved, approved ? null : "User rejected");
 
-        if (!_ctx.ApprovalResponder(response))
+        if (!ContentContext.ApprovalResponder(response))
             return;
 
         var toolName = ToolName ?? "Tool";
-        _ctx.ApprovalResolved = true;
-        _ctx.ApprovalResolutionText = response.Approved
+        ContentContext.ApprovalResolved = true;
+        ContentContext.ApprovalResolutionText = response.Approved
             ? $"✅ Approved — {toolName}"
             : $"❌ Rejected — {toolName}";
     }

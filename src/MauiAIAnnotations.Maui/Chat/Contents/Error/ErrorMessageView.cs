@@ -6,7 +6,7 @@ namespace MauiAIAnnotations.Maui.Chat;
 /// Displays an error message from an <see cref="ErrorContent"/> item.
 /// Styled via a ControlTemplate that uses <c>{TemplateBinding ErrorMessageText}</c>.
 /// </summary>
-public class ErrorMessageView : ContentView
+public class ErrorMessageView : ContentContextView
 {
     public static readonly BindableProperty ErrorMessageTextProperty =
         BindableProperty.Create(nameof(ErrorMessageText), typeof(string), typeof(ErrorMessageView));
@@ -17,29 +17,8 @@ public class ErrorMessageView : ContentView
         set => SetValue(ErrorMessageTextProperty, value);
     }
 
-    private ContentContext? _ctx;
-
-    protected override void OnBindingContextChanged()
+    protected override void RefreshFromContentContext()
     {
-        base.OnBindingContextChanged();
-        if (_ctx is not null)
-            _ctx.PropertyChanged -= OnContentContextChanged;
-        _ctx = BindingContext as ContentContext;
-        if (_ctx is not null)
-        {
-            _ctx.PropertyChanged += OnContentContextChanged;
-            Refresh();
-        }
-    }
-
-    private void OnContentContextChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(ContentContext.Content))
-            Refresh();
-    }
-
-    private void Refresh()
-    {
-        ErrorMessageText = (_ctx?.Content as ErrorContent)?.Message;
+        ErrorMessageText = (ContentContext?.Content as ErrorContent)?.Message;
     }
 }

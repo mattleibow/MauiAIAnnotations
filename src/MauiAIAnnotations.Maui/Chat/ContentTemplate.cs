@@ -43,7 +43,7 @@ public abstract class ContentTemplate : BindableObject
     internal virtual DataTemplate GetTemplate()
     {
         var type = ViewType ?? throw new InvalidOperationException($"{GetType().Name} has no ViewType set.");
-        return _cachedTemplate ??= new DataTemplate(() => CreateView(type));
+        return _cachedTemplate ??= new DataTemplate(() => PrepareDataTemplateView(CreateView(type)));
     }
 
     internal virtual int GetPriority(ContentContext context) => Priority;
@@ -79,5 +79,14 @@ public abstract class ContentTemplate : BindableObject
                 $"Could not create '{type.Name}' because the MAUI service provider is unavailable and the view has no public parameterless constructor.",
                 ex);
         }
+    }
+
+    internal static T PrepareDataTemplateView<T>(T view)
+        where T : View
+    {
+        if (view is ContentContextView contextView)
+            contextView.SetBinding(ContentContextView.ContentContextProperty, new Binding("."));
+
+        return view;
     }
 }

@@ -17,7 +17,7 @@ public class ErrorContentTemplate : ContentTemplate
         {
             var view = new ErrorMessageView();
             view.SetDynamicResource(ContentView.ControlTemplateProperty, ChatThemeKeys.ErrorTemplate);
-            return view;
+            return PrepareDataTemplateView(view);
         });
     }
 
