@@ -1,8 +1,56 @@
-# Custom Tool Result Rendering
+# Default and Custom Tool Result Rendering
 
-By default, function results appear as plain text in the chat. You can replace that with a rich, styled view — a plant card, a weather widget, a product tile — by creating a **content template mapping** that targets specific tool results.
+Tool results already have a built-in **default view** in the chat. If that is enough, keep the stock templates and you are done. If you want something richer — a plant card, a weather widget, a product tile — add a **custom content template mapping** for the specific tool results you care about.
 
-This guide walks through the sample app's `PlantCardView`: when the AI returns a `Plant` from any tool call (e.g. `get_plant`), a styled card appears instead of raw JSON.
+This guide covers both paths:
+
+| Path | Use it when | What you do |
+| --- | --- | --- |
+| **Default view** | You want the fastest setup or a good debug-friendly fallback | Keep `FunctionResultTemplate` and `DefaultContentTemplate` in `ChatPanelControl` |
+| **Custom view** | You want cards, widgets, or tool-specific UI | Add a `ContentTemplate` with a custom `ViewType` before the generic fallback |
+
+## How to Use the Default Result View
+
+The default result view is built in. You do **not** need a custom renderer just to show tool results in the chat.
+
+### 1. Register the built-in templates
+
+```xml
+<maui:ChatPanelControl ChatVM="{Binding ChatViewModel}">
+    <maui:ChatPanelControl.ContentTemplates>
+        <mauiChat:TextContentTemplate Role="User" />
+        <mauiChat:TextContentTemplate Role="Assistant" />
+        <mauiChat:FunctionCallTemplate />
+        <mauiChat:FunctionResultTemplate />
+        <mauiChat:ToolApprovalTemplate />
+        <mauiChat:ErrorContentTemplate />
+        <mauiChat:DefaultContentTemplate />
+    </maui:ChatPanelControl.ContentTemplates>
+</maui:ChatPanelControl>
+```
+
+### 2. Return normal tool results
+
+Your tool can return a string, a DTO, a list, or another normal .NET object:
+
+```csharp
+[ExportAIFunction("get_plants", Description = "Gets all plants the user has registered.")]
+public async Task<List<Plant>> GetPlantsAsync() => await _repo.GetPlantsAsync();
+```
+
+The chat panel will show:
+
+- the tool call via `FunctionCallTemplate`
+- the returned value via `FunctionResultTemplate`
+- a generic fallback via `DefaultContentTemplate` if nothing more specific matches
+
+That is the right starting point for most apps. It is also the fallback you should keep even after adding custom views.
+
+### Default view result
+
+| Windows | Android |
+| --- | --- |
+| <img src="images/function-calls.png" alt="Default Function Result View on Windows" width="300" /> | <img src="images/function-calls-android.png" alt="Default Function Result View on Android" width="300" /> |
 
 ## How Content Templates Work
 
@@ -17,7 +65,11 @@ ContentTemplateSelector
 
 **Order matters.** Specific mappings must appear before generic ones, otherwise the generic mapping matches first and your custom view is never used.
 
-## Step 1: Create a ContentTemplate
+## How to Build a Custom View
+
+Once the default result view is working, you can replace it for specific tools or result shapes.
+
+### Step 1: Create a ContentTemplate
 
 Subclass `ContentTemplate` and override `When()` to match the tool results you care about:
 
@@ -62,7 +114,7 @@ public class PlantResultTemplate : ContentTemplate
 
 The `TryGetPlant` helper handles both strongly-typed returns and JSON payloads, which is common when the AI serializes results.
 
-## Step 2: Create a ViewModel (Optional)
+### Step 2: Create a ViewModel (Optional)
 
 Built-in library views bind directly to `ContentContext` — no ViewModel required. But when your view needs to **extract or transform** data from the AI response, a small ViewModel keeps the view clean:
 
@@ -82,7 +134,7 @@ public partial class PlantResultViewModel : ObservableObject
 }
 ```
 
-## Step 3: Create the XAML View
+### Step 3: Create the XAML View
 
 The view receives a `ContentContext` as its `BindingContext`. The code-behind creates the ViewModel and wires it up:
 
@@ -118,7 +170,7 @@ public partial class PlantResultView : ContentView
 
 The `PlantCardView` inside is a normal MAUI control that binds to `Plant` properties like `Nickname`, `Location`, and `IsIndoor`.
 
-## Step 4: Register the Template
+### Step 4: Register the Template
 
 Add your mapping to the `ContentTemplates` list in the page XAML. Place it **before** the generic `FunctionResultTemplate`:
 
@@ -135,16 +187,17 @@ Add your mapping to the `ContentTemplates` list in the page XAML. Place it **bef
 
 If `PlantResultTemplate` appears after `FunctionResultTemplate`, the generic mapping matches every `FunctionResultContent` first and the plant card never shows.
 
-## Result
+### Custom view result
 
 | Windows | Android |
 | --- | --- |
 | <img src="images/plant-card.png" alt="Plant Card in Chat on Windows" width="300" /> | <img src="images/plant-card-android.png" alt="Plant Card in Chat on Android" width="300" /> |
 
-## When to Use This Pattern
+## When to Use Each Pattern
 
 | Scenario | Example |
 |---|---|
+| Default view is enough | Quick start, internal tools, debugging raw output |
 | Rich data cards | Plant info, weather, product details |
 | Interactive elements | Buttons, links, rating controls |
 | Custom visualizations | Charts, maps, progress indicators |

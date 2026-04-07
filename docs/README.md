@@ -14,7 +14,7 @@ Pick the path that matches your goal:
 | --- | --- | --- |
 | **Quick start** | A working MAUI chat + function-calling flow with the fewest steps | [Getting Started](getting-started.md) |
 | **Approval flow** | Approve/reject sensitive tool calls before they run | [Human-in-the-Loop Approval](human-in-the-loop.md) |
-| **Rich tool UI** | Show tool results as cards, widgets, or other custom views | [Custom Tool Rendering](tool-rendering.md) |
+| **Tool result views** | Start with the default result view, then swap in cards or widgets when needed | [Custom Tool Rendering](tool-rendering.md) |
 
 ### What those paths look like
 
@@ -96,7 +96,7 @@ Keep `UseMauiToolApproval()` before `UseFunctionInvocation()` so approval-requir
 
 - [Getting Started](getting-started.md) - the full first-run walkthrough.
 - [Human-in-the-Loop Approval](human-in-the-loop.md) - built-in approval cards plus optional custom review views.
-- [Custom Tool Rendering](tool-rendering.md) - result cards and tool-specific content templates.
+- [Custom Tool Rendering](tool-rendering.md) - the built-in default result view plus the custom card/widget path.
 
 ## Packages
 

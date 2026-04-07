@@ -132,7 +132,7 @@ xmlns:mauiChat="clr-namespace:MauiAIAnnotations.Maui.Chat;assembly=MauiAIAnnotat
 </maui:ChatPanelControl>
 ```
 
-The built-in templates already provide the default MAUI views, including the standard approve/reject card for `ApprovalRequired = true` tools. Set `ViewType` only when you want to swap in a custom renderer for a specific content type.
+The built-in templates already provide the default MAUI views, including the standard approve/reject card for `ApprovalRequired = true` tools. Set `ViewType` only when you want to swap in a custom renderer for a specific content type. For both the default-view path and the custom-view path, see [Tool Rendering](tool-rendering.md).
 
 Run the app and you'll see the chat interface:
 

@@ -17,7 +17,7 @@ Choose the path that matches what you need:
 | --- | --- | --- |
 | **Quick start** | Add AI chat + function calling to an existing MAUI page fast | [Getting Started](docs/getting-started.md) |
 | **Approval flow** | Require approve/reject before sensitive tools run | [Human-in-the-Loop Approval](docs/human-in-the-loop.md) |
-| **Rich tool UI** | Render tool results as plant cards, widgets, or custom views | [Custom Tool Rendering](docs/tool-rendering.md) |
+| **Tool result views** | Start with the default result view, then replace it with cards or widgets when needed | [Custom Tool Rendering](docs/tool-rendering.md) |
 
 ### What each path looks like
 
@@ -104,7 +104,7 @@ The built-in templates already provide the standard MAUI views. Add a custom `Vi
 
 - **Need a guided first integration?** Start with [Getting Started](docs/getting-started.md).
 - **Need review-before-run for writes/deletes?** Use [Human-in-the-Loop Approval](docs/human-in-the-loop.md).
-- **Need richer visuals for tool results?** Use [Custom Tool Rendering](docs/tool-rendering.md).
+- **Need the default tool result view or a custom one?** Use [Custom Tool Rendering](docs/tool-rendering.md).
 - **Need a working reference app?** See [`samples/MauiSampleApp`](samples/MauiSampleApp).
 
 ## Packages
