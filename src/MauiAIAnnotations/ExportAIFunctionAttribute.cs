@@ -9,7 +9,8 @@ namespace MauiAIAnnotations;
 /// </summary>
 /// <remarks>
 /// The method must be a public instance method on a type that is registered in DI.
-/// Parameter descriptions should use <see cref="System.ComponentModel.DescriptionAttribute"/>.
+/// Method and parameter descriptions should preferably use
+/// <see cref="System.ComponentModel.DescriptionAttribute"/>.
 /// Return values are automatically serialized by Microsoft.Extensions.AI.
 /// </remarks>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
@@ -34,8 +35,7 @@ public sealed class ExportAIFunctionAttribute : Attribute
 
     /// <summary>
     /// Description shown to the AI model explaining what this tool does.
-    /// If not set, falls back to <see cref="System.ComponentModel.DescriptionAttribute"/>
-    /// on the method, if present.
+    /// If this property is not set, the method-level description is used.
     /// </summary>
     public string? Description { get; set; }
 

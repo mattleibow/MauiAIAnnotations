@@ -11,13 +11,15 @@ namespace MauiAIAnnotations.Tests;
 
 public class TestToolService
 {
-    [ExportAIFunction("test_tool", Description = "A test tool")]
+    [Description("A test tool")]
+    [ExportAIFunction("test_tool")]
     public string DoSomething([Description("input value")] string input) => $"result: {input}";
 
     [ExportAIFunction]
     public int GetCount() => 42;
 
-    [ExportAIFunction("async_tool", Description = "An async tool")]
+    [Description("An async tool")]
+    [ExportAIFunction("async_tool")]
     public async Task<string> DoAsyncWork([Description("input value")] string input)
     {
         await Task.Delay(1);
@@ -29,7 +31,8 @@ public class TestToolService
 
 public class MultiParamService
 {
-    [ExportAIFunction("multi_param", Description = "A tool with multiple parameters")]
+    [Description("A tool with multiple parameters")]
+    [ExportAIFunction("multi_param")]
     public string Combine(
         [Description("first name")] string firstName,
         [Description("last name")] string lastName,
@@ -42,7 +45,8 @@ public class DisposableToolService : IDisposable
     public bool IsDisposed { get; private set; }
     public void Dispose() => IsDisposed = true;
 
-    [ExportAIFunction("disposable_tool", Description = "Tool on a disposable service")]
+    [Description("Tool on a disposable service")]
+    [ExportAIFunction("disposable_tool")]
     public string GetValue() => "value";
 }
 
@@ -69,7 +73,8 @@ public class InvocationCounterService
 {
     public int InvocationCount { get; private set; }
 
-    [ExportAIFunction("counter_tool", Description = "Counts invocations")]
+    [Description("Counts invocations")]
+    [ExportAIFunction("counter_tool")]
     public int Increment()
     {
         InvocationCount++;
@@ -79,7 +84,8 @@ public class InvocationCounterService
 
 public class CancellableToolService
 {
-    [ExportAIFunction("cancellable_tool", Description = "A cancellable tool")]
+    [Description("A cancellable tool")]
+    [ExportAIFunction("cancellable_tool")]
     public async Task<string> CancellableWork(
         [Description("input value")] string input,
         CancellationToken cancellationToken)
@@ -104,19 +110,23 @@ public class RefParameterService
 
 public class ApprovalMixedService
 {
-    [ExportAIFunction("safe_read", Description = "A safe read-only tool")]
+    [Description("A safe read-only tool")]
+    [ExportAIFunction("safe_read")]
     public string ReadData() => "data";
 
-    [ExportAIFunction("dangerous_write", Description = "A dangerous write tool", ApprovalRequired = true)]
+    [Description("A dangerous write tool")]
+    [ExportAIFunction("dangerous_write", ApprovalRequired = true)]
     public string WriteData([Description("data to write")] string data) => $"wrote: {data}";
 
-    [ExportAIFunction("another_safe", Description = "Another safe tool")]
+    [Description("Another safe tool")]
+    [ExportAIFunction("another_safe")]
     public int GetCount() => 1;
 }
 
 public class AllApprovalService
 {
-    [ExportAIFunction("needs_approval", Description = "Needs approval", ApprovalRequired = true)]
+    [Description("Needs approval")]
+    [ExportAIFunction("needs_approval", ApprovalRequired = true)]
     public string DoWork() => "done";
 }
 
@@ -146,10 +156,8 @@ public sealed class PlantToolResult
 
 public class ComplexSchemaService
 {
-    [ExportAIFunction(
-        "create_plant_profile",
-        Description = "Creates a plant profile from structured details.",
-        ApprovalRequired = true)]
+    [Description("Creates a plant profile from structured details.")]
+    [ExportAIFunction("create_plant_profile", ApprovalRequired = true)]
     public PlantToolResult CreatePlantProfile(
         [Description("structured details for the plant profile")] ComplexPlantRequest profile,
         [Description("whether to notify the user after creation")] bool notifyUser = true) =>

@@ -27,7 +27,7 @@ dotnet add package Azure.AI.OpenAI
 
 ## Step 2: Annotate Your Service Methods
 
-Add `[ExportAIFunction]` to any service methods you want the AI to call. Use `[Description]` on parameters so the model understands what each argument means.
+Add `[ExportAIFunction]` to any service methods you want the AI to call. Use `[Description]` on the method and its parameters so the model gets a cleaner, more readable summary of what the tool does and what each argument means.
 
 ```csharp
 using MauiAIAnnotations;
@@ -35,13 +35,15 @@ using System.ComponentModel;
 
 public class PlantDataService
 {
-    [ExportAIFunction("get_plants", Description = "Gets all plants.")]
+    [Description("Gets all plants.")]
+    [ExportAIFunction("get_plants")]
     public async Task<List<Plant>> GetPlantsAsync()
     {
         // your existing data access logic
     }
 
-    [ExportAIFunction("add_plant", Description = "Adds a new plant.")]
+    [Description("Adds a new plant.")]
+    [ExportAIFunction("add_plant")]
     public async Task<Plant> AddPlantAsync(
         [Description("A friendly name for the plant")] string nickname,
         [Description("The species of the plant")] string species)

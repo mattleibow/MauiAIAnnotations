@@ -8,7 +8,8 @@ namespace MauiSampleApp.Core.Services;
 
 public class SpeciesService(IDocumentStore store, IChatClient chatClient)
 {
-    [ExportAIFunction("get_species", Description = "Gets a species profile by common name (e.g. 'tomato', 'basil'). Returns care information including watering frequency, sunlight needs, and frost tolerance.")]
+    [Description("Gets a species profile by common name (e.g. 'tomato', 'basil'). Returns care information including watering frequency, sunlight needs, and frost tolerance.")]
+    [ExportAIFunction("get_species")]
     public async Task<SpeciesProfile> GetSpeciesAsync(
         [Description("The common name of the plant species")] string name)
     {

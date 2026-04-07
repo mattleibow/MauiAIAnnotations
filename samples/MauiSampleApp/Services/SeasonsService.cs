@@ -5,8 +5,8 @@ namespace MauiSampleApp.Services;
 
 public class SeasonsService
 {
-    [ExportAIFunction("get_seasonal_gardening_advice",
-        Description = "Gets gardening advice for the current season based on the month number and hemisphere. Seasons are reversed in the southern hemisphere.")]
+    [Description("Gets gardening advice for the current season based on the month number and hemisphere. Seasons are reversed in the southern hemisphere.")]
+    [ExportAIFunction("get_seasonal_gardening_advice")]
     public string GetSeasonalAdvice(
         [Description("The month number (1-12)")] int month,
         [Description("The hemisphere: 'north' or 'south'. Defaults to north if not specified.")] string hemisphere = "north")

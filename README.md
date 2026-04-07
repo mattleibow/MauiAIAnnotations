@@ -49,13 +49,12 @@ using System.ComponentModel;
 
 public class PlantDataService
 {
-    [ExportAIFunction("get_plants", Description = "Gets all plants the user has registered.")]
+    [Description("Gets all plants the user has registered.")]
+    [ExportAIFunction("get_plants")]
     public async Task<List<Plant>> GetPlantsAsync() => ...;
 
-    [ExportAIFunction(
-        "add_plant",
-        Description = "Adds a new plant to the garden.",
-        ApprovalRequired = true)]
+    [Description("Adds a new plant to the garden.")]
+    [ExportAIFunction("add_plant", ApprovalRequired = true)]
     public async Task<Plant> AddPlantAsync(
         [Description("A friendly name for the plant")] string nickname,
         [Description("The species name")] string species) => ...;

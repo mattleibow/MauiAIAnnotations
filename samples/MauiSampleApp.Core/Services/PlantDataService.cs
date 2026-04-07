@@ -9,7 +9,8 @@ public class PlantDataService(IDocumentStore store, SpeciesService speciesServic
 {
     public event EventHandler? PlantsChanged;
 
-    [ExportAIFunction("get_plants", Description = "Gets the user's plants. Optionally pass a query to filter by species, nickname, or location for requests like 'all my tomatoes' or 'plants on the balcony'.")]
+    [Description("Gets the user's plants. Optionally pass a query to filter by species, nickname, or location for requests like 'all my tomatoes' or 'plants on the balcony'.")]
+    [ExportAIFunction("get_plants")]
     public async Task<List<Plant>> GetPlantsAsync(
         [Description("Optional search text to filter plants by species, nickname, or location. Leave blank to return all plants.")] string? query = null)
     {
@@ -33,7 +34,8 @@ public class PlantDataService(IDocumentStore store, SpeciesService speciesServic
             .ToList();
     }
 
-    [ExportAIFunction("get_plant", Description = "Gets a specific plant by its nickname.")]
+    [Description("Gets a specific plant by its nickname.")]
+    [ExportAIFunction("get_plant")]
     public async Task<Plant?> GetPlantAsync(
         [Description("The nickname of the plant to look up")] string nickname)
     {
@@ -65,7 +67,8 @@ public class PlantDataService(IDocumentStore store, SpeciesService speciesServic
         return fallbackMatches.Count == 1 ? fallbackMatches[0] : null;
     }
 
-    [ExportAIFunction("add_plant", Description = "Adds a new plant to the garden.", ApprovalRequired = true)]
+    [Description("Adds a new plant to the garden.")]
+    [ExportAIFunction("add_plant", ApprovalRequired = true)]
     public async Task<Plant> AddPlantAsync(
         [Description("The plant details to add")] NewPlantRequest request)
     {
@@ -86,7 +89,8 @@ public class PlantDataService(IDocumentStore store, SpeciesService speciesServic
         return plant;
     }
 
-    [ExportAIFunction("remove_plant", Description = "Removes a plant by its nickname.", ApprovalRequired = true)]
+    [Description("Removes a plant by its nickname.")]
+    [ExportAIFunction("remove_plant", ApprovalRequired = true)]
     public async Task RemovePlantAsync(
         [Description("The nickname of the plant to remove")] string nickname)
     {
@@ -98,7 +102,8 @@ public class PlantDataService(IDocumentStore store, SpeciesService speciesServic
         }
     }
 
-    [ExportAIFunction("log_care_event", Description = "Logs a care event for a plant.")]
+    [Description("Logs a care event for a plant.")]
+    [ExportAIFunction("log_care_event")]
     public async Task<CareEvent> LogCareEventAsync(
         [Description("The nickname of the plant")] string plantNickname,
         [Description("The care event details")] CareEventRequest careEvent)
@@ -120,7 +125,8 @@ public class PlantDataService(IDocumentStore store, SpeciesService speciesServic
         return result;
     }
 
-    [ExportAIFunction("get_care_history", Description = "Gets the care history for a plant by its nickname.")]
+    [Description("Gets the care history for a plant by its nickname.")]
+    [ExportAIFunction("get_care_history")]
     public async Task<List<CareEvent>> GetCareHistoryAsync(
         [Description("The nickname of the plant")] string plantNickname)
     {
@@ -134,9 +140,8 @@ public class PlantDataService(IDocumentStore store, SpeciesService speciesServic
                   .ToList();
     }
 
-    [ExportAIFunction("log_batch_care_events",
-        Description = "Log multiple care events for a plant at once. Use when the user reports several activities.",
-        ApprovalRequired = true)]
+    [Description("Log multiple care events for a plant at once. Use when the user reports several activities.")]
+    [ExportAIFunction("log_batch_care_events", ApprovalRequired = true)]
     public async Task<List<CareEvent>> LogBatchCareEventsAsync(
         [Description("The nickname of the plant")] string plantNickname,
         [Description("The care events to log")] List<CareEventRequest> careEvents)

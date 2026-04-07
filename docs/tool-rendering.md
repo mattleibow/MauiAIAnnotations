@@ -34,7 +34,8 @@ The default result view is built in. You do **not** need a custom renderer just 
 Your tool can return a string, a DTO, a list, or another normal .NET object:
 
 ```csharp
-[ExportAIFunction("get_plants", Description = "Gets all plants the user has registered.")]
+[Description("Gets all plants the user has registered.")]
+[ExportAIFunction("get_plants")]
 public async Task<List<Plant>> GetPlantsAsync() => await _repo.GetPlantsAsync();
 ```
 

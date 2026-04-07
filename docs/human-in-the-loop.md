@@ -27,14 +27,16 @@ and then approve or reject the action.
 Add `ApprovalRequired = true` to any tool that mutates data:
 
 ```csharp
-[ExportAIFunction("add_plant", Description = "Adds a new plant.", ApprovalRequired = true)]
+[Description("Adds a new plant.")]
+[ExportAIFunction("add_plant", ApprovalRequired = true)]
 public async Task<Plant> AddPlantAsync(
     [Description("A friendly name for the plant")] string nickname,
     [Description("The species name")] string species,
     [Description("Where the plant is located")] string location,
     [Description("Whether the plant is kept indoors")] bool isIndoor) { ... }
 
-[ExportAIFunction("remove_plant", Description = "Removes a plant.", ApprovalRequired = true)]
+[Description("Removes a plant.")]
+[ExportAIFunction("remove_plant", ApprovalRequired = true)]
 public async Task RemovePlantAsync(
     [Description("The nickname of the plant to remove")] string nickname) { ... }
 ```
