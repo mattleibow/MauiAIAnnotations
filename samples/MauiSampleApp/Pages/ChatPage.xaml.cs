@@ -1,14 +1,14 @@
-using MauiAIAnnotations.Maui.ViewModels;
+using MauiAIAnnotations.Maui.Chat;
 
 namespace MauiSampleApp.Pages;
 
 public partial class ChatPage : ContentPage
 {
-    public ChatViewModel ChatViewModel { get; }
+    public ChatSession ChatSession { get; }
 
-    public ChatPage(ChatViewModel chatViewModel)
+    public ChatPage(ChatSession chatSession)
     {
-        ChatViewModel = chatViewModel;
+        ChatSession = chatSession;
         InitializeComponent();
     }
 }

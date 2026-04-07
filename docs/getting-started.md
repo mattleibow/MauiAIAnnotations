@@ -71,7 +71,7 @@ builder.Services.AddSingleton<PlantDataService>();
 // Discover all [ExportAIFunction] methods automatically
 builder.Services.AddAITools();
 
-// Set up the AI chat client with function invocation + approval handling
+// Set up the AI chat client with function invocation
 builder.Services.AddSingleton<IChatClient>(provider =>
 {
     var client = new AzureOpenAIClient(
@@ -82,31 +82,32 @@ builder.Services.AddSingleton<IChatClient>(provider =>
         .GetChatClient(deploymentName)
         .AsIChatClient()
         .AsBuilder()
-        .UseMauiToolApproval()
         .UseFunctionInvocation()
         .Build(provider);
 });
 ```
 
-`AddAITools()` scans your registered services for `[ExportAIFunction]` attributes and makes them available as AI tools. `UseFunctionInvocation()` enables automatic function calling, and `UseMauiToolApproval()` adds the built-in approval middleware for tools marked with `ApprovalRequired = true`. Keep `UseMauiToolApproval()` before `UseFunctionInvocation()` so the approval layer wraps the MEAI function invoker.
+`AddAITools()` scans your registered services for `[ExportAIFunction]` attributes and makes them available as AI tools. `UseFunctionInvocation()` enables automatic function calling. For tools marked with `ApprovalRequired = true`, the chat session surfaces a `ToolApprovalRequestContent`, the turn ends cleanly, and the conversation continues when the user later approves or rejects that request.
 
 > **Note:** `endpoint`, `apiKey`, and `deploymentName` should come from configuration
 > (e.g. `builder.Configuration` or user secrets). See the sample app's `MauiProgram.cs`
 > for a full example using `AddJsonStream` for embedded secrets.
 
-You'll also need a `ChatViewModel` (or subclass) and page binding. The library provides
-`MauiAIAnnotations.Maui.ViewModels.ChatViewModel` — `AddAIChat()` registers it along with the shared approval coordinator:
+You'll also need a session object for the page to bind to. The library provides
+`MauiAIAnnotations.Maui.Chat.ChatSession` — `AddAIChat()` registers it for you:
 
 ```csharp
-builder.Services.AddAIChat();
+builder.Services.AddAIChat(ServiceLifetime.Transient);
 builder.Services.AddTransient<HomePage>();
 ```
 
 ```csharp
 // HomePage.xaml.cs
-public HomePage(ChatViewModel chatViewModel)
+public ChatSession ChatSession { get; }
+
+public HomePage(ChatSession chatSession)
 {
-    BindingContext = new { ChatViewModel = chatViewModel };
+    ChatSession = chatSession;
     InitializeComponent();
 }
 ```
@@ -121,10 +122,10 @@ xmlns:mauiChat="clr-namespace:MauiAIAnnotations.Maui.Chat;assembly=MauiAIAnnotat
 ```
 
 ```xml
-<maui:ChatPanelControl ItemsSource="{Binding ChatViewModel.Messages}"
-                       Text="{Binding ChatViewModel.UserInput, Mode=TwoWay}"
-                       SendCommand="{Binding ChatViewModel.SendCommand}"
-                       IsBusy="{Binding ChatViewModel.IsBusy}">
+<maui:ChatPanelControl ItemsSource="{Binding ChatSession.Messages}"
+                       Text="{Binding ChatSession.UserInput, Mode=TwoWay}"
+                       SendCommand="{Binding ChatSession.SendCommand}"
+                       IsBusy="{Binding ChatSession.IsBusy}">
     <maui:ChatPanelControl.ContentTemplates>
         <mauiChat:TextContentTemplate Role="User" />
         <mauiChat:TextContentTemplate Role="Assistant" />
@@ -137,7 +138,7 @@ xmlns:mauiChat="clr-namespace:MauiAIAnnotations.Maui.Chat;assembly=MauiAIAnnotat
 </maui:ChatPanelControl>
 ```
 
-The built-in templates already provide the default MAUI views, including the standard approve/reject card for `ApprovalRequired = true` tools. `ChatViewModel` is just the starter state object; `ChatPanelControl` itself binds through `ItemsSource`, `Text`, `SendCommand`, and `IsBusy`. For both the default-view path and the custom-view path, see [Tool Rendering](tool-rendering.md).
+The built-in templates already provide the default MAUI views, including the standard approve/reject card for `ApprovalRequired = true` tools. `ChatSession` is the starter state object; `ChatPanelControl` itself binds through `ItemsSource`, `Text`, `SendCommand`, and `IsBusy`. The older `ChatViewModel` still exists for compatibility, but new code should prefer `ChatSession`. For both the default-view path and the custom-view path, see [Tool Rendering](tool-rendering.md).
 
 Run the app and you'll see the chat interface:
 

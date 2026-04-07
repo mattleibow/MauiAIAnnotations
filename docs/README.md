@@ -60,14 +60,13 @@ public class PlantDataService
 ```csharp
 builder.Services.AddSingleton<PlantDataService>();
 builder.Services.AddAITools(typeof(PlantDataService).Assembly);
-builder.Services.AddAIChat();
+builder.Services.AddAIChat(ServiceLifetime.Transient);
 
 builder.Services.AddSingleton<IChatClient>(provider =>
 {
     return openAiChatClient
         .AsIChatClient()
         .AsBuilder()
-        .UseMauiToolApproval()
         .UseFunctionInvocation()
         .Build(provider);
 });
@@ -76,10 +75,10 @@ builder.Services.AddSingleton<IChatClient>(provider =>
 ### 3. Add `ChatPanelControl` to your page
 
 ```xml
-<maui:ChatPanelControl ItemsSource="{Binding ChatViewModel.Messages}"
-                       Text="{Binding ChatViewModel.UserInput, Mode=TwoWay}"
-                       SendCommand="{Binding ChatViewModel.SendCommand}"
-                       IsBusy="{Binding ChatViewModel.IsBusy}">
+<maui:ChatPanelControl ItemsSource="{Binding ChatSession.Messages}"
+                       Text="{Binding ChatSession.UserInput, Mode=TwoWay}"
+                       SendCommand="{Binding ChatSession.SendCommand}"
+                       IsBusy="{Binding ChatSession.IsBusy}">
     <maui:ChatPanelControl.ContentTemplates>
         <mauiChat:TextContentTemplate Role="User" />
         <mauiChat:TextContentTemplate Role="Assistant" />
@@ -92,7 +91,7 @@ builder.Services.AddSingleton<IChatClient>(provider =>
 </maui:ChatPanelControl>
 ```
 
-Keep `UseMauiToolApproval()` before `UseFunctionInvocation()` so approval-required tools can pause and resume cleanly. The chat panel uses normal bindable control properties, so you can wire it to `ChatViewModel` or your own state object.
+The chat panel uses normal bindable control properties, so you can wire it to `ChatSession` or your own state object. Approval-required tools now follow a turn-based request/response flow: the approval card is shown, the turn ends, and the session continues when the user answers that request.
 
 ## Next paths
 

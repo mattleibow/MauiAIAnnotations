@@ -66,28 +66,25 @@ public class PlantDataService
 ```csharp
 builder.Services.AddSingleton<PlantDataService>();
 builder.Services.AddAITools(typeof(PlantDataService).Assembly);
-builder.Services.AddAIChat();
+builder.Services.AddAIChat(ServiceLifetime.Transient);
 
 builder.Services.AddSingleton<IChatClient>(provider =>
 {
     return openAiChatClient
         .AsIChatClient()
         .AsBuilder()
-        .UseMauiToolApproval()
         .UseFunctionInvocation()
         .Build(provider);
 });
 ```
 
-> Keep `UseMauiToolApproval()` before `UseFunctionInvocation()` so approval-required tools can pause and resume correctly.
-
 ### 3. Drop the chat panel onto your page
 
 ```xml
-<maui:ChatPanelControl ItemsSource="{Binding ChatViewModel.Messages}"
-                       Text="{Binding ChatViewModel.UserInput, Mode=TwoWay}"
-                       SendCommand="{Binding ChatViewModel.SendCommand}"
-                       IsBusy="{Binding ChatViewModel.IsBusy}">
+<maui:ChatPanelControl ItemsSource="{Binding ChatSession.Messages}"
+                       Text="{Binding ChatSession.UserInput, Mode=TwoWay}"
+                       SendCommand="{Binding ChatSession.SendCommand}"
+                       IsBusy="{Binding ChatSession.IsBusy}">
     <maui:ChatPanelControl.ContentTemplates>
         <mauiChat:TextContentTemplate Role="User" />
         <mauiChat:TextContentTemplate Role="Assistant" />
@@ -100,7 +97,7 @@ builder.Services.AddSingleton<IChatClient>(provider =>
 </maui:ChatPanelControl>
 ```
 
-The control itself is now just a normal bindable MAUI control: `ItemsSource`, `Text`, `SendCommand`, and `IsBusy` can point at any state object. `ChatViewModel` is the convenience helper, not a required framework dependency.
+The control itself is just a normal bindable MAUI control: `ItemsSource`, `Text`, `SendCommand`, and `IsBusy` can point at any state object. `ChatSession` is the recommended session object; the older `ChatViewModel` remains only as a compatibility shim.
 
 ## When you want more than the basics
 

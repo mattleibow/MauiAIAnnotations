@@ -6,6 +6,7 @@ using MauiAIAnnotations.Maui;
 using MauiDevFlow.Agent;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MauiSampleApp.Core.Services;
 using MauiSampleApp.Chat;
@@ -70,7 +71,7 @@ public static class MauiProgram
         builder.AddOpenAIServices();
 
         // Register AI chat
-        builder.Services.AddAIChat();
+        builder.Services.AddAIChat(ServiceLifetime.Transient);
 
         // Register ViewModels and Pages
         builder.Services.AddSingleton<HomePageViewModel>();
@@ -139,7 +140,6 @@ public static class MauiProgram
             return chatClient.AsIChatClient()
                 .AsBuilder()
                 .UseLogging(lf)
-                .UseMauiToolApproval()
                 .UseFunctionInvocation()
                 .Build(provider);
         });

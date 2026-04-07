@@ -9,6 +9,7 @@ namespace MauiAIAnnotations;
 /// </summary>
 public sealed class ToolApprovalChatClient : DelegatingChatClient
 {
+    private const string ApprovalScopeKey = "mauiapproval_scope_id";
     private readonly IToolApprovalCoordinator _approvalCoordinator;
 
     /// <summary>
@@ -38,6 +39,7 @@ public sealed class ToolApprovalChatClient : DelegatingChatClient
         ArgumentNullException.ThrowIfNull(messages);
 
         var history = messages.ToList();
+        var scopeId = ResolveScopeId(history, options);
 
         while (true)
         {
@@ -69,7 +71,7 @@ public sealed class ToolApprovalChatClient : DelegatingChatClient
 
             history.AddMessages(iterationUpdates);
 
-            var responses = await _approvalCoordinator.WaitForApprovalAsync(approvalRequests, cancellationToken).ConfigureAwait(false);
+            var responses = await _approvalCoordinator.WaitForApprovalAsync(scopeId, approvalRequests, cancellationToken).ConfigureAwait(false);
             if (responses.Count == 0)
             {
                 yield break;
@@ -79,5 +81,33 @@ public sealed class ToolApprovalChatClient : DelegatingChatClient
             yield return approvalResponseUpdate;
             history.AddMessages(approvalResponseUpdate);
         }
+    }
+
+    private static string ResolveScopeId(IReadOnlyList<ChatMessage> history, ChatOptions? options)
+    {
+        if (!string.IsNullOrWhiteSpace(options?.ConversationId))
+            return options.ConversationId!;
+
+        if (options?.AdditionalProperties?.TryGetValue(ApprovalScopeKey, out var rawScopeId) == true &&
+            rawScopeId is string optionScopeId &&
+            !string.IsNullOrWhiteSpace(optionScopeId))
+        {
+            return optionScopeId;
+        }
+
+        foreach (var message in history.Reverse())
+        {
+            foreach (var content in message.Contents)
+            {
+                if (content.AdditionalProperties?.TryGetValue(ApprovalScopeKey, out rawScopeId) == true &&
+                    rawScopeId is string contentScopeId &&
+                    !string.IsNullOrWhiteSpace(contentScopeId))
+                {
+                    return contentScopeId;
+                }
+            }
+        }
+
+        return ToolApprovalCoordinator.DefaultScopeId;
     }
 }

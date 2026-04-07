@@ -4,9 +4,9 @@
 
 Some AI tool calls are too sensitive to auto-execute — adding, deleting, or modifying
 data should require explicit user consent. The `[ExportAIFunction]` attribute supports
-an `ApprovalRequired` flag that tells the system to pause and present an approval card
-before the tool is invoked. The user can review the arguments, optionally edit them,
-and then approve or reject the action.
+an `ApprovalRequired` flag that tells the system to surface an approval card before the
+tool is invoked. The user can review the arguments, optionally edit them, and then
+approve or reject the action in a later turn.
 
 ## How It Works
 
@@ -15,12 +15,12 @@ and then approve or reject the action.
    an `ApprovalRequiredAIFunction` (from `Microsoft.Extensions.AI`).
 3. **Chat client yields an approval request** — `FunctionInvokingChatClient` recognises
    the wrapper and emits a `ToolApprovalRequestContent` instead of auto-invoking.
-4. **Approval middleware pauses the conversation** — `UseMauiToolApproval()` waits for the
-   app to answer the request while the chat UI continues to show the approval card.
+4. **The session stores that request and the turn ends cleanly** — `ChatSession` exposes the
+   pending approval while preserving the conversation history for the next turn.
 5. **User reviews & decides** — The user sees an approval card where they can inspect
    (and optionally edit) the arguments, then tap **Approve** or **Reject**.
-6. **Result flows back** — On approval the tool executes with the (possibly modified)
-   arguments. On rejection the tool is skipped and the AI is informed.
+6. **The session resumes the conversation** — On approval the tool executes with the
+   (possibly modified) arguments. On rejection the tool is skipped and the AI is informed.
 
 ## Step 1: Mark Sensitive Tools
 
@@ -41,8 +41,8 @@ public async Task RemovePlantAsync(
     [Description("The nickname of the plant to remove")] string nickname) { ... }
 ```
 
-The discovery pipeline handles the wrapping automatically, but your chat client should
-include the approval middleware so the request can pause and resume cleanly:
+The discovery pipeline handles the wrapping automatically. The recommended chat setup keeps
+the approval flow explicit and turn-based:
 
 ```csharp
 builder.Services.AddSingleton<IChatClient>(provider =>
@@ -53,14 +53,14 @@ builder.Services.AddSingleton<IChatClient>(provider =>
         .AsIChatClient()
         .AsBuilder()
         .UseLogging(loggerFactory)
-        .UseMauiToolApproval()
         .UseFunctionInvocation()
         .Build(provider);
 });
 ```
 
-Keep `UseMauiToolApproval()` before `UseFunctionInvocation()` so the approval middleware
-wraps the MEAI function invoker.
+If you still want the older one-call, in-memory wait/resume behavior for a simple local sample,
+`UseMauiToolApproval()` remains available as a legacy opt-in. The recommended framework path,
+though, is the `ChatSession`-driven request/response model above.
 
 ## Step 2: Register the Approval Template
 

@@ -1,4 +1,4 @@
-﻿using MauiAIAnnotations.Maui.ViewModels;
+﻿using MauiAIAnnotations.Maui.Chat;
 using MauiSampleApp.Core.Models;
 using MauiSampleApp.ViewModels;
 
@@ -12,12 +12,12 @@ public partial class HomePage : ContentPage
     private bool _isChatTrayOpen;
     private double _panStartHeight;
 
-    public ChatViewModel ChatViewModel { get; }
+    public ChatSession ChatSession { get; }
 
-    public HomePage(HomePageViewModel viewModel, ChatViewModel chatViewModel)
+    public HomePage(HomePageViewModel viewModel, ChatSession chatSession)
     {
         _viewModel = viewModel;
-        ChatViewModel = chatViewModel;
+        ChatSession = chatSession;
         BindingContext = viewModel;
         InitializeComponent();
         Loaded += OnPageLoaded;

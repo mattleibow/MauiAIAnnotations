@@ -9,11 +9,12 @@ namespace MauiAIAnnotations;
 public static class ToolApprovalChatClientBuilderExtensions
 {
     /// <summary>
-    /// Adds the MauiAIAnnotations approval middleware to the chat pipeline.
+    /// Adds the legacy MauiAIAnnotations approval middleware to the chat pipeline.
     /// </summary>
     /// <remarks>
     /// Call this <em>before</em> <see cref="FunctionInvokingChatClientBuilderExtensions.UseFunctionInvocation(ChatClientBuilder, Microsoft.Extensions.Logging.ILoggerFactory?, Action{FunctionInvokingChatClient}?)"/>
-    /// so the approval middleware wraps the MEAI function invoker and can pause when approval-required tools are proposed.
+    /// if you explicitly want the older in-memory pause/resume behavior. The preferred framework path is the
+    /// session-scoped, turn-based approval flow handled by <c>ChatSession</c>.
     /// </remarks>
     /// <param name="builder">The chat-client builder.</param>
     /// <returns>The same builder for chaining.</returns>

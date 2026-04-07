@@ -7,8 +7,9 @@ namespace MauiAIAnnotations;
 /// </summary>
 public sealed class ToolApprovalCoordinator : IToolApprovalCoordinator
 {
+    internal const string DefaultScopeId = "__default";
     private readonly object _syncLock = new();
-    private PendingApprovalBatch? _pendingBatch;
+    private readonly Dictionary<string, PendingApprovalBatch> _pendingBatches = new(StringComparer.Ordinal);
 
     /// <inheritdoc />
     public bool HasPendingApprovals
@@ -17,7 +18,7 @@ public sealed class ToolApprovalCoordinator : IToolApprovalCoordinator
         {
             lock (_syncLock)
             {
-                return _pendingBatch is not null;
+                return _pendingBatches.Count > 0;
             }
         }
     }
@@ -28,8 +29,16 @@ public sealed class ToolApprovalCoordinator : IToolApprovalCoordinator
     /// <inheritdoc />
     public async ValueTask<IReadOnlyList<ToolApprovalResponseContent>> WaitForApprovalAsync(
         IReadOnlyList<ToolApprovalRequestContent> requests,
+        CancellationToken cancellationToken = default) =>
+        await WaitForApprovalAsync(DefaultScopeId, requests, cancellationToken).ConfigureAwait(false);
+
+    /// <inheritdoc />
+    public async ValueTask<IReadOnlyList<ToolApprovalResponseContent>> WaitForApprovalAsync(
+        string scopeId,
+        IReadOnlyList<ToolApprovalRequestContent> requests,
         CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(scopeId);
         ArgumentNullException.ThrowIfNull(requests);
 
         if (requests.Count == 0)
@@ -40,14 +49,14 @@ public sealed class ToolApprovalCoordinator : IToolApprovalCoordinator
         PendingApprovalBatch batch;
         lock (_syncLock)
         {
-            if (_pendingBatch is not null)
+            if (_pendingBatches.ContainsKey(scopeId))
             {
                 throw new InvalidOperationException(
-                    "A tool approval flow is already in progress. Complete or cancel the current approvals before starting a new batch.");
+                    $"A tool approval flow is already in progress for scope '{scopeId}'. Complete or cancel the current approvals before starting a new batch.");
             }
 
             batch = new PendingApprovalBatch(requests);
-            _pendingBatch = batch;
+            _pendingBatches[scopeId] = batch;
         }
 
         OnPendingApprovalsChanged();
@@ -65,10 +74,7 @@ public sealed class ToolApprovalCoordinator : IToolApprovalCoordinator
         {
             lock (_syncLock)
             {
-                if (ReferenceEquals(_pendingBatch, batch))
-                {
-                    _pendingBatch = null;
-                }
+                _pendingBatches.Remove(scopeId);
             }
 
             OnPendingApprovalsChanged();
@@ -77,23 +83,44 @@ public sealed class ToolApprovalCoordinator : IToolApprovalCoordinator
 
     /// <inheritdoc />
     public bool TrySubmit(ToolApprovalResponseContent response)
+        => TrySubmit(DefaultScopeId, response);
+
+    /// <inheritdoc />
+    public bool TrySubmit(string scopeId, ToolApprovalResponseContent response)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(scopeId);
         ArgumentNullException.ThrowIfNull(response);
 
         lock (_syncLock)
         {
-            return _pendingBatch?.TryAddResponse(response) ?? false;
+            return _pendingBatches.TryGetValue(scopeId, out var batch) && batch.TryAddResponse(response);
         }
     }
 
     /// <inheritdoc />
     public void CancelPending()
     {
+        List<PendingApprovalBatch> batches;
+        lock (_syncLock)
+        {
+            batches = [.. _pendingBatches.Values];
+            _pendingBatches.Clear();
+        }
+
+        foreach (var batch in batches)
+            batch.TrySetCanceled();
+
+        OnPendingApprovalsChanged();
+    }
+
+    /// <inheritdoc />
+    public void CancelPending(string scopeId)
+    {
         PendingApprovalBatch? batch;
         lock (_syncLock)
         {
-            batch = _pendingBatch;
-            _pendingBatch = null;
+            _pendingBatches.TryGetValue(scopeId, out batch);
+            _pendingBatches.Remove(scopeId);
         }
 
         batch?.TrySetCanceled();

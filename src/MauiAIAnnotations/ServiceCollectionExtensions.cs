@@ -16,7 +16,7 @@ namespace MauiAIAnnotations;
 public static class ServiceCollectionExtensions
 {
     /// <summary>
-    /// Registers the shared approval coordinator used by the chat approval middleware and UI.
+    /// Registers the shared approval coordinator used by the legacy blocking approval middleware.
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <param name="lifetime">The lifetime for the coordinator service.</param>

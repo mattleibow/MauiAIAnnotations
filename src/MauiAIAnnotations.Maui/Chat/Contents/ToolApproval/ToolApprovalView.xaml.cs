@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Windows.Input;
+using CommunityToolkit.Mvvm.Input;
 using MauiAIAnnotations.Maui.Themes;
-using MauiAIAnnotations.Maui.ViewModels;
 using Microsoft.Extensions.AI;
 
 namespace MauiAIAnnotations.Maui.Chat;
@@ -88,8 +88,8 @@ public class ToolApprovalView : ContentContextView
 
     public ToolApprovalView()
     {
-        ApproveCommand = new Command(() => Respond(true));
-        RejectCommand = new Command(() => Respond(false));
+        ApproveCommand = new AsyncRelayCommand(() => RespondAsync(true));
+        RejectCommand = new AsyncRelayCommand(() => RespondAsync(false));
     }
 
     protected override void RefreshFromContentContext()
@@ -238,26 +238,19 @@ public class ToolApprovalView : ContentContextView
         return view;
     }
 
-    private void Respond(bool approved)
+    private async Task RespondAsync(bool approved)
     {
         if (ContentContext is null || ContentContext.Content is not ToolApprovalRequestContent request)
             return;
 
         if (ContentContext.ApprovalResponder is null)
             throw new InvalidOperationException(
-                "This approval view is not connected to a tool approval coordinator. Ensure the chat client pipeline includes UseMauiToolApproval().");
+                "This approval view is not connected to a chat session. Ensure the approval request was created by ChatSession.");
 
         var response = ResolveResponseFactory()?.CreateApprovalResponse(request, approved)
             ?? request.CreateResponse(approved, approved ? null : "User rejected");
 
-        if (!ContentContext.ApprovalResponder(response))
-            return;
-
-        var toolName = ToolName ?? "Tool";
-        ContentContext.ApprovalResolved = true;
-        ContentContext.ApprovalResolutionText = response.Approved
-            ? $"✅ Approved — {toolName}"
-            : $"❌ Rejected — {toolName}";
+        await ContentContext.ApprovalResponder(response);
     }
 
     private IToolApprovalResponseFactory? ResolveResponseFactory()

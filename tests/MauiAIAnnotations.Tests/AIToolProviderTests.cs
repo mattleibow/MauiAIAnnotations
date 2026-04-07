@@ -1043,6 +1043,63 @@ public class ToolApprovalPipelineTests
         Assert.True(predicate(), "Timed out waiting for the expected approval state.");
     }
 
+    [Fact]
+    public async Task Approval_coordinator_supports_multiple_scopes()
+    {
+        var coordinator = new ToolApprovalCoordinator();
+        var request1 = new ToolApprovalRequestContent(
+            "approval-session-1",
+            new FunctionCallContent("call-session-1", "add_plant", new Dictionary<string, object?> { ["nickname"] = "Fern" }));
+        var request2 = new ToolApprovalRequestContent(
+            "approval-session-2",
+            new FunctionCallContent("call-session-2", "add_plant", new Dictionary<string, object?> { ["nickname"] = "Palm" }));
+
+        var wait1 = coordinator.WaitForApprovalAsync("session-1", [request1]).AsTask();
+        var wait2 = coordinator.WaitForApprovalAsync("session-2", [request2]).AsTask();
+
+        await WaitForAsync(() => coordinator.HasPendingApprovals);
+
+        Assert.True(coordinator.TrySubmit("session-1", request1.CreateResponse(approved: true)));
+        Assert.False(wait1.IsCompletedSuccessfully && wait2.IsCompletedSuccessfully && !coordinator.HasPendingApprovals);
+
+        var responses1 = await wait1;
+        Assert.Single(responses1);
+        Assert.True(responses1[0].Approved);
+
+        Assert.True(coordinator.HasPendingApprovals);
+        Assert.True(coordinator.TrySubmit("session-2", request2.CreateResponse(approved: false)));
+
+        var responses2 = await wait2;
+        Assert.Single(responses2);
+        Assert.False(responses2[0].Approved);
+        Assert.False(coordinator.HasPendingApprovals);
+    }
+
+    [Fact]
+    public async Task CancelPending_scope_only_affects_that_scope()
+    {
+        var coordinator = new ToolApprovalCoordinator();
+        var request1 = new ToolApprovalRequestContent(
+            "approval-clear-1",
+            new FunctionCallContent("call-clear-1", "add_plant", new Dictionary<string, object?> { ["nickname"] = "Rosemary" }));
+        var request2 = new ToolApprovalRequestContent(
+            "approval-clear-2",
+            new FunctionCallContent("call-clear-2", "add_plant", new Dictionary<string, object?> { ["nickname"] = "Basil" }));
+
+        var wait1 = coordinator.WaitForApprovalAsync("session-a", [request1]).AsTask();
+        var wait2 = coordinator.WaitForApprovalAsync("session-b", [request2]).AsTask();
+
+        await WaitForAsync(() => coordinator.HasPendingApprovals);
+
+        coordinator.CancelPending("session-a");
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await wait1);
+
+        Assert.True(coordinator.TrySubmit("session-b", request2.CreateResponse(approved: true)));
+        var responses2 = await wait2;
+        Assert.Single(responses2);
+        Assert.True(responses2[0].Approved);
+    }
+
     private sealed class SequenceChatClient(params ChatResponseUpdate[][] responses) : IChatClient
     {
         private readonly Queue<ChatResponseUpdate[]> _responses = new(responses);
