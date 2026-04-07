@@ -12,4 +12,9 @@ public static class ChatThemeKeys
     public const string ErrorTemplate = "MauiAI.ErrorTemplate";
     public const string DefaultTemplate = "MauiAI.DefaultTemplate";
     public const string ToolApprovalTemplate = "MauiAI.ToolApprovalTemplate";
+    public const string ToolApprovalArgsStackStyle = "MauiAI.ToolApproval.ArgsStackStyle";
+    public const string ToolApprovalArgsRowStyle = "MauiAI.ToolApproval.ArgsRowStyle";
+    public const string ToolApprovalEmptyArgsLabelStyle = "MauiAI.ToolApproval.EmptyArgsLabelStyle";
+    public const string ToolApprovalArgNameLabelStyle = "MauiAI.ToolApproval.ArgNameLabelStyle";
+    public const string ToolApprovalArgValueLabelStyle = "MauiAI.ToolApproval.ArgValueLabelStyle";
 }

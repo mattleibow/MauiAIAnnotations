@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Windows.Input;
+using MauiAIAnnotations.Maui.Themes;
 using MauiAIAnnotations.Maui.ViewModels;
 using Microsoft.Extensions.AI;
 
@@ -210,25 +211,40 @@ public class ToolApprovalView : ContentView
         if (_ctx?.Content is not ToolApprovalRequestContent approval ||
             approval.ToolCall is not FunctionCallContent fc ||
             fc.Arguments is null || fc.Arguments.Count == 0)
-            return new Label { Text = "(no arguments)", FontSize = 12, TextColor = Colors.Gray };
+        {
+            return ApplyStyleResource(
+                new Label { Text = "(no arguments)" },
+                ChatThemeKeys.ToolApprovalEmptyArgsLabelStyle);
+        }
 
-        var stack = new VerticalStackLayout { Spacing = 4 };
+        var stack = ApplyStyleResource(
+            new VerticalStackLayout(),
+            ChatThemeKeys.ToolApprovalArgsStackStyle);
+
         foreach (var kvp in fc.Arguments)
         {
-            var row = new HorizontalStackLayout { Spacing = 6 };
-            row.Add(new Label
-            {
-                Text = $"{kvp.Key}:", FontSize = 12,
-                FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#7A7062")
-            });
-            row.Add(new Label
-            {
-                Text = kvp.Value?.ToString() ?? "(null)", FontSize = 12,
-                TextColor = Color.FromArgb("#2C2416")
-            });
+            var row = ApplyStyleResource(
+                new HorizontalStackLayout(),
+                ChatThemeKeys.ToolApprovalArgsRowStyle);
+
+            row.Add(ApplyStyleResource(
+                new Label { Text = $"{kvp.Key}:" },
+                ChatThemeKeys.ToolApprovalArgNameLabelStyle));
+
+            row.Add(ApplyStyleResource(
+                new Label { Text = kvp.Value?.ToString() ?? "(null)" },
+                ChatThemeKeys.ToolApprovalArgValueLabelStyle));
+
             stack.Add(row);
         }
+
         return stack;
+    }
+
+    private static T ApplyStyleResource<T>(T view, string resourceKey) where T : VisualElement
+    {
+        view.SetDynamicResource(StyleProperty, resourceKey);
+        return view;
     }
 
     private void Respond(bool approved)

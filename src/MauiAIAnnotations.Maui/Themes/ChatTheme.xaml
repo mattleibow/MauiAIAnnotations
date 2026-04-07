@@ -220,6 +220,30 @@
         </Border>
     </ControlTemplate>
 
+    <Style x:Key="MauiAI.ToolApproval.ArgsStackStyle" TargetType="VerticalStackLayout">
+        <Setter Property="Spacing" Value="4" />
+    </Style>
+
+    <Style x:Key="MauiAI.ToolApproval.ArgsRowStyle" TargetType="HorizontalStackLayout">
+        <Setter Property="Spacing" Value="6" />
+    </Style>
+
+    <Style x:Key="MauiAI.ToolApproval.EmptyArgsLabelStyle" TargetType="Label">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="TextColor" Value="{DynamicResource MauiAI.Default.TextColor}" />
+    </Style>
+
+    <Style x:Key="MauiAI.ToolApproval.ArgNameLabelStyle" TargetType="Label">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource MauiAI.FunctionCall.TextColor}" />
+    </Style>
+
+    <Style x:Key="MauiAI.ToolApproval.ArgValueLabelStyle" TargetType="Label">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="TextColor" Value="{DynamicResource MauiAI.Assistant.TextColor}" />
+    </Style>
+
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <!-- Implicit Styles — wire ControlTemplate via DynamicResource     -->
     <!-- ═══════════════════════════════════════════════════════════════ -->
