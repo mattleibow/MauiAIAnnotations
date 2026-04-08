@@ -16,20 +16,6 @@ namespace MauiAIAnnotations;
 public static class ServiceCollectionExtensions
 {
     /// <summary>
-    /// Registers the shared approval coordinator used by the legacy blocking approval middleware.
-    /// </summary>
-    /// <param name="services">The service collection.</param>
-    /// <param name="lifetime">The lifetime for the coordinator service.</param>
-    /// <returns>The service collection for chaining.</returns>
-    public static IServiceCollection AddToolApprovalCoordinator(
-        this IServiceCollection services,
-        ServiceLifetime lifetime = ServiceLifetime.Singleton)
-    {
-        services.TryAdd(new ServiceDescriptor(typeof(IToolApprovalCoordinator), typeof(ToolApprovalCoordinator), lifetime));
-        return services;
-    }
-
-    /// <summary>
     /// Registers the headless multi-instance chat session service.
     /// Requires <see cref="IChatClient"/> and <c>IEnumerable&lt;AITool&gt;</c> to be registered.
     /// </summary>

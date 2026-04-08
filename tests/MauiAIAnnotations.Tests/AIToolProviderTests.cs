@@ -923,223 +923,6 @@ public class ApprovalRequiredTests
     }
 }
 
-public class ToolApprovalPipelineTests
-{
-    [Fact]
-    public async Task Approval_middleware_waits_for_response_and_replays_it_to_inner_client()
-    {
-        var request = new ToolApprovalRequestContent(
-            "approval-1",
-            new FunctionCallContent(
-                "call-1",
-                "add_plant",
-                new Dictionary<string, object?> { ["nickname"] = "Fern" }));
-
-        var innerClient = new SequenceChatClient(
-            [new ChatResponseUpdate(ChatRole.Assistant, [request])],
-            [new ChatResponseUpdate(ChatRole.Assistant, [new TextContent("Added Fern.")])]);
-
-        var coordinator = new ToolApprovalCoordinator();
-        var middleware = new ToolApprovalChatClient(innerClient, coordinator);
-
-        var responseTask = middleware.GetResponseAsync([new ChatMessage(ChatRole.User, "Add a fern")]);
-
-        await WaitForAsync(() => coordinator.HasPendingApprovals);
-        Assert.True(coordinator.TrySubmit(request.CreateResponse(approved: true)));
-
-        var response = await responseTask;
-
-        Assert.Equal(2, innerClient.ReceivedMessages.Count);
-        Assert.Contains(
-            innerClient.ReceivedMessages[1].SelectMany(static message => message.Contents),
-            static content => content is ToolApprovalResponseContent { Approved: true, RequestId: "approval-1" });
-
-        var allContents = response.Messages.SelectMany(static message => message.Contents).ToList();
-        Assert.Contains(allContents, static content => content is ToolApprovalRequestContent { RequestId: "approval-1" });
-        Assert.Contains(allContents, static content => content is ToolApprovalResponseContent { Approved: true, RequestId: "approval-1" });
-        Assert.Contains(allContents, static content => content is TextContent { Text: "Added Fern." });
-    }
-
-    [Fact]
-    public async Task Approval_middleware_preserves_edited_tool_call_arguments()
-    {
-        var originalCall = new FunctionCallContent(
-            "call-2",
-            "add_plant",
-            new Dictionary<string, object?> { ["nickname"] = "Old Name" });
-        var request = new ToolApprovalRequestContent("approval-2", originalCall);
-
-        var innerClient = new SequenceChatClient(
-            [new ChatResponseUpdate(ChatRole.Assistant, [request])],
-            [new ChatResponseUpdate(ChatRole.Assistant, [new TextContent("Updated nickname.")])]);
-
-        var coordinator = new ToolApprovalCoordinator();
-        var middleware = new ToolApprovalChatClient(innerClient, coordinator);
-
-        var responseTask = middleware.GetResponseAsync([new ChatMessage(ChatRole.User, "Add a plant")]);
-
-        await WaitForAsync(() => coordinator.HasPendingApprovals);
-
-        var editedResponse = new ToolApprovalResponseContent(
-            request.RequestId,
-            approved: true,
-            new FunctionCallContent(
-                originalCall.CallId,
-                originalCall.Name,
-                new Dictionary<string, object?> { ["nickname"] = "New Name" }));
-
-        Assert.True(coordinator.TrySubmit(editedResponse));
-        await responseTask;
-
-        var replayedResponse = Assert.IsType<ToolApprovalResponseContent>(
-            innerClient.ReceivedMessages[1]
-                .SelectMany(static message => message.Contents)
-                .Single(static content => content is ToolApprovalResponseContent));
-
-        var replayedCall = Assert.IsType<FunctionCallContent>(replayedResponse.ToolCall);
-        Assert.Equal("New Name", replayedCall.Arguments?["nickname"]?.ToString());
-    }
-
-    [Fact]
-    public async Task Approval_middleware_rejects_edited_tool_call_identity_changes()
-    {
-        var originalCall = new FunctionCallContent(
-            "call-3",
-            "add_plant",
-            new Dictionary<string, object?> { ["nickname"] = "Original" });
-        var request = new ToolApprovalRequestContent("approval-3", originalCall);
-
-        var coordinator = new ToolApprovalCoordinator();
-        var waitTask = coordinator.WaitForApprovalAsync([request]).AsTask();
-
-        await WaitForAsync(() => coordinator.HasPendingApprovals);
-
-        var invalidResponse = new ToolApprovalResponseContent(
-            request.RequestId,
-            approved: true,
-            new FunctionCallContent(
-                originalCall.CallId,
-                "remove_plant",
-                new Dictionary<string, object?> { ["nickname"] = "Original" }));
-
-        Assert.False(coordinator.TrySubmit(invalidResponse));
-
-        coordinator.CancelPending();
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await waitTask);
-    }
-
-    private static async Task WaitForAsync(Func<bool> predicate)
-    {
-        for (var i = 0; i < 50; i++)
-        {
-            if (predicate())
-            {
-                return;
-            }
-
-            await Task.Delay(20);
-        }
-
-        Assert.True(predicate(), "Timed out waiting for the expected approval state.");
-    }
-
-    [Fact]
-    public async Task Approval_coordinator_supports_multiple_scopes()
-    {
-        var coordinator = new ToolApprovalCoordinator();
-        var request1 = new ToolApprovalRequestContent(
-            "approval-session-1",
-            new FunctionCallContent("call-session-1", "add_plant", new Dictionary<string, object?> { ["nickname"] = "Fern" }));
-        var request2 = new ToolApprovalRequestContent(
-            "approval-session-2",
-            new FunctionCallContent("call-session-2", "add_plant", new Dictionary<string, object?> { ["nickname"] = "Palm" }));
-
-        var wait1 = coordinator.WaitForApprovalAsync("session-1", [request1]).AsTask();
-        var wait2 = coordinator.WaitForApprovalAsync("session-2", [request2]).AsTask();
-
-        await WaitForAsync(() => coordinator.HasPendingApprovals);
-
-        Assert.True(coordinator.TrySubmit("session-1", request1.CreateResponse(approved: true)));
-        Assert.False(wait1.IsCompletedSuccessfully && wait2.IsCompletedSuccessfully && !coordinator.HasPendingApprovals);
-
-        var responses1 = await wait1;
-        Assert.Single(responses1);
-        Assert.True(responses1[0].Approved);
-
-        Assert.True(coordinator.HasPendingApprovals);
-        Assert.True(coordinator.TrySubmit("session-2", request2.CreateResponse(approved: false)));
-
-        var responses2 = await wait2;
-        Assert.Single(responses2);
-        Assert.False(responses2[0].Approved);
-        Assert.False(coordinator.HasPendingApprovals);
-    }
-
-    [Fact]
-    public async Task CancelPending_scope_only_affects_that_scope()
-    {
-        var coordinator = new ToolApprovalCoordinator();
-        var request1 = new ToolApprovalRequestContent(
-            "approval-clear-1",
-            new FunctionCallContent("call-clear-1", "add_plant", new Dictionary<string, object?> { ["nickname"] = "Rosemary" }));
-        var request2 = new ToolApprovalRequestContent(
-            "approval-clear-2",
-            new FunctionCallContent("call-clear-2", "add_plant", new Dictionary<string, object?> { ["nickname"] = "Basil" }));
-
-        var wait1 = coordinator.WaitForApprovalAsync("session-a", [request1]).AsTask();
-        var wait2 = coordinator.WaitForApprovalAsync("session-b", [request2]).AsTask();
-
-        await WaitForAsync(() => coordinator.HasPendingApprovals);
-
-        coordinator.CancelPending("session-a");
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await wait1);
-
-        Assert.True(coordinator.TrySubmit("session-b", request2.CreateResponse(approved: true)));
-        var responses2 = await wait2;
-        Assert.Single(responses2);
-        Assert.True(responses2[0].Approved);
-    }
-
-    private sealed class SequenceChatClient(params ChatResponseUpdate[][] responses) : IChatClient
-    {
-        private readonly Queue<ChatResponseUpdate[]> _responses = new(responses);
-
-        public List<List<ChatMessage>> ReceivedMessages { get; } = [];
-
-        public Task<ChatResponse> GetResponseAsync(
-            IEnumerable<ChatMessage> messages,
-            ChatOptions? options = null,
-            CancellationToken cancellationToken = default) =>
-            GetStreamingResponseAsync(messages, options, cancellationToken).ToChatResponseAsync(cancellationToken);
-
-        public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
-            IEnumerable<ChatMessage> messages,
-            ChatOptions? options = null,
-            [EnumeratorCancellation] CancellationToken cancellationToken = default)
-        {
-            ReceivedMessages.Add([.. messages]);
-
-            if (!_responses.TryDequeue(out var response))
-            {
-                yield break;
-            }
-
-            foreach (var update in response)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                yield return update;
-                await Task.Yield();
-            }
-        }
-
-        public object? GetService(Type serviceType, object? serviceKey = null) => null;
-
-        public void Dispose()
-        {
-        }
-    }
-}
-
 public class ChatSessionTests
 {
     [Fact]
@@ -1195,6 +978,99 @@ public class ChatSessionTests
         Assert.Single(innerClient.ReceivedMessages);
         Assert.DoesNotContain(innerClient.ReceivedMessages[0], static message => message.Role == ChatRole.System);
         Assert.Null(session.SystemPrompt);
+    }
+
+    [Fact]
+    public async Task Headless_session_preserves_edited_tool_call_arguments()
+    {
+        var originalCall = new FunctionCallContent(
+            "call-edit-1",
+            "add_plant",
+            new Dictionary<string, object?> { ["nickname"] = "Old Name" });
+        var request = new ToolApprovalRequestContent("approval-edit-1", originalCall);
+
+        var innerClient = new SequenceChatClient(
+            [new ChatResponseUpdate(ChatRole.Assistant, [request])],
+            [new ChatResponseUpdate(ChatRole.Assistant, [new TextContent("Updated nickname.")])]);
+
+        var session = new ChatSession([], innerClient);
+        await session.SendAsync("Add a plant");
+
+        var editedResponse = new ToolApprovalResponseContent(
+            request.RequestId,
+            approved: true,
+            new FunctionCallContent(
+                originalCall.CallId,
+                originalCall.Name,
+                new Dictionary<string, object?> { ["nickname"] = "New Name" }));
+
+        await session.SubmitApprovalAsync(editedResponse);
+
+        var replayedResponse = Assert.IsType<ToolApprovalResponseContent>(
+            innerClient.ReceivedMessages[1]
+                .SelectMany(static message => message.Contents)
+                .Single(static content => content is ToolApprovalResponseContent));
+
+        var replayedCall = Assert.IsType<FunctionCallContent>(replayedResponse.ToolCall);
+        Assert.Equal("New Name", replayedCall.Arguments?["nickname"]?.ToString());
+    }
+
+    [Fact]
+    public async Task Headless_session_rejects_edited_tool_call_identity_changes()
+    {
+        var originalCall = new FunctionCallContent(
+            "call-edit-2",
+            "add_plant",
+            new Dictionary<string, object?> { ["nickname"] = "Original" });
+        var request = new ToolApprovalRequestContent("approval-edit-2", originalCall);
+
+        var innerClient = new SequenceChatClient([new ChatResponseUpdate(ChatRole.Assistant, [request])]);
+        var session = new ChatSession([], innerClient);
+
+        await session.SendAsync("Add a plant");
+
+        var invalidResponse = new ToolApprovalResponseContent(
+            request.RequestId,
+            approved: true,
+            new FunctionCallContent(
+                originalCall.CallId,
+                "remove_plant",
+                new Dictionary<string, object?> { ["nickname"] = "Original" }));
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => session.SubmitApprovalAsync(invalidResponse));
+
+        Assert.Equal("Edited approval responses must preserve the original tool call identity.", ex.Message);
+        Assert.True(session.HasPendingApprovals);
+        Assert.Equal(ToolApprovalState.Pending, session.PendingApprovals.Single().ApprovalState);
+    }
+
+    [Fact]
+    public async Task Multiple_headless_sessions_hold_pending_approvals_independently()
+    {
+        var request1 = new ToolApprovalRequestContent(
+            "approval-session-1",
+            new FunctionCallContent("call-session-1", "add_plant", new Dictionary<string, object?> { ["nickname"] = "Fern" }));
+        var request2 = new ToolApprovalRequestContent(
+            "approval-session-2",
+            new FunctionCallContent("call-session-2", "add_plant", new Dictionary<string, object?> { ["nickname"] = "Palm" }));
+
+        var session1 = new ChatSession([], new SequenceChatClient([new ChatResponseUpdate(ChatRole.Assistant, [request1])]));
+        var session2 = new ChatSession([], new SequenceChatClient([new ChatResponseUpdate(ChatRole.Assistant, [request2])]));
+
+        await session1.SendAsync("Add a fern");
+        await session2.SendAsync("Add a palm");
+
+        Assert.True(session1.HasPendingApprovals);
+        Assert.True(session2.HasPendingApprovals);
+        Assert.Equal("Fern", ((FunctionCallContent)((ToolApprovalRequestContent)session1.PendingApprovals.Single().Content).ToolCall!).Arguments?["nickname"]?.ToString());
+        Assert.Equal("Palm", ((FunctionCallContent)((ToolApprovalRequestContent)session2.PendingApprovals.Single().Content).ToolCall!).Arguments?["nickname"]?.ToString());
+
+        session1.Clear();
+
+        Assert.False(session1.HasPendingApprovals);
+        Assert.Empty(session1.Messages);
+        Assert.True(session2.HasPendingApprovals);
+        Assert.Single(session2.PendingApprovals);
     }
 }
 

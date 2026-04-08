@@ -58,10 +58,6 @@ builder.Services.AddSingleton<IChatClient>(provider =>
 });
 ```
 
-If you still want the older one-call, in-memory wait/resume behavior for a simple local sample,
-`UseMauiToolApproval()` remains available as a legacy opt-in. The recommended framework path,
-though, is the `ChatSession`-driven request/response model above.
-
 ## Step 2: Register the Approval Template
 
 The library ships with a generic `ToolApprovalView` that works for any tool. Register

@@ -71,6 +71,15 @@ public sealed class ChatSession : IChatSession, IDisposable
         if (!_pendingApprovalsById.TryGetValue(response.RequestId, out var pendingEntry))
             throw new InvalidOperationException("This approval request is no longer pending.");
 
+        if (pendingEntry.Content is not ToolApprovalRequestContent request)
+            throw new InvalidOperationException("Pending approval entries must be backed by a ToolApprovalRequestContent.");
+
+        if (!IsValidApprovalResponse(request, response))
+        {
+            throw new InvalidOperationException(
+                "Edited approval responses must preserve the original tool call identity.");
+        }
+
         ReplaceEntry(
             pendingEntry,
             pendingEntry with
@@ -290,6 +299,23 @@ public sealed class ChatSession : IChatSession, IDisposable
 
         IsBusy = isBusy;
         OnChanged(ChatSessionChangeKind.StateChanged);
+    }
+
+    private static bool IsValidApprovalResponse(
+        ToolApprovalRequestContent request,
+        ToolApprovalResponseContent response)
+    {
+        if (response.ToolCall is null)
+            return true;
+
+        if (request.ToolCall is FunctionCallContent originalCall &&
+            response.ToolCall is FunctionCallContent editedCall)
+        {
+            return string.Equals(editedCall.CallId, originalCall.CallId, StringComparison.Ordinal) &&
+                   string.Equals(editedCall.Name, originalCall.Name, StringComparison.OrdinalIgnoreCase);
+        }
+
+        return request.ToolCall?.GetType() == response.ToolCall.GetType();
     }
 
     private void OnChanged(ChatSessionChangeKind kind, ChatEntry? entry = null, int? index = null) =>
