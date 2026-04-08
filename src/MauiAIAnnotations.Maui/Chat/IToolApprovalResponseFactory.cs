@@ -3,7 +3,7 @@ using Microsoft.Extensions.AI;
 namespace MauiAIAnnotations.Maui.Chat;
 
 /// <summary>
-/// Implemented by a custom approval view or its BindingContext to provide a custom
+/// Implemented by a custom approval view to provide a custom
 /// <see cref="ToolApprovalResponseContent"/> when the user approves or rejects a request.
 /// </summary>
 /// <remarks>

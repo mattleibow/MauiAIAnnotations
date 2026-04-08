@@ -1,9 +1,9 @@
 # MauiAIAnnotations
 
-Turn regular .NET MAUI services into AI-callable tools and add a reusable chat UI without hand-writing JSON schemas or tool adapters.
+Turn regular .NET services into AI-callable tools and host them in a reusable chat experience without hand-writing JSON schemas or tool adapters.
 
-`MauiAIAnnotations` handles **reflection-based tool discovery** and schema generation.  
-`MauiAIAnnotations.Maui` adds the **chat panel, content templates, and approval UI**.
+`MauiAIAnnotations` handles **reflection-based tool discovery**, schema generation, and the **headless `ChatSession` engine**.  
+`MauiAIAnnotations.Maui` adds the **thin MAUI chat panel, content templates, and approval UI** on top of that core session.
 
 | Windows | Android |
 | --- | --- |
@@ -61,12 +61,12 @@ public class PlantDataService
 }
 ```
 
-### 2. Register tools and build the MEAI chat pipeline
+### 2. Register tools and the headless chat session
 
 ```csharp
 builder.Services.AddSingleton<PlantDataService>();
 builder.Services.AddAITools(typeof(PlantDataService).Assembly);
-builder.Services.AddAIChat(ServiceLifetime.Transient);
+builder.Services.AddChatSession(ServiceLifetime.Transient);
 
 builder.Services.AddSingleton<IChatClient>(provider =>
 {
@@ -81,10 +81,7 @@ builder.Services.AddSingleton<IChatClient>(provider =>
 ### 3. Drop the chat panel onto your page
 
 ```xml
-<maui:ChatPanelControl ItemsSource="{Binding ChatSession.Messages}"
-                       Text="{Binding ChatSession.UserInput, Mode=TwoWay}"
-                       SendCommand="{Binding ChatSession.SendCommand}"
-                       IsBusy="{Binding ChatSession.IsBusy}">
+<maui:ChatPanelControl Session="{Binding ChatSession}">
     <maui:ChatPanelControl.ContentTemplates>
         <mauiChat:TextContentTemplate Role="User" />
         <mauiChat:TextContentTemplate Role="Assistant" />
@@ -97,7 +94,7 @@ builder.Services.AddSingleton<IChatClient>(provider =>
 </maui:ChatPanelControl>
 ```
 
-The control itself is just a normal bindable MAUI control: `ItemsSource`, `Text`, `SendCommand`, and `IsBusy` can point at any state object. `ChatSession` is the recommended session object; the older `ChatViewModel` remains only as a compatibility shim.
+`ChatSession` is the framework-facing conversation engine. `ChatPanelControl` just renders any `IChatSession` you give it through the `Session` property, so the MAUI layer stays UI-only instead of owning a framework-managed `BindingContext` or chat ViewModel.
 
 ## When you want more than the basics
 

@@ -1,57 +1,37 @@
-using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.AI;
 
 namespace MauiAIAnnotations.Maui.Chat;
 
 /// <summary>
-/// Wraps an <see cref="AIContent"/> item with its role for display in a chat UI.
-/// Views subscribe to PropertyChanged on Content to react to streaming updates.
+/// Thin MAUI wrapper around a headless <see cref="ChatEntry"/>.
 /// </summary>
-public partial class ContentContext : ObservableObject
+public sealed class ContentContext
 {
-    [NotifyPropertyChangedFor(nameof(ToolName))]
-    [ObservableProperty]
-    public partial AIContent Content { get; set; }
-
-    public ContentRole Role { get; }
-
-    /// <summary>
-    /// Gets the associated tool name when this content represents a tool call,
-    /// approval request, or tool result.
-    /// </summary>
-    public string? ToolName => ToolNameOverride ?? Content switch
+    public ContentContext(IChatSession session, ChatEntry entry)
     {
-        FunctionCallContent call => call.Name,
-        ToolApprovalRequestContent approval when approval.ToolCall is FunctionCallContent call => call.Name,
+        Session = session ?? throw new ArgumentNullException(nameof(session));
+        Entry = entry ?? throw new ArgumentNullException(nameof(entry));
+    }
+
+    public IChatSession Session { get; }
+
+    public ChatEntry Entry { get; }
+
+    public AIContent Content => Entry.Content;
+
+    public ContentRole Role => Entry.Role;
+
+    public string? ToolName => Entry.ToolName;
+
+    public ToolApprovalState ApprovalState => Entry.ApprovalState;
+
+    public bool ApprovalResolved =>
+        Entry.ApprovalState is ToolApprovalState.Approved or ToolApprovalState.Rejected;
+
+    public string? ApprovalResolutionText => Entry.ApprovalState switch
+    {
+        ToolApprovalState.Approved => $"Approved - {ToolName ?? "Tool"}",
+        ToolApprovalState.Rejected => $"Rejected - {ToolName ?? "Tool"}",
         _ => null,
     };
-
-    internal string? ToolNameOverride { get; init; }
-
-    internal Func<ToolApprovalResponseContent, Task>? ApprovalResponder { get; init; }
-
-    /// <summary>Whether the approval has been resolved (approved or rejected).</summary>
-    [ObservableProperty]
-    public partial bool ApprovalResolved { get; set; }
-
-    /// <summary>Status text shown after resolution (e.g. "✅ Approved" or "❌ Rejected").</summary>
-    [ObservableProperty]
-    public partial string? ApprovalResolutionText { get; set; }
-
-    public ContentContext(AIContent content, ContentRole role)
-    {
-        Content = content;
-        Role = role;
-    }
-
-    public ContentContext(AIContent content, string role)
-        : this(content, ParseRole(role))
-    {
-    }
-
-    private static ContentRole ParseRole(string role) =>
-        Enum.TryParse<ContentRole>(role, ignoreCase: true, out var parsedRole)
-            ? parsedRole
-            : throw new ArgumentOutOfRangeException(nameof(role), role,
-                $"Unknown content role '{role}'.");
 }

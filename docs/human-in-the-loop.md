@@ -102,7 +102,7 @@ public class PlantApprovalMapping : ContentTemplate
 }
 ```
 
-### 2. Create a view-model with review properties
+### 2. Create a small review model
 
 ```csharp
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -145,8 +145,9 @@ public string IndoorDisplay => IsIndoor ? "Yes" : "No";
 }
 ```
 
-If you want the custom view-model to submit edited values instead of the original tool
-call, implement `IToolApprovalResponseFactory` as well:
+If you want the custom view to submit edited values instead of the original tool
+call, implement `IToolApprovalResponseFactory` on the view and delegate to your
+local review model as needed:
 
 ```csharp
 using MauiAIAnnotations.Maui.Chat;
@@ -177,9 +178,10 @@ public ToolApprovalResponseContent CreateApprovalResponse(
 
 ### 3. Create the XAML view
 
-The view uses compiled bindings with `x:DataType`. The built-in `ToolApprovalView`
-continues to own the approve/reject buttons and approval submission; your custom view
-only needs to render the review fields (and optionally implement
+The view derives from `ContentContextView` and exposes its own `ViewModel` property explicitly,
+so the framework does not have to rely on the ambient `BindingContext` for its own plumbing.
+The built-in `ToolApprovalView` continues to own the approve/reject buttons and approval
+submission; your custom view only needs to render the review fields (and optionally implement
 `IToolApprovalResponseFactory` if it wants to return edited arguments). See the full implementation in
 `samples/MauiSampleApp/Chat/Contents/PlantApproval/`.
 

@@ -42,7 +42,7 @@ maui-devflow MAUI fill <AutomationId> "text"
 
 ### Project Structure
 - `src/MauiAIAnnotations/` — Core library: `[ExportAIFunction]` attribute, `AddAITools()` DI extension, `DependencyInjectionAIFunction`
-- `src/MauiAIAnnotations.Maui/` — Reusable MAUI chat UI: `ChatPanelControl`, `ChatPanelControl`, `ChatViewModel`, content template system
+- `src/MauiAIAnnotations.Maui/` — Reusable MAUI chat UI: `ChatPanelControl`, content template system, and approval views that render a headless `IChatSession`
 - `samples/MauiSampleApp/` — Gardening helper demo app
 - `samples/MauiSampleApp.Core/` — Core services (PlantDataService, SpeciesService, SeasonsService)
 - `tests/` — xUnit test projects
@@ -52,6 +52,8 @@ maui-devflow MAUI fill <AutomationId> "text"
 **Attribute-based tool discovery**: Decorate service methods with `[ExportAIFunction]`. `AddAITools()` scans assemblies and registers each as an `AITool` singleton in DI. `DependencyInjectionAIFunction` resolves the service from DI per-invocation, respecting lifetimes.
 
 **Content template system**: `ContentTemplate` subclasses declare a `When(ContentContext)` predicate and a `ViewType`. `ContentTemplateSelector` picks the first match. Templates are declared in XAML and cached (MAUI requirement: same DataTemplate instance per call).
+
+**Headless chat architecture**: Keep orchestration in `MauiAIAnnotations.ChatSession` / `IChatSession` and keep the MAUI layer thin. `ChatPanelControl` should render a supplied session via its `Session` property instead of depending on a library-owned `BindingContext` or chat ViewModel.
 
 **Compiled bindings**: All chat content views use `x:DataType="chat:ContentContext"` for compiled bindings. Views bind directly to `ContentContext` computed properties (Text, FunctionName, ErrorMessage, ResultText, DisplayText). No intermediate ViewModels for library views.
 

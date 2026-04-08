@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:local="clr-namespace:MauiSampleApp.Chat"
-             x:Class="MauiSampleApp.Chat.BatchCareApprovalView"
-             x:DataType="local:BatchCareApprovalViewModel">
+<mauiChat:ContentContextView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                             xmlns:local="clr-namespace:MauiSampleApp.Chat"
+                             xmlns:mauiChat="clr-namespace:MauiAIAnnotations.Maui.Chat;assembly=MauiAIAnnotations.Maui"
+                             x:Class="MauiSampleApp.Chat.BatchCareApprovalView"
+                             x:Name="This">
 
     <!-- Content-only: library wrapper provides header + buttons -->
-    <VerticalStackLayout Spacing="8">
+    <VerticalStackLayout Spacing="8"
+                         BindingContext="{Binding ViewModel, Source={x:Reference This}}"
+                         x:DataType="local:BatchCareApprovalViewModel">
         <Label Text="Review the proposed care log entries. If the set should change, reject and ask again."
                FontSize="12"
                LineBreakMode="WordWrap"
@@ -54,4 +57,4 @@
         </CollectionView>
     </VerticalStackLayout>
 
-</ContentView>
+</mauiChat:ContentContextView>

@@ -203,13 +203,13 @@
                             <Button Grid.Column="3"
                                     Text="&#x1F5D1;"
                                     FontSize="16"
-                                    AutomationId="ClearChatButton"
-                                    BackgroundColor="Transparent"
-                                    TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"
-                                    Command="{Binding Source={x:Reference ThisPage}, Path=ChatSession.ClearCommand}"
-                                    Padding="8,4"
-                                    MinimumWidthRequest="44"
-                                    VerticalOptions="Center"
+                             AutomationId="ClearChatButton"
+                                     BackgroundColor="Transparent"
+                                     TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}"
+                                     Clicked="OnClearChatClicked"
+                                     Padding="8,4"
+                                     MinimumWidthRequest="44"
+                                     VerticalOptions="Center"
                                     ToolTipProperties.Text="Clear chat" />
                         </Grid>
                     </VerticalStackLayout>
@@ -223,10 +223,7 @@
                       Grid.Row="2"
                       IsVisible="False"
                       Padding="12,8,12,12">
-                    <maui:ChatPanelControl ItemsSource="{Binding Source={x:Reference ThisPage}, Path=ChatSession.Messages}"
-                                           Text="{Binding Source={x:Reference ThisPage}, Path=ChatSession.UserInput, Mode=TwoWay}"
-                                           SendCommand="{Binding Source={x:Reference ThisPage}, Path=ChatSession.SendCommand}"
-                                           IsBusy="{Binding Source={x:Reference ThisPage}, Path=ChatSession.IsBusy}">
+                    <maui:ChatPanelControl Session="{Binding Source={x:Reference ThisPage}, Path=ChatSession}">
                         <maui:ChatPanelControl.ContentTemplates>
                             <mauiChat:TextContentTemplate Role="User" />
                             <mauiChat:TextContentTemplate Role="Assistant" />

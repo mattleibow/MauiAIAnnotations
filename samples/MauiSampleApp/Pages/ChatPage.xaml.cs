@@ -1,4 +1,4 @@
-using MauiAIAnnotations.Maui.Chat;
+using MauiAIAnnotations;
 
 namespace MauiSampleApp.Pages;
 
@@ -10,5 +10,10 @@ public partial class ChatPage : ContentPage
     {
         ChatSession = chatSession;
         InitializeComponent();
+    }
+
+    private void OnClearChatClicked(object? sender, EventArgs e)
+    {
+        ChatSession.Clear();
     }
 }

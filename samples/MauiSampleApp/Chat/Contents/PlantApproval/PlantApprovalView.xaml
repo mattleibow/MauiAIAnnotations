@@ -1,15 +1,18 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:local="clr-namespace:MauiSampleApp.Chat"
-             x:Class="MauiSampleApp.Chat.PlantApprovalView"
-             x:DataType="local:PlantApprovalViewModel">
+<mauiChat:ContentContextView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                             xmlns:local="clr-namespace:MauiSampleApp.Chat"
+                             xmlns:mauiChat="clr-namespace:MauiAIAnnotations.Maui.Chat;assembly=MauiAIAnnotations.Maui"
+                             x:Class="MauiSampleApp.Chat.PlantApprovalView"
+                             x:Name="This">
 
     <!-- Content-only: no header, no buttons. The library wrapper provides those. -->
     <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto"
           ColumnDefinitions="90,*"
           RowSpacing="8"
-          ColumnSpacing="8">
+          ColumnSpacing="8"
+          BindingContext="{Binding ViewModel, Source={x:Reference This}}"
+          x:DataType="local:PlantApprovalViewModel">
         <Label Grid.ColumnSpan="2"
                Text="Review the proposed plant details. If something should change, reject and ask again."
                FontSize="12"
@@ -101,4 +104,4 @@
         </Border>
     </Grid>
 
-</ContentView>
+</mauiChat:ContentContextView>

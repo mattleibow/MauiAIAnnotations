@@ -1,19 +1,18 @@
 using System.Collections;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.Windows.Input;
 using MauiAIAnnotations.Maui.Chat;
 
 namespace MauiAIAnnotations.Maui.Controls;
 
 public partial class ChatPanelControl : ContentView
 {
-    public static readonly BindableProperty ItemsSourceProperty =
+    public static readonly BindableProperty SessionProperty =
         BindableProperty.Create(
-            nameof(ItemsSource),
-            typeof(IEnumerable<ContentContext>),
+            nameof(Session),
+            typeof(IChatSession),
             typeof(ChatPanelControl),
-            propertyChanged: OnItemsSourceChanged);
+            propertyChanged: OnSessionChanged);
 
     public static readonly BindableProperty TextProperty =
         BindableProperty.Create(
@@ -30,16 +29,10 @@ public partial class ChatPanelControl : ContentView
             typeof(ChatPanelControl),
             false);
 
-    public static readonly BindableProperty SendCommandProperty =
-        BindableProperty.Create(
-            nameof(SendCommand),
-            typeof(ICommand),
-            typeof(ChatPanelControl));
-
-    public IEnumerable<ContentContext>? ItemsSource
+    public IChatSession? Session
     {
-        get => (IEnumerable<ContentContext>?)GetValue(ItemsSourceProperty);
-        set => SetValue(ItemsSourceProperty, value);
+        get => (IChatSession?)GetValue(SessionProperty);
+        set => SetValue(SessionProperty, value);
     }
 
     public string? Text
@@ -54,19 +47,15 @@ public partial class ChatPanelControl : ContentView
         set => SetValue(IsBusyProperty, value);
     }
 
-    public ICommand? SendCommand
-    {
-        get => (ICommand?)GetValue(SendCommandProperty);
-        set => SetValue(SendCommandProperty, value);
-    }
-
     private readonly ObservableCollection<ContentTemplate> _contentTemplates = [];
+    private readonly ObservableCollection<ContentContext> _items = [];
 
     public IList<ContentTemplate> ContentTemplates => _contentTemplates;
 
     public ChatPanelControl()
     {
         InitializeComponent();
+        ChatMessages.ItemsSource = _items;
         _contentTemplates.CollectionChanged += (_, _) => RebuildTemplateSelector();
     }
 
@@ -78,44 +67,109 @@ public partial class ChatPanelControl : ContentView
         ChatMessages.ItemTemplate = selector;
     }
 
-    private static void OnItemsSourceChanged(BindableObject bindable, object oldValue, object newValue)
+    private static void OnSessionChanged(BindableObject bindable, object oldValue, object newValue)
     {
         var control = (ChatPanelControl)bindable;
 
-        if (oldValue is INotifyCollectionChanged oldCollection)
-            oldCollection.CollectionChanged -= control.OnMessagesCollectionChanged;
+        if (oldValue is IChatSession oldSession)
+            oldSession.Changed -= control.OnSessionStateChanged;
 
-        if (newValue is INotifyCollectionChanged newCollection)
-            newCollection.CollectionChanged += control.OnMessagesCollectionChanged;
+        if (newValue is IChatSession newSession)
+            newSession.Changed += control.OnSessionStateChanged;
 
-        control.ScrollToLatestMessage();
+        control.RebuildFromSession();
     }
 
-    private void OnMessagesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    private void OnSessionStateChanged(object? sender, ChatSessionChangedEventArgs e)
     {
-        if (GetMessageCount() == 0)
+        Dispatcher.Dispatch(() => ApplySessionChange(sender as IChatSession, e));
+    }
+
+    private void RebuildFromSession()
+    {
+        _items.Clear();
+
+        if (Session is null)
+        {
+            IsBusy = false;
+            return;
+        }
+
+        foreach (var entry in Session.Messages)
+            _items.Add(new ContentContext(Session, entry));
+
+        IsBusy = Session.IsBusy;
+        ScrollToLatestMessage();
+    }
+
+    private void ApplySessionChange(IChatSession? session, ChatSessionChangedEventArgs e)
+    {
+        if (session is null)
             return;
 
-        foreach (var delayMs in new[] { 50, 150, 300 })
-            Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(delayMs), ScrollToLatestMessage);
+        IsBusy = session.IsBusy;
+
+        switch (e.Kind)
+        {
+            case ChatSessionChangeKind.Reset:
+                _items.Clear();
+                break;
+
+            case ChatSessionChangeKind.MessageAdded:
+                if (e.Entry is null)
+                    break;
+
+                var addIndex = Math.Clamp(e.Index ?? _items.Count, 0, _items.Count);
+                _items.Insert(addIndex, new ContentContext(session, e.Entry));
+                ScrollToLatestMessage();
+                break;
+
+            case ChatSessionChangeKind.MessageUpdated:
+                if (e.Entry is null || e.Index is null)
+                    break;
+
+                if (e.Index.Value >= 0 && e.Index.Value < _items.Count)
+                    _items[e.Index.Value] = new ContentContext(session, e.Entry);
+                else
+                    RebuildFromSession();
+
+                ScrollToLatestMessage();
+                break;
+        }
+    }
+
+    private async void OnSendButtonClicked(object? sender, EventArgs e)
+    {
+        await SendCurrentTextAsync();
+    }
+
+    private async void OnInputCompleted(object? sender, EventArgs e)
+    {
+        await SendCurrentTextAsync();
+    }
+
+    private async Task SendCurrentTextAsync()
+    {
+        if (Session is null || IsBusy || string.IsNullOrWhiteSpace(Text))
+            return;
+
+        var nextMessage = Text.Trim();
+        Text = string.Empty;
+        await Session.SendAsync(nextMessage);
     }
 
     private void ScrollToLatestMessage()
     {
-        var messageCount = GetMessageCount();
+        var messageCount = _items.Count;
         if (messageCount == 0)
             return;
 
-        ChatMessages.ScrollTo(messageCount - 1, position: ScrollToPosition.End, animate: false);
-    }
-
-    private int GetMessageCount() =>
-        ItemsSource switch
+        Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(50), () =>
         {
-            ICollection<ContentContext> genericCollection => genericCollection.Count,
-            IReadOnlyCollection<ContentContext> readOnlyCollection => readOnlyCollection.Count,
-            ICollection collection => collection.Count,
-            IEnumerable<ContentContext> enumerable => enumerable.Count(),
-            _ => 0,
-        };
+            if (_items.Count == 0)
+                return;
+
+            ChatMessages.ScrollTo(_items.Count - 1, position: ScrollToPosition.End, animate: false);
+        });
+    }
 }

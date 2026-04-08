@@ -28,7 +28,7 @@ public static class ToolApprovalChatClientBuilderExtensions
             if (coordinator is null)
             {
                 throw new InvalidOperationException(
-                    "UseMauiToolApproval requires IToolApprovalCoordinator to be registered. Call services.AddToolApprovalCoordinator() or services.AddAIChat() first.");
+                    "UseMauiToolApproval requires IToolApprovalCoordinator to be registered. Call services.AddToolApprovalCoordinator() first.");
             }
 
             return new ToolApprovalChatClient(innerClient, coordinator);

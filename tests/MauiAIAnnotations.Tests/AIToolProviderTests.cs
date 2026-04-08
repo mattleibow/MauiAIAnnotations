@@ -1139,3 +1139,100 @@ public class ToolApprovalPipelineTests
         }
     }
 }
+
+public class ChatSessionTests
+{
+    [Fact]
+    public async Task Headless_session_surfaces_messages_and_approvals_without_ui_state_objects()
+    {
+        var request = new ToolApprovalRequestContent(
+            "approval-headless-1",
+            new FunctionCallContent(
+                "call-headless-1",
+                "add_plant",
+                new Dictionary<string, object?> { ["nickname"] = "Fern" }));
+
+        var innerClient = new SequenceChatClient(
+            [new ChatResponseUpdate(ChatRole.Assistant, [new TextContent("Let me check.")])],
+            [new ChatResponseUpdate(ChatRole.Assistant, [request])],
+            [new ChatResponseUpdate(ChatRole.Assistant, [new TextContent("Added Fern.")])]);
+
+        var session = new ChatSession([], innerClient);
+        var changes = new List<ChatSessionChangeKind>();
+        session.Changed += (_, args) => changes.Add(args.Kind);
+
+        await session.SendAsync("Add a fern");
+
+        Assert.Equal(2, session.Messages.Count);
+        Assert.Equal(ContentRole.User, session.Messages[0].Role);
+        Assert.Equal(ContentRole.Assistant, session.Messages[1].Role);
+        Assert.Equal("Let me check.", ((TextContent)session.Messages[1].Content).Text);
+        Assert.Contains(ChatSessionChangeKind.MessageAdded, changes);
+        Assert.Contains(ChatSessionChangeKind.StateChanged, changes);
+
+        await session.SendAsync("Please continue with approval");
+
+        Assert.True(session.HasPendingApprovals);
+        Assert.Single(session.PendingApprovals);
+        Assert.Equal(ToolApprovalState.Pending, session.PendingApprovals.Single().ApprovalState);
+        Assert.Equal("add_plant", session.PendingApprovals.Single().ToolName);
+
+        await session.SubmitApprovalAsync(request.CreateResponse(approved: true));
+
+        Assert.False(session.HasPendingApprovals);
+        Assert.Equal(ToolApprovalState.Approved, session.Messages.Single(m => m.Role == ContentRole.Approval).ApprovalState);
+        Assert.Contains(session.Messages, static message => message.Content is TextContent { Text: "Added Fern." });
+    }
+
+    [Fact]
+    public async Task Headless_session_does_not_inject_a_default_system_prompt()
+    {
+        var innerClient = new SequenceChatClient([new ChatResponseUpdate(ChatRole.Assistant, [new TextContent("Hello!")])]);
+        var session = new ChatSession([], innerClient);
+
+        await session.SendAsync("Hi");
+
+        Assert.Single(innerClient.ReceivedMessages);
+        Assert.DoesNotContain(innerClient.ReceivedMessages[0], static message => message.Role == ChatRole.System);
+        Assert.Null(session.SystemPrompt);
+    }
+}
+
+internal sealed class SequenceChatClient(params ChatResponseUpdate[][] responses) : IChatClient
+{
+    private readonly Queue<ChatResponseUpdate[]> _responses = new(responses);
+
+    public List<List<ChatMessage>> ReceivedMessages { get; } = [];
+
+    public Task<ChatResponse> GetResponseAsync(
+        IEnumerable<ChatMessage> messages,
+        ChatOptions? options = null,
+        CancellationToken cancellationToken = default) =>
+        GetStreamingResponseAsync(messages, options, cancellationToken).ToChatResponseAsync(cancellationToken);
+
+    public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+        IEnumerable<ChatMessage> messages,
+        ChatOptions? options = null,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        ReceivedMessages.Add([.. messages]);
+
+        if (!_responses.TryDequeue(out var response))
+        {
+            yield break;
+        }
+
+        foreach (var update in response)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            yield return update;
+            await Task.Yield();
+        }
+    }
+
+    public object? GetService(Type serviceType, object? serviceKey = null) => null;
+
+    public void Dispose()
+    {
+    }
+}

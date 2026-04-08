@@ -24,7 +24,7 @@
                         FontSize="16"
                         AutomationId="ClearChatButton"
                         BackgroundColor="Transparent" TextColor="#D4E8D4"
-                        Command="{Binding Source={x:Reference ThisPage}, Path=ChatSession.ClearCommand}"
+                        Clicked="OnClearChatClicked"
                         Padding="8,4" MinimumWidthRequest="44"
                         ToolTipProperties.Text="Clear chat" />
             </Grid>
@@ -32,10 +32,7 @@
 
         <!-- Chat Panel -->
         <maui:ChatPanelControl Grid.Row="1"
-                               ItemsSource="{Binding Source={x:Reference ThisPage}, Path=ChatSession.Messages}"
-                               Text="{Binding Source={x:Reference ThisPage}, Path=ChatSession.UserInput, Mode=TwoWay}"
-                               SendCommand="{Binding Source={x:Reference ThisPage}, Path=ChatSession.SendCommand}"
-                               IsBusy="{Binding Source={x:Reference ThisPage}, Path=ChatSession.IsBusy}">
+                               Session="{Binding Source={x:Reference ThisPage}, Path=ChatSession}">
             <maui:ChatPanelControl.ContentTemplates>
                 <mauiChat:TextContentTemplate Role="User" />
                 <mauiChat:TextContentTemplate Role="Assistant" />

@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using MauiAIAnnotations.Maui.Themes;
@@ -8,8 +7,7 @@ namespace MauiAIAnnotations.Maui.Chat;
 
 /// <summary>
 /// Standalone C# ContentView for tool approval requests.
-/// Subscribes to ContentContext.PropertyChanged to track
-/// Content and ApprovalResolved changes. No XAML backing — styled via ControlTemplate.
+/// No XAML backing — styled via ControlTemplate.
 /// Custom templates can include a root named <c>PART_Root</c>; if omitted,
 /// the view falls back to applying visual states to itself.
 /// </summary>
@@ -75,7 +73,7 @@ public class ToolApprovalView : ContentContextView
     /// <summary>
     /// Optional inner content view type. When set, the wrapper resolves this view
     /// from DI (supporting constructor injection) and places it in the content slot.
-    /// The view or its BindingContext can implement <see cref="IContentContextAware"/>
+    /// The resolved view can implement <see cref="IContentContextAware"/>
     /// to receive the <see cref="ContentContext"/> — like MAUI's IQueryAttributable.
     /// </summary>
     internal Type? InnerContentType { get; set; }
@@ -97,14 +95,6 @@ public class ToolApprovalView : ContentContextView
         Refresh();
     }
 
-    protected override void OnObservedContentContextPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName is nameof(ContentContext.Content))
-            Refresh();
-        if (e.PropertyName is nameof(ContentContext.ApprovalResolved) or nameof(ContentContext.ApprovalResolutionText))
-            RefreshApprovalState();
-    }
-
     private void Refresh()
     {
         RefreshToolName();
@@ -114,16 +104,12 @@ public class ToolApprovalView : ContentContextView
 
     private void RefreshToolName()
     {
-        if (ContentContext?.Content is ToolApprovalRequestContent approval &&
-            approval.ToolCall is FunctionCallContent fc)
-        {
-            ToolName = fc.Name;
-        }
+        ToolName = ContentContext?.ToolName;
     }
 
     private void RefreshApprovalState()
     {
-        IsPending = ContentContext is not null && !ContentContext.ApprovalResolved;
+        IsPending = ContentContext?.ApprovalState == ToolApprovalState.Pending;
         IsResolved = ContentContext?.ApprovalResolved ?? false;
         ResolutionText = ContentContext?.ApprovalResolutionText;
 
@@ -169,15 +155,14 @@ public class ToolApprovalView : ContentContextView
         {
             innerView = ContentTemplate.CreateView(InnerContentType, Handler?.MauiContext?.Services);
 
-            var aware = innerView as IContentContextAware ?? innerView.BindingContext as IContentContextAware;
-            aware?.ApplyContentContext(ContentContext);
+            (innerView as IContentContextAware)?.ApplyContentContext(ContentContext);
         }
         else
         {
             innerView = BuildDefaultArgsView();
         }
 
-        if (ContentContext.ApprovalResolved)
+        if (ContentContext?.ApprovalResolved == true)
             innerView.IsEnabled = false;
 
         Content = innerView;
@@ -243,14 +228,10 @@ public class ToolApprovalView : ContentContextView
         if (ContentContext is null || ContentContext.Content is not ToolApprovalRequestContent request)
             return;
 
-        if (ContentContext.ApprovalResponder is null)
-            throw new InvalidOperationException(
-                "This approval view is not connected to a chat session. Ensure the approval request was created by ChatSession.");
-
         var response = ResolveResponseFactory()?.CreateApprovalResponse(request, approved)
             ?? request.CreateResponse(approved, approved ? null : "User rejected");
 
-        await ContentContext.ApprovalResponder(response);
+        await ContentContext.Session.SubmitApprovalAsync(response);
     }
 
     private IToolApprovalResponseFactory? ResolveResponseFactory()
@@ -258,6 +239,6 @@ public class ToolApprovalView : ContentContextView
         if (Content is IToolApprovalResponseFactory viewFactory)
             return viewFactory;
 
-        return (Content as BindableObject)?.BindingContext as IToolApprovalResponseFactory;
+        return null;
     }
 }

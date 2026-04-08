@@ -1,4 +1,4 @@
-﻿using MauiAIAnnotations.Maui.Chat;
+using MauiAIAnnotations;
 using MauiSampleApp.Core.Models;
 using MauiSampleApp.ViewModels;
 
@@ -44,6 +44,11 @@ public partial class HomePage : ContentPage
     private async void OnAddPlantClicked(object? sender, EventArgs e)
     {
         await Shell.Current.GoToAsync("AddPlant");
+    }
+
+    private void OnClearChatClicked(object? sender, EventArgs e)
+    {
+        ChatSession.Clear();
     }
 
     private void OnPageLoaded(object? sender, EventArgs e)

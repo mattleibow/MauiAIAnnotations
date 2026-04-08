@@ -60,7 +60,7 @@ public class PlantDataService
 ```csharp
 builder.Services.AddSingleton<PlantDataService>();
 builder.Services.AddAITools(typeof(PlantDataService).Assembly);
-builder.Services.AddAIChat(ServiceLifetime.Transient);
+builder.Services.AddChatSession(ServiceLifetime.Transient);
 
 builder.Services.AddSingleton<IChatClient>(provider =>
 {
@@ -75,10 +75,7 @@ builder.Services.AddSingleton<IChatClient>(provider =>
 ### 3. Add `ChatPanelControl` to your page
 
 ```xml
-<maui:ChatPanelControl ItemsSource="{Binding ChatSession.Messages}"
-                       Text="{Binding ChatSession.UserInput, Mode=TwoWay}"
-                       SendCommand="{Binding ChatSession.SendCommand}"
-                       IsBusy="{Binding ChatSession.IsBusy}">
+<maui:ChatPanelControl Session="{Binding ChatSession}">
     <maui:ChatPanelControl.ContentTemplates>
         <mauiChat:TextContentTemplate Role="User" />
         <mauiChat:TextContentTemplate Role="Assistant" />
@@ -91,7 +88,7 @@ builder.Services.AddSingleton<IChatClient>(provider =>
 </maui:ChatPanelControl>
 ```
 
-The chat panel uses normal bindable control properties, so you can wire it to `ChatSession` or your own state object. Approval-required tools now follow a turn-based request/response flow: the approval card is shown, the turn ends, and the session continues when the user answers that request.
+The chat panel renders whichever `IChatSession` you pass into `Session`. Approval-required tools follow a turn-based request/response flow: the approval card is shown, the turn ends, and the same session continues when the user answers that request.
 
 ## Next paths
 
@@ -103,8 +100,8 @@ The chat panel uses normal bindable control properties, so you can wire it to `C
 
 | Package | Description |
 | --- | --- |
-| **MauiAIAnnotations** | Attribute-based AI tool discovery. Decorate methods with `[ExportAIFunction]` and call `AddAITools()` to register them in DI. |
-| **MauiAIAnnotations.Maui** | Reusable MAUI chat UI, content template system, and human-in-the-loop approval dialogs. |
+| **MauiAIAnnotations** | Attribute-based AI tool discovery plus the headless `ChatSession` engine. Decorate methods with `[ExportAIFunction]`, call `AddAITools()`, and host the session anywhere. |
+| **MauiAIAnnotations.Maui** | Reusable MAUI chat UI, content template system, and human-in-the-loop approval dialogs that render an `IChatSession`. |
 
 ## Requirements
 

@@ -93,11 +93,12 @@ builder.Services.AddSingleton<IChatClient>(provider =>
 > (e.g. `builder.Configuration` or user secrets). See the sample app's `MauiProgram.cs`
 > for a full example using `AddJsonStream` for embedded secrets.
 
-You'll also need a session object for the page to bind to. The library provides
-`MauiAIAnnotations.Maui.Chat.ChatSession` — `AddAIChat()` registers it for you:
+You'll also need a session object for the page or window to host. The library provides the
+headless `MauiAIAnnotations.ChatSession` engine — register it once and resolve a fresh session
+for each chat surface you want:
 
 ```csharp
-builder.Services.AddAIChat(ServiceLifetime.Transient);
+builder.Services.AddChatSession(ServiceLifetime.Transient);
 builder.Services.AddTransient<HomePage>();
 ```
 
@@ -122,10 +123,7 @@ xmlns:mauiChat="clr-namespace:MauiAIAnnotations.Maui.Chat;assembly=MauiAIAnnotat
 ```
 
 ```xml
-<maui:ChatPanelControl ItemsSource="{Binding ChatSession.Messages}"
-                       Text="{Binding ChatSession.UserInput, Mode=TwoWay}"
-                       SendCommand="{Binding ChatSession.SendCommand}"
-                       IsBusy="{Binding ChatSession.IsBusy}">
+<maui:ChatPanelControl Session="{Binding ChatSession}">
     <maui:ChatPanelControl.ContentTemplates>
         <mauiChat:TextContentTemplate Role="User" />
         <mauiChat:TextContentTemplate Role="Assistant" />
@@ -138,7 +136,7 @@ xmlns:mauiChat="clr-namespace:MauiAIAnnotations.Maui.Chat;assembly=MauiAIAnnotat
 </maui:ChatPanelControl>
 ```
 
-The built-in templates already provide the default MAUI views, including the standard approve/reject card for `ApprovalRequired = true` tools. `ChatSession` is the starter state object; `ChatPanelControl` itself binds through `ItemsSource`, `Text`, `SendCommand`, and `IsBusy`. The older `ChatViewModel` still exists for compatibility, but new code should prefer `ChatSession`. For both the default-view path and the custom-view path, see [Tool Rendering](tool-rendering.md).
+The built-in templates already provide the default MAUI views, including the standard approve/reject card for `ApprovalRequired = true` tools. `ChatSession` owns the conversation state and events; `ChatPanelControl` just renders that session through the `Session` property and manages its own input/busy visuals internally. For both the default-view path and the custom-view path, see [Tool Rendering](tool-rendering.md).
 
 Run the app and you'll see the chat interface:
 
@@ -156,6 +154,7 @@ Ask the AI a question like *"Show me all my plants"* and watch it invoke your an
 
 - **Host-controlled layout** — place `ChatPanelControl` wherever it fits your page: inline, in a tray, or as a sidebar on wider screens.
 - **Automatic function invocation** — `FunctionInvokingChatClient` intercepts tool-call responses from the model and dispatches them to your `[ExportAIFunction]` methods.
+- **Headless conversation engine** — the same `ChatSession` can be hosted by MAUI, WinForms, a console app, or another UI framework because it exposes plain methods and change events instead of depending on a framework-owned ViewModel.
 - **Visual message templates** — each message type (user text, assistant text, function call, function result, error) gets its own visual template via the content mappings above.
 - **DI-integrated tools** — `AddAITools()` discovers tool definitions at registration time via reflection, respecting DI lifetimes for each invocation.
 

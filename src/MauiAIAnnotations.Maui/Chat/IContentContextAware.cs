@@ -1,9 +1,9 @@
 namespace MauiAIAnnotations.Maui.Chat;
 
 /// <summary>
-/// Implemented by a view or its BindingContext to receive the <see cref="ContentContext"/>
-/// when the approval card is shown. Works like MAUI's <c>IQueryAttributable</c> —
-/// the library checks both the view and its BindingContext.
+/// Implemented by a custom view to receive the <see cref="ContentContext"/>
+/// when the approval card is shown. Works like MAUI's <c>IQueryAttributable</c>,
+/// but keeps the framework logic on the view itself instead of relying on an ambient BindingContext.
 /// </summary>
 public interface IContentContextAware
 {

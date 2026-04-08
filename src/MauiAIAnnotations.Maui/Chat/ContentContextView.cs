@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using Microsoft.Maui.Controls.Xaml;
 
 namespace MauiAIAnnotations.Maui.Chat;
@@ -31,23 +30,12 @@ public abstract class ContentContextView : ContentView, IContentContextAware
     {
         var view = (ContentContextView)bindable;
 
-        if (oldValue is ContentContext oldContext)
-            oldContext.PropertyChanged -= view.OnObservedContentContextPropertyChanged;
-
-        if (newValue is ContentContext newContext)
-            newContext.PropertyChanged += view.OnObservedContentContextPropertyChanged;
-
         view.OnContentContextAssigned((ContentContext?)oldValue, (ContentContext?)newValue);
         view.RefreshFromContentContext();
     }
 
     protected virtual void OnContentContextAssigned(ContentContext? oldContext, ContentContext? newContext)
     {
-    }
-
-    protected virtual void OnObservedContentContextPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        RefreshFromContentContext();
     }
 
     protected abstract void RefreshFromContentContext();

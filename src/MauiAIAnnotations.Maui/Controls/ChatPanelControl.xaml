@@ -9,7 +9,6 @@
         <CollectionView x:Name="ChatMessages"
                         AutomationId="ChatMessages"
                         Grid.Row="0"
-                        ItemsSource="{Binding ItemsSource, Source={x:Reference Self}}"
                         Margin="12,8,12,0" />
 
         <!-- Busy indicator -->
@@ -31,12 +30,12 @@
                 <Entry Placeholder="Type a message..."
                        AutomationId="ChatInput"
                        Text="{Binding Text, Source={x:Reference Self}, Mode=TwoWay}"
-                       ReturnCommand="{Binding SendCommand, Source={x:Reference Self}}"
+                       Completed="OnInputCompleted"
                        FontSize="14"
                        BackgroundColor="Transparent" />
                 <Button Grid.Column="1" Text="&#x27A4;"
                         AutomationId="SendMessageButton"
-                        Command="{Binding SendCommand, Source={x:Reference Self}}"
+                        Clicked="OnSendButtonClicked"
                         BackgroundColor="#5B8C5A"
                         TextColor="White" FontSize="16"
                         WidthRequest="42" HeightRequest="42"

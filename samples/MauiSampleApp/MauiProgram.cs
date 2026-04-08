@@ -70,8 +70,8 @@ public static class MauiProgram
         // Register AI
         builder.AddOpenAIServices();
 
-        // Register AI chat
-        builder.Services.AddAIChat(ServiceLifetime.Transient);
+        // Register the headless chat engine; the MAUI controls bind to it as a thin UI layer.
+        builder.Services.AddChatSession(ServiceLifetime.Transient);
 
         // Register ViewModels and Pages
         builder.Services.AddSingleton<HomePageViewModel>();

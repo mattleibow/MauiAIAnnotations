@@ -30,6 +30,19 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
+    /// Registers the headless multi-instance chat session service.
+    /// Requires <see cref="IChatClient"/> and <c>IEnumerable&lt;AITool&gt;</c> to be registered.
+    /// </summary>
+    public static IServiceCollection AddChatSession(
+        this IServiceCollection services,
+        ServiceLifetime lifetime = ServiceLifetime.Transient)
+    {
+        services.TryAdd(new ServiceDescriptor(typeof(ChatSession), typeof(ChatSession), lifetime));
+        services.TryAdd(new ServiceDescriptor(typeof(IChatSession), sp => sp.GetRequiredService<ChatSession>(), lifetime));
+        return services;
+    }
+
+    /// <summary>
     /// Scans the calling assembly and its referenced assemblies for types containing methods
     /// annotated with <see cref="ExportAIFunctionAttribute"/> and registers the discovered
     /// <see cref="AITool"/> instances in DI. Consumers inject <c>IEnumerable&lt;AITool&gt;</c>

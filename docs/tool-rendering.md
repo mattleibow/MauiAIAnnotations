@@ -16,10 +16,7 @@ The default result view is built in. You do **not** need a custom renderer just 
 ### 1. Register the built-in templates
 
 ```xml
-<maui:ChatPanelControl ItemsSource="{Binding ChatSession.Messages}"
-                       Text="{Binding ChatSession.UserInput, Mode=TwoWay}"
-                       SendCommand="{Binding ChatSession.SendCommand}"
-                       IsBusy="{Binding ChatSession.IsBusy}">
+<maui:ChatPanelControl Session="{Binding ChatSession}">
     <maui:ChatPanelControl.ContentTemplates>
         <mauiChat:TextContentTemplate Role="User" />
         <mauiChat:TextContentTemplate Role="Assistant" />
@@ -120,7 +117,7 @@ The `TryGetPlant` helper handles both strongly-typed returns and JSON payloads, 
 
 ### Step 2: Create a ViewModel (Optional)
 
-Built-in library views bind directly to `ContentContext` — no ViewModel required. But when your view needs to **extract or transform** data from the AI response, a small ViewModel keeps the view clean:
+Built-in library views bind directly to `ContentContext` — no library-owned ViewModel required. But when your app-specific view needs to **extract or transform** data from the AI response, a small local ViewModel keeps the view clean:
 
 ```csharp
 public partial class PlantResultViewModel : ObservableObject
@@ -179,10 +176,7 @@ The `PlantCardView` inside is a normal MAUI control that binds to `Plant` proper
 Add your mapping to the `ContentTemplates` list in the page XAML. Place it **before** the generic `FunctionResultTemplate`:
 
 ```xml
-<maui:ChatPanelControl ItemsSource="{Binding ChatSession.Messages}"
-                       Text="{Binding ChatSession.UserInput, Mode=TwoWay}"
-                       SendCommand="{Binding ChatSession.SendCommand}"
-                       IsBusy="{Binding ChatSession.IsBusy}">
+<maui:ChatPanelControl Session="{Binding ChatSession}">
     <maui:ChatPanelControl.ContentTemplates>
         <!-- ... other mappings ... -->
         <local:PlantResultTemplate ViewType="{x:Type local:PlantResultView}" />
