@@ -175,21 +175,29 @@ public sealed class ChatSession : IChatSession, IDisposable
         var responseText = string.Empty;
         var responseUpdates = new List<ChatResponseUpdate>();
 
-        await foreach (var update in _chatClient.GetStreamingResponseAsync(history, options, cancellationToken)
-            .WithCancellation(cancellationToken))
+        // Run on a thread pool thread so the network I/O never touches the
+        // caller's synchronization context. Android throws
+        // NetworkOnMainThreadException when HTTP calls hit the UI thread.
+        // Consumers (e.g. ChatPanelControl) must marshal Changed events to
+        // their own thread via Dispatcher.Dispatch or equivalent.
+        await Task.Run(async () =>
         {
-            responseUpdates.Add(update.Clone());
-
-            if (!string.IsNullOrWhiteSpace(update.ConversationId) &&
-                !string.Equals(ConversationId, update.ConversationId, StringComparison.Ordinal))
+            await foreach (var update in _chatClient.GetStreamingResponseAsync(history, options, cancellationToken)
+                .WithCancellation(cancellationToken))
             {
-                ConversationId = update.ConversationId;
-                OnChanged(ChatSessionChangeKind.StateChanged);
-            }
+                responseUpdates.Add(update.Clone());
 
-            foreach (var content in update.Contents)
-                ProcessResponseContent(content, ref assistantEntry, ref responseText);
-        }
+                if (!string.IsNullOrWhiteSpace(update.ConversationId) &&
+                    !string.Equals(ConversationId, update.ConversationId, StringComparison.Ordinal))
+                {
+                    ConversationId = update.ConversationId;
+                    OnChanged(ChatSessionChangeKind.StateChanged);
+                }
+
+                foreach (var content in update.Contents)
+                    ProcessResponseContent(content, ref assistantEntry, ref responseText);
+            }
+        }, cancellationToken);
 
         if (responseUpdates.Count > 0)
         {

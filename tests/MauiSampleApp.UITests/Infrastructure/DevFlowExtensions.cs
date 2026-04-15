@@ -155,53 +155,64 @@ public static class DevFlowExtensions
 
     /// <summary>
     /// Opens the chat tray if it's not already open.
-    /// In permanent sidebar layouts, the chat may always be visible.
+    /// On Android, the bottom sheet keeps all children "visible" in the tree
+    /// even when collapsed — we check the toggle button text instead.
     /// </summary>
     public static async Task EnsureChatTrayOpenAsync(this IAppDriver driver)
     {
-        var chatInput = await driver.QueryAsync(automationId: "ChatInput");
-        if (chatInput is { Count: > 0 } && chatInput[0].IsVisible)
-            return; // Already open or permanent sidebar
-
         var toggle = await driver.QueryAsync(automationId: "ChatTrayToggleButton");
         if (toggle is { Count: > 0 })
         {
-            await driver.TapAsync(toggle[0].Id);
-            try
+            // If toggle says "Open", tray is collapsed — tap to expand
+            // If toggle says "Close", tray is already open
+            if (string.Equals(toggle[0].Text, "Open", StringComparison.OrdinalIgnoreCase))
             {
-                await driver.WaitForElementAsync("ChatInput", timeoutMs: 5000);
+                await driver.TapAsync(toggle[0].Id);
+                // Wait for tray animation to complete
+                await Task.Delay(1000);
+
+                // Poll until toggle text changes to "Close"
+                for (var i = 0; i < 10; i++)
+                {
+                    toggle = await driver.QueryAsync(automationId: "ChatTrayToggleButton");
+                    if (toggle is { Count: > 0 } &&
+                        string.Equals(toggle[0].Text, "Close", StringComparison.OrdinalIgnoreCase))
+                        return;
+                    await Task.Delay(500);
+                }
             }
-            catch (TimeoutException)
-            {
-                // Chat may not be toggleable in this layout
-            }
+            return;
         }
+
+        // No toggle button — chat may be a permanent sidebar
     }
 
     /// <summary>
-    /// Closes the chat tray if possible. In permanent sidebar layouts,
-    /// the chat stays visible — this is a no-op in that case.
+    /// Closes the chat tray if possible. Uses toggle button text to determine state.
     /// </summary>
     public static async Task EnsureChatTrayClosedAsync(this IAppDriver driver)
     {
-        var chatInput = await driver.QueryAsync(automationId: "ChatInput");
-        if (chatInput is null or { Count: 0 })
-            return; // Already closed
-
         var toggle = await driver.QueryAsync(automationId: "ChatTrayToggleButton");
         if (toggle is not { Count: > 0 })
             return; // No toggle button available
 
-        await driver.TapAsync(toggle[0].Id);
+        // If toggle says "Close", tray is open — tap to collapse
+        if (string.Equals(toggle[0].Text, "Close", StringComparison.OrdinalIgnoreCase))
+        {
+            await driver.TapAsync(toggle[0].Id);
+            await Task.Delay(1000);
 
-        try
-        {
-            await driver.WaitForElementGoneAsync("ChatInput", timeoutMs: 3000);
+            // Poll until toggle text changes to "Open"
+            for (var i = 0; i < 10; i++)
+            {
+                toggle = await driver.QueryAsync(automationId: "ChatTrayToggleButton");
+                if (toggle is { Count: > 0 } &&
+                    string.Equals(toggle[0].Text, "Open", StringComparison.OrdinalIgnoreCase))
+                    return;
+                await Task.Delay(500);
+            }
         }
-        catch (TimeoutException)
-        {
-            // Permanent sidebar layout — chat can't be closed, which is fine
-        }
+        // Already collapsed or permanent sidebar
     }
 
     private static ElementInfo? FindByType(IList<ElementInfo>? elements, string typeName)
