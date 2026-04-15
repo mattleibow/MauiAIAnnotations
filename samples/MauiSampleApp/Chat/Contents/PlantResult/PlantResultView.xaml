@@ -4,7 +4,7 @@
                          xmlns:controls="clr-namespace:MauiSampleApp.Controls"
                          xmlns:models="clr-namespace:MauiSampleApp.Core.Models;assembly=MauiSampleApp.Core"
                          xmlns:chat="clr-namespace:MauiSampleApp.Chat"
-                         xmlns:maui="clr-namespace:MauiAIAnnotations.Maui.Chat;assembly=MauiAIAnnotations.Maui"
+                         xmlns:maui="clr-namespace:Microsoft.Extensions.AI.Maui.Chat;assembly=Microsoft.Extensions.AI.Maui"
                          x:Name="This"
                          x:Class="MauiSampleApp.Chat.PlantResultView">
     <Grid x:Name="InnerContent" Padding="0,4">

@@ -1,7 +1,7 @@
-# MauiAIAnnotations — Copilot Instructions
+# Microsoft.Extensions.AI Libraries — Copilot Instructions
 
 ## Project Overview
-A .NET 10 library for attribute-based AI tool discovery (`MauiAIAnnotations`) with a reusable MAUI chat UI library (`MauiAIAnnotations.Maui`) and a gardening helper sample app (`MauiSampleApp`).
+A .NET 10 library set for attribute-based AI tool discovery (`Microsoft.Extensions.AI.Attributes`), a headless chat engine (`Microsoft.Extensions.AI.Chat`), a reusable MAUI chat UI (`Microsoft.Extensions.AI.Maui`), and a gardening helper sample app (`MauiSampleApp`).
 
 ## Build & Test
 
@@ -41,8 +41,9 @@ maui-devflow MAUI fill <AutomationId> "text"
 ## Architecture
 
 ### Project Structure
-- `src/MauiAIAnnotations/` — Core library: `[ExportAIFunction]` attribute, `AddAITools()` DI extension, `DependencyInjectionAIFunction`
-- `src/MauiAIAnnotations.Maui/` — Reusable MAUI chat UI: `ChatPanelControl`, content template system, and approval views that render a headless `IChatSession`
+- `src/Microsoft.Extensions.AI.Attributes/` — Attribute/discovery library: `[ExportAIFunction]`, `AddAITools()`, `DependencyInjectionAIFunction`
+- `src/Microsoft.Extensions.AI.Chat/` — Headless chat/session engine: `ChatSession`, transcript types, approval state, `AddChatSession()`
+- `src/Microsoft.Extensions.AI.Maui/` — Reusable MAUI chat UI: `ChatPanelControl`, content template system, and approval views that render a headless `IChatSession`
 - `samples/MauiSampleApp/` — Gardening helper demo app
 - `samples/MauiSampleApp.Core/` — Core services (PlantDataService, SpeciesService, SeasonsService)
 - `tests/` — xUnit test projects
@@ -53,7 +54,7 @@ maui-devflow MAUI fill <AutomationId> "text"
 
 **Content template system**: `ContentTemplate` subclasses declare a `When(ContentContext)` predicate and a `ViewType`. `ContentTemplateSelector` picks the first match. Templates are declared in XAML and cached (MAUI requirement: same DataTemplate instance per call).
 
-**Headless chat architecture**: Keep orchestration in `MauiAIAnnotations.ChatSession` / `IChatSession` and keep the MAUI layer thin. `ChatPanelControl` should render a supplied session via its `Session` property instead of depending on a library-owned `BindingContext` or chat ViewModel.
+**Headless chat architecture**: Keep orchestration in `Microsoft.Extensions.AI.Chat.ChatSession` / `IChatSession` and keep the MAUI layer thin. `ChatPanelControl` should render a supplied session via its `Session` property instead of depending on a library-owned `BindingContext` or chat ViewModel.
 
 **Compiled bindings**: All chat content views use `x:DataType="chat:ContentContext"` for compiled bindings. Views bind directly to `ContentContext` computed properties (Text, FunctionName, ErrorMessage, ResultText, DisplayText). No intermediate ViewModels for library views.
 

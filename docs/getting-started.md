@@ -1,4 +1,4 @@
-# Getting Started with MauiAIAnnotations
+# Getting Started with Microsoft.Extensions.AI.Maui
 
 Add AI chat functionality to your existing .NET MAUI app in minutes. This is the **fastest path** to a working chat experience with function calling.
 
@@ -18,8 +18,9 @@ Add AI chat functionality to your existing .NET MAUI app in minutes. This is the
 From your MAUI project directory, add the required packages:
 
 ```bash
-dotnet add package MauiAIAnnotations
-dotnet add package MauiAIAnnotations.Maui
+dotnet add package Microsoft.Extensions.AI.Attributes
+dotnet add package Microsoft.Extensions.AI.Chat
+dotnet add package Microsoft.Extensions.AI.Maui
 dotnet add package Microsoft.Extensions.AI
 dotnet add package Microsoft.Extensions.AI.OpenAI
 dotnet add package Azure.AI.OpenAI
@@ -30,7 +31,7 @@ dotnet add package Azure.AI.OpenAI
 Add `[ExportAIFunction]` to any service methods you want the AI to call. Use `[Description]` on the method and its parameters so the model gets a cleaner, more readable summary of what the tool does and what each argument means.
 
 ```csharp
-using MauiAIAnnotations;
+using Microsoft.Extensions.AI.Attributes;
 using System.ComponentModel;
 
 public class PlantDataService
@@ -60,7 +61,8 @@ That's it — no manual JSON schema definitions or adapter classes needed. The l
 Register your services and the AI chat client in `MauiProgram.cs`:
 
 ```csharp
-using MauiAIAnnotations;
+using Microsoft.Extensions.AI.Attributes;
+using Microsoft.Extensions.AI.Chat;
 using Microsoft.Extensions.AI;
 using Azure.AI.OpenAI;
 using System.ClientModel;
@@ -94,7 +96,7 @@ builder.Services.AddSingleton<IChatClient>(provider =>
 > for a full example using `AddJsonStream` for embedded secrets.
 
 You'll also need a session object for the page or window to host. The library provides the
-headless `MauiAIAnnotations.ChatSession` engine — register it once and resolve a fresh session
+headless `Microsoft.Extensions.AI.Chat.ChatSession` engine — register it once and resolve a fresh session
 for each chat surface you want:
 
 ```csharp
@@ -118,8 +120,8 @@ public HomePage(ChatSession chatSession)
 Add the `ChatPanelControl` to any XAML page. Include the namespace declarations and content template mappings:
 
 ```xml
-xmlns:maui="clr-namespace:MauiAIAnnotations.Maui.Controls;assembly=MauiAIAnnotations.Maui"
-xmlns:mauiChat="clr-namespace:MauiAIAnnotations.Maui.Chat;assembly=MauiAIAnnotations.Maui"
+xmlns:maui="clr-namespace:Microsoft.Extensions.AI.Maui.Controls;assembly=Microsoft.Extensions.AI.Maui"
+xmlns:mauiChat="clr-namespace:Microsoft.Extensions.AI.Maui.Chat;assembly=Microsoft.Extensions.AI.Maui"
 ```
 
 ```xml

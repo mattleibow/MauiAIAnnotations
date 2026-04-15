@@ -76,7 +76,7 @@ Subclass `ContentTemplate` and override `When()` to match the tool results you c
 
 ```csharp
 using System.Text.Json;
-using MauiAIAnnotations.Maui.Chat;
+using Microsoft.Extensions.AI.Maui.Chat;
 using Microsoft.Extensions.AI;
 using MauiSampleApp.Core.Models;
 

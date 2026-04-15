@@ -1,11 +1,12 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using MauiAIAnnotations;
+using Microsoft.Extensions.AI.Attributes;
+using Microsoft.Extensions.AI.Chat;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace MauiAIAnnotations.Tests;
+namespace Microsoft.Extensions.AI.Attributes.Tests;
 
 #region Test helper types
 

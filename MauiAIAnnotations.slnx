@@ -1,7 +1,8 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/MauiAIAnnotations.Maui/MauiAIAnnotations.Maui.csproj" />
-    <Project Path="src/MauiAIAnnotations/MauiAIAnnotations.csproj" />
+    <Project Path="src/Microsoft.Extensions.AI.Attributes/Microsoft.Extensions.AI.Attributes.csproj" />
+    <Project Path="src/Microsoft.Extensions.AI.Chat/Microsoft.Extensions.AI.Chat.csproj" />
+    <Project Path="src/Microsoft.Extensions.AI.Maui/Microsoft.Extensions.AI.Maui.csproj" />
   </Folder>
   <Folder Name="/samples/">
     <Project Path="samples/MauiSampleApp.Core/MauiSampleApp.Core.csproj" />

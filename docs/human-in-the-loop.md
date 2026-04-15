@@ -86,7 +86,7 @@ Create a `PlantApprovalMapping` class that matches only the `add_plant` tool.
 It inherits from `ContentTemplate` and overrides `When()`:
 
 ```csharp
-using MauiAIAnnotations.Maui.Chat;
+using Microsoft.Extensions.AI.Maui.Chat;
 using Microsoft.Extensions.AI;
 
 public class PlantApprovalMapping : ContentTemplate
@@ -102,7 +102,7 @@ public class PlantApprovalMapping : ContentTemplate
 
 ```csharp
 using CommunityToolkit.Mvvm.ComponentModel;
-using MauiAIAnnotations.Maui.Chat;
+using Microsoft.Extensions.AI.Maui.Chat;
 using Microsoft.Extensions.AI;
 
 public partial class PlantApprovalViewModel : ObservableObject, IContentContextAware
@@ -146,7 +146,7 @@ call, implement `IToolApprovalResponseFactory` on the view and delegate to your
 local review model as needed:
 
 ```csharp
-using MauiAIAnnotations.Maui.Chat;
+using Microsoft.Extensions.AI.Maui.Chat;
 using Microsoft.Extensions.AI;
 
 public ToolApprovalResponseContent CreateApprovalResponse(

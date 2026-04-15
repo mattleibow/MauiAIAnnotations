@@ -1,5 +1,5 @@
 using System.Text.Json;
-using MauiAIAnnotations.Maui.Chat;
+using Microsoft.Extensions.AI.Maui.Chat;
 using MauiSampleApp.Core.Models;
 using Microsoft.Extensions.AI;
 

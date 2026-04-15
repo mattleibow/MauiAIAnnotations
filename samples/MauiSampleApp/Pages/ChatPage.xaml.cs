@@ -1,4 +1,4 @@
-using MauiAIAnnotations;
+using Microsoft.Extensions.AI.Chat;
 
 namespace MauiSampleApp.Pages;
 

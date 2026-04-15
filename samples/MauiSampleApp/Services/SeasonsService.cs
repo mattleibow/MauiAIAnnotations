@@ -1,5 +1,5 @@
 using System.ComponentModel;
-using MauiAIAnnotations;
+using Microsoft.Extensions.AI.Attributes;
 
 namespace MauiSampleApp.Services;
 

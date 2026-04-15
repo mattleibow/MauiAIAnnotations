@@ -1,5 +1,5 @@
 using System.ComponentModel;
-using MauiAIAnnotations;
+using Microsoft.Extensions.AI.Attributes;
 using MauiSampleApp.Core.Models;
 using Microsoft.Extensions.AI;
 using Shiny.DocumentDb;

@@ -78,7 +78,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\src\MauiAIAnnotations.Maui\MauiAIAnnotations.Maui.csproj" />
+	  <ProjectReference Include="..\..\src\Microsoft.Extensions.AI.Attributes\Microsoft.Extensions.AI.Attributes.csproj" />
+	  <ProjectReference Include="..\..\src\Microsoft.Extensions.AI.Chat\Microsoft.Extensions.AI.Chat.csproj" />
+	  <ProjectReference Include="..\..\src\Microsoft.Extensions.AI.Maui\Microsoft.Extensions.AI.Maui.csproj" />
 	  <ProjectReference Include="..\MauiSampleApp.Core\MauiSampleApp.Core.csproj" />
 	</ItemGroup>
 

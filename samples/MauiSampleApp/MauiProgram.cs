@@ -1,9 +1,9 @@
-﻿using System.ClientModel;
+using System.ClientModel;
 using System.Reflection;
 using Azure.AI.OpenAI;
-using MauiAIAnnotations;
-using MauiAIAnnotations.Maui;
 using MauiDevFlow.Agent;
+using Microsoft.Extensions.AI.Attributes;
+using Microsoft.Extensions.AI.Chat;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -50,7 +50,7 @@ public static class MauiProgram
         // ── AI Tools ────────────────────────────────────────────────
         //
         // 1. Attribute-discovered tools (from [ExportAIFunction] on services)
-        //    These are the "new way" using MauiAIAnnotations.
+        //    These are the "new way" using Microsoft.Extensions.AI.Attributes.
         //    The parameterless overload scans the calling assembly and its
         //    referenced assemblies (e.g. MauiSampleApp.Core) automatically.
         builder.Services.AddAITools();

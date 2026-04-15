@@ -1,6 +1,6 @@
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
-using MauiAIAnnotations.Maui.Chat;
+using Microsoft.Extensions.AI.Maui.Chat;
 using Microsoft.Extensions.AI;
 
 namespace MauiSampleApp.Chat;

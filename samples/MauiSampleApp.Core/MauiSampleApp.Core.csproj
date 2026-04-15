@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\MauiAIAnnotations\MauiAIAnnotations.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.Extensions.AI.Attributes\Microsoft.Extensions.AI.Attributes.csproj" />
   </ItemGroup>
 
 </Project>
