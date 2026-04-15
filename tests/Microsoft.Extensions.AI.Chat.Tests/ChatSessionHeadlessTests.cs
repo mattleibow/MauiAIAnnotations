@@ -152,4 +152,34 @@ public class ChatSessionHeadlessTests
         Assert.True(session2.HasPendingApprovals);
         Assert.Single(session2.PendingApprovals);
     }
+
+    [Fact]
+    public async Task Sending_new_message_while_approval_pending_auto_rejects_and_continues()
+    {
+        var request = new ToolApprovalRequestContent(
+            "approval-auto-reject-1",
+            new FunctionCallContent(
+                "call-auto-reject-1",
+                "add_plant",
+                new Dictionary<string, object?> { ["nickname"] = "Fern" }));
+
+        var innerClient = new SequenceChatClient(
+            [new ChatResponseUpdate(ChatRole.Assistant, [request])],
+            [new ChatResponseUpdate(ChatRole.Assistant, [new TextContent("Got it, moving on.")])]);
+
+        var session = new ChatSession([], innerClient);
+
+        await session.SendAsync("Add a fern");
+        Assert.True(session.HasPendingApprovals);
+
+        // Send a new message while approval is still pending — should auto-reject
+        await session.SendAsync("Never mind, do something else");
+
+        Assert.False(session.HasPendingApprovals);
+        Assert.Equal(ToolApprovalState.Rejected, session.Messages.Single(m => m.Role == ContentRole.Approval).ApprovalState);
+
+        // The rejection response should have been added to the history sent to the inner client
+        var lastHistory = innerClient.ReceivedMessages[^1];
+        Assert.Contains(lastHistory, static m => m.Contents.OfType<ToolApprovalResponseContent>().Any(r => !r.Approved));
+    }
 }

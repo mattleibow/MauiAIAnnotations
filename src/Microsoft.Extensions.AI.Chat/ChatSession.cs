@@ -57,6 +57,10 @@ public sealed class ChatSession : IChatSession, IDisposable
         if (string.IsNullOrWhiteSpace(userMessage))
             return;
 
+        // Implicitly reject any pending approvals so the middleware sees
+        // matched request/response pairs in the conversation history.
+        AutoRejectPendingApprovals();
+
         var trimmedMessage = userMessage.Trim();
         AddEntry(new TextContent(trimmedMessage), ContentRole.User);
 
@@ -96,6 +100,32 @@ public sealed class ChatSession : IChatSession, IDisposable
     {
         _activeRequestCancellation?.Cancel();
         _activeRequestCancellation?.Dispose();
+    }
+
+    /// <summary>
+    /// Reject all pending approvals, adding rejection responses to the
+    /// conversation history so the middleware sees matched pairs.
+    /// </summary>
+    private void AutoRejectPendingApprovals()
+    {
+        if (_pendingApprovalsById.Count == 0)
+            return;
+
+        foreach (var (_, pendingEntry) in _pendingApprovalsById)
+        {
+            if (pendingEntry.Content is not ToolApprovalRequestContent request)
+                continue;
+
+            var rejection = request.CreateResponse(approved: false, "Superseded by new user message");
+            _conversationHistory.Add(new ChatMessage(ChatRole.User, [rejection]));
+
+            ReplaceEntry(
+                pendingEntry,
+                pendingEntry with { ApprovalState = ToolApprovalState.Rejected });
+        }
+
+        _pendingApprovalsById.Clear();
+        OnChanged(ChatSessionChangeKind.StateChanged);
     }
 
     private async Task ContinueConversationAsync(ChatMessage message, CancellationToken cancellationToken)
