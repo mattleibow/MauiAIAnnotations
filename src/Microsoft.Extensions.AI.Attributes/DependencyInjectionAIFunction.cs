@@ -50,12 +50,13 @@ internal sealed class DependencyInjectionAIFunction : AIFunction
         AIFunctionArguments arguments,
         CancellationToken cancellationToken)
     {
-        var instance = ResolveService(arguments);
+        using var scope = _rootServiceProvider.CreateScope();
+        var instance = ResolveService(arguments, scope.ServiceProvider);
         var boundFunction = AIFunctionFactory.Create(_method, instance, _factoryOptions);
         return await boundFunction.InvokeAsync(arguments, cancellationToken);
     }
 
-    private object ResolveService(AIFunctionArguments arguments)
+    private object ResolveService(AIFunctionArguments arguments, IServiceProvider scopedProvider)
     {
         var provided = arguments.Services;
         if (provided is not null && !ReferenceEquals(provided, _rootServiceProvider))
@@ -68,9 +69,9 @@ internal sealed class DependencyInjectionAIFunction : AIFunction
             }
             catch
             {
-                // Fall through to root
+                // Fall through to scoped provider
             }
         }
-        return _rootServiceProvider.GetRequiredService(_serviceType);
+        return scopedProvider.GetRequiredService(_serviceType);
     }
 }

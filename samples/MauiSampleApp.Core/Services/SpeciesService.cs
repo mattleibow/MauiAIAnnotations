@@ -57,8 +57,8 @@ public class SpeciesService(IDocumentStore store, IChatClient chatClient)
     private static SpeciesProfile CreateFallbackProfile(string name) => new()
     {
         Id = Guid.NewGuid().ToString(),
-        CommonName = char.ToUpper(name[0]) + name[1..],
-        ScientificName = $"{char.ToUpper(name[0]) + name[1..]} sp.",
+        CommonName = name.Length > 0 ? char.ToUpper(name[0]) + name[1..] : "Unknown",
+        ScientificName = name.Length > 0 ? $"{char.ToUpper(name[0]) + name[1..]} sp." : "Unknown sp.",
         WateringFrequencyDays = 3,
         SunlightNeeds = "Full",
         FrostTolerant = false,

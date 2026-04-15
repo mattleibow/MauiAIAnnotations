@@ -18,7 +18,7 @@ public class AIFunctionScopedLifetimeTests
     }
 
     [Fact]
-    public async Task Scoped_with_root_provider_and_validate_scopes_throws()
+    public async Task Scoped_with_root_provider_and_validate_scopes_creates_scope_automatically()
     {
         var services = new ServiceCollection();
         services.AddScoped<InvocationCounterService>();
@@ -28,7 +28,9 @@ public class AIFunctionScopedLifetimeTests
         var tool = provider.GetRequiredService<IEnumerable<AITool>>().First(t => t.Name == "counter_tool") as AIFunction;
         var args = new AIFunctionArguments(new Dictionary<string, object?>());
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => tool!.InvokeAsync(args).AsTask());
+        // Now creates an internal scope, so scoped services resolve correctly
+        var result = await tool!.InvokeAsync(args);
+        Assert.Equal(1, GetIntResult(result));
     }
 
     [Fact]

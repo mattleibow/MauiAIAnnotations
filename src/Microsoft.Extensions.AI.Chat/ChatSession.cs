@@ -60,8 +60,7 @@ public sealed class ChatSession : IChatSession, IDisposable
         var trimmedMessage = userMessage.Trim();
         AddEntry(new TextContent(trimmedMessage), ContentRole.User);
 
-        await ContinueConversationAsync(new ChatMessage(ChatRole.User, trimmedMessage), cancellationToken)
-            .ConfigureAwait(false);
+        await ContinueConversationAsync(new ChatMessage(ChatRole.User, trimmedMessage), cancellationToken);
     }
 
     public async Task SubmitApprovalAsync(ToolApprovalResponseContent response, CancellationToken cancellationToken = default)
@@ -90,8 +89,7 @@ public sealed class ChatSession : IChatSession, IDisposable
         _pendingApprovalsById.Remove(response.RequestId);
         OnChanged(ChatSessionChangeKind.StateChanged);
 
-        await ContinueConversationAsync(new ChatMessage(ChatRole.User, [response]), cancellationToken)
-            .ConfigureAwait(false);
+        await ContinueConversationAsync(new ChatMessage(ChatRole.User, [response]), cancellationToken);
     }
 
     public void Dispose()
@@ -113,8 +111,7 @@ public sealed class ChatSession : IChatSession, IDisposable
 
         try
         {
-            await Task.Run(() => RunStreamingLoopAsync(requestCancellation.Token), requestCancellation.Token)
-                .ConfigureAwait(false);
+            await RunStreamingLoopAsync(requestCancellation.Token);
         }
         catch (OperationCanceledException) when (requestCancellation.IsCancellationRequested)
         {
@@ -149,8 +146,7 @@ public sealed class ChatSession : IChatSession, IDisposable
         var responseUpdates = new List<ChatResponseUpdate>();
 
         await foreach (var update in _chatClient.GetStreamingResponseAsync(history, options, cancellationToken)
-            .WithCancellation(cancellationToken)
-            .ConfigureAwait(false))
+            .WithCancellation(cancellationToken))
         {
             responseUpdates.Add(update.Clone());
 
