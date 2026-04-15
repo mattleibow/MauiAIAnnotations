@@ -14,7 +14,7 @@
           BindingContext="{Binding ViewModel, Source={x:Reference This}}"
           x:DataType="local:PlantApprovalViewModel">
         <Label Grid.ColumnSpan="2"
-               Text="Review the proposed plant details. If something should change, reject and ask again."
+               Text="Review or edit the proposed plant details before approving."
                FontSize="12"
                LineBreakMode="WordWrap"
                TextColor="{AppThemeBinding Light=#7A7062, Dark=#A69E90}" />
@@ -27,17 +27,21 @@
                TextColor="{AppThemeBinding Light=#7A7062, Dark=#A69E90}" />
         <Border Grid.Row="1"
                 Grid.Column="1"
-                Padding="12,10"
-                AutomationId="ApprovalNicknameEntry"
+                Padding="8,2"
                 BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2A2721}"
                 Stroke="{AppThemeBinding Light=#E8E0D4, Dark=#4A4337}"
                 StrokeThickness="1">
             <Border.StrokeShape>
                 <RoundRectangle CornerRadius="10" />
             </Border.StrokeShape>
-            <Label Text="{Binding NicknameDisplay}"
+            <Entry Text="{Binding Nickname}"
+                   Placeholder="Plant nickname"
+                   ClearButtonVisibility="WhileEditing"
+                   AutomationId="ApprovalNicknameEntry"
                    FontSize="13"
-                   TextColor="{AppThemeBinding Light=#2C2416, Dark=#EDE8DF}" />
+                   TextColor="{AppThemeBinding Light=#2C2416, Dark=#EDE8DF}"
+                   PlaceholderColor="{AppThemeBinding Light=#9A907F, Dark=#8C8478}"
+                   BackgroundColor="Transparent" />
         </Border>
 
         <Label Grid.Row="2"
@@ -48,17 +52,21 @@
                TextColor="{AppThemeBinding Light=#7A7062, Dark=#A69E90}" />
         <Border Grid.Row="2"
                 Grid.Column="1"
-                Padding="12,10"
-                AutomationId="ApprovalSpeciesEntry"
+                Padding="8,2"
                 BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2A2721}"
                 Stroke="{AppThemeBinding Light=#E8E0D4, Dark=#4A4337}"
                 StrokeThickness="1">
             <Border.StrokeShape>
                 <RoundRectangle CornerRadius="10" />
             </Border.StrokeShape>
-            <Label Text="{Binding SpeciesDisplay}"
+            <Entry Text="{Binding Species}"
+                   Placeholder="Species"
+                   ClearButtonVisibility="WhileEditing"
+                   AutomationId="ApprovalSpeciesEntry"
                    FontSize="13"
-                   TextColor="{AppThemeBinding Light=#2C2416, Dark=#EDE8DF}" />
+                   TextColor="{AppThemeBinding Light=#2C2416, Dark=#EDE8DF}"
+                   PlaceholderColor="{AppThemeBinding Light=#9A907F, Dark=#8C8478}"
+                   BackgroundColor="Transparent" />
         </Border>
 
         <Label Grid.Row="3"
@@ -69,17 +77,21 @@
                TextColor="{AppThemeBinding Light=#7A7062, Dark=#A69E90}" />
         <Border Grid.Row="3"
                 Grid.Column="1"
-                Padding="12,10"
-                AutomationId="ApprovalLocationEntry"
+                Padding="8,2"
                 BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2A2721}"
                 Stroke="{AppThemeBinding Light=#E8E0D4, Dark=#4A4337}"
                 StrokeThickness="1">
             <Border.StrokeShape>
                 <RoundRectangle CornerRadius="10" />
             </Border.StrokeShape>
-            <Label Text="{Binding LocationDisplay}"
+            <Entry Text="{Binding Location}"
+                   Placeholder="Location"
+                   ClearButtonVisibility="WhileEditing"
+                   AutomationId="ApprovalLocationEntry"
                    FontSize="13"
-                   TextColor="{AppThemeBinding Light=#2C2416, Dark=#EDE8DF}" />
+                   TextColor="{AppThemeBinding Light=#2C2416, Dark=#EDE8DF}"
+                   PlaceholderColor="{AppThemeBinding Light=#9A907F, Dark=#8C8478}"
+                   BackgroundColor="Transparent" />
         </Border>
 
         <Label Grid.Row="4"
@@ -90,17 +102,22 @@
                TextColor="{AppThemeBinding Light=#7A7062, Dark=#A69E90}" />
         <Border Grid.Row="4"
                 Grid.Column="1"
-                Padding="12,10"
-                AutomationId="ApprovalIndoorSwitch"
+                Padding="12,8"
                 BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2A2721}"
                 Stroke="{AppThemeBinding Light=#E8E0D4, Dark=#4A4337}"
                 StrokeThickness="1">
             <Border.StrokeShape>
                 <RoundRectangle CornerRadius="10" />
             </Border.StrokeShape>
-            <Label Text="{Binding IndoorDisplay}"
-                   FontSize="13"
-                   TextColor="{AppThemeBinding Light=#2C2416, Dark=#EDE8DF}" />
+            <HorizontalStackLayout Spacing="10">
+                <Switch IsToggled="{Binding IsIndoor}"
+                        AutomationId="ApprovalIndoorSwitch"
+                        HorizontalOptions="Start" />
+                <Label Text="{Binding IndoorDisplay}"
+                       VerticalOptions="Center"
+                       FontSize="13"
+                       TextColor="{AppThemeBinding Light=#2C2416, Dark=#EDE8DF}" />
+            </HorizontalStackLayout>
         </Border>
     </Grid>
 

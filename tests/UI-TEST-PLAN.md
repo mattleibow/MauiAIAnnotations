@@ -245,7 +245,7 @@ maui-devflow MAUI tree
 
 **Expected:**
 - User message appears
-- **Custom approval card** (PlantApprovalView) with review-only details:
+- **Custom approval card** (PlantApprovalView) with editable details:
   - Nickname: "Sun Daisy" — `ApprovalNicknameEntry`
   - Species: "daisy" — `ApprovalSpeciesEntry`
   - Location: "balcony" — `ApprovalLocationEntry`
@@ -264,11 +264,11 @@ maui-devflow MAUI tree
 **Expected after approve:**
 - Approval card stays in the chat with a resolved state such as "✅ Approved — add_plant"
 - A ⚙️ "Calling add_plant..." function call bubble appears after approval
-- PlantResultView card shows the plant using the original proposed values
+- PlantResultView card shows the plant using the current approved values
 - Assistant confirms the addition
 - Tree still contains the resolved `PlantApprovalView`, but only the active pending approval uses the plain button IDs
 
-**Pass criteria:** Custom approval card renders as review-only, approval succeeds, and the proposed plant is added.
+**Pass criteria:** Custom approval card renders, the values can be reviewed or adjusted before approval, and the approved plant is added.
 
 ---
 

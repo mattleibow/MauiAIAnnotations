@@ -2,7 +2,9 @@ using Microsoft.Extensions.AI.Maui.Chat;
 
 namespace MauiSampleApp.Chat;
 
-public partial class BatchCareApprovalView : ContentContextView
+using Microsoft.Extensions.AI;
+
+public partial class BatchCareApprovalView : ContentContextView, IToolApprovalResponseFactory
 {
     private readonly BatchCareApprovalViewModel _vm = new();
 
@@ -18,4 +20,7 @@ public partial class BatchCareApprovalView : ContentContextView
         if (ContentContext is not null)
             _vm.ApplyContentContext(ContentContext);
     }
+
+    public ToolApprovalResponseContent CreateApprovalResponse(ToolApprovalRequestContent request, bool approved) =>
+        _vm.CreateApprovalResponse(request, approved);
 }

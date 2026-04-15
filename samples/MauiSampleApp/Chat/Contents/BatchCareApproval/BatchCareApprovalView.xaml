@@ -10,26 +10,43 @@
     <VerticalStackLayout Spacing="8"
                          BindingContext="{Binding ViewModel, Source={x:Reference This}}"
                          x:DataType="local:BatchCareApprovalViewModel">
-        <Label Text="Review the proposed care log entries. If the set should change, reject and ask again."
+        <Label Text="Review or edit the proposed care log entries before approving."
                FontSize="12"
                LineBreakMode="WordWrap"
                TextColor="{AppThemeBinding Light=#7A7062, Dark=#A69E90}" />
 
-        <HorizontalStackLayout Spacing="6">
+        <Grid ColumnDefinitions="60,*"
+              ColumnSpacing="8">
             <Label Text="Plant:"
+                   VerticalOptions="Center"
                    FontSize="13"
                    FontAttributes="Bold"
                    TextColor="{AppThemeBinding Light=#7A7062, Dark=#A69E90}" />
-            <Label Text="{Binding PlantNicknameDisplay}"
-                   FontSize="13"
-                   TextColor="{AppThemeBinding Light=#2C2416, Dark=#EDE8DF}" />
-        </HorizontalStackLayout>
+            <Border Grid.Column="1"
+                    Padding="8,2"
+                    BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2A2721}"
+                    Stroke="{AppThemeBinding Light=#E8E0D4, Dark=#4A4337}"
+                    StrokeThickness="1">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="10" />
+                </Border.StrokeShape>
+                <Entry Text="{Binding PlantNickname}"
+                       Placeholder="Plant nickname"
+                       AutomationId="BatchPlantNicknameEntry"
+                       ClearButtonVisibility="WhileEditing"
+                       FontSize="13"
+                       TextColor="{AppThemeBinding Light=#2C2416, Dark=#EDE8DF}"
+                       PlaceholderColor="{AppThemeBinding Light=#9A907F, Dark=#8C8478}"
+                       BackgroundColor="Transparent" />
+            </Border>
+        </Grid>
 
         <Label Text="Care events to log:"
                FontSize="12"
                TextColor="{AppThemeBinding Light=#7A7062, Dark=#A69E90}" />
 
         <CollectionView ItemsSource="{Binding CareItems}"
+                        SelectionMode="None"
                         AutomationId="BatchCareList">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="local:CareItemViewModel">
@@ -41,20 +58,42 @@
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="10" />
                         </Border.StrokeShape>
-                        <VerticalStackLayout Spacing="2">
-                            <Label Text="{Binding EventType}"
+                        <VerticalStackLayout Spacing="6">
+                            <Entry Text="{Binding EventType}"
+                                   Placeholder="Event type"
+                                   AutomationId="BatchCareEventTypeEntry"
+                                   ClearButtonVisibility="WhileEditing"
                                    FontSize="14"
                                    FontAttributes="Bold"
-                                   TextColor="{AppThemeBinding Light=#2C2416, Dark=#EDE8DF}" />
-                            <Label Text="{Binding Notes}"
-                                   IsVisible="{Binding HasNotes}"
-                                   FontSize="12"
-                                   TextColor="{AppThemeBinding Light=#7A7062, Dark=#A69E90}" />
+                                   TextColor="{AppThemeBinding Light=#2C2416, Dark=#EDE8DF}"
+                                   PlaceholderColor="{AppThemeBinding Light=#9A907F, Dark=#8C8478}"
+                                   BackgroundColor="Transparent" />
+                            <Editor Text="{Binding Notes}"
+                                    Placeholder="Notes (optional)"
+                                    AutomationId="BatchCareEventNotesEntry"
+                                    AutoSize="TextChanges"
+                                    MinimumHeightRequest="72"
+                                    FontSize="12"
+                                    TextColor="{AppThemeBinding Light=#2C2416, Dark=#EDE8DF}"
+                                    PlaceholderColor="{AppThemeBinding Light=#9A907F, Dark=#8C8478}"
+                                    BackgroundColor="Transparent" />
+                            <HorizontalStackLayout HorizontalOptions="End">
+                                <Button Text="Remove"
+                                        Padding="10,4"
+                                        FontSize="12"
+                                        Command="{Binding Source={x:Reference This}, Path=ViewModel.RemoveCareItemCommand}"
+                                        CommandParameter="{Binding .}" />
+                            </HorizontalStackLayout>
                         </VerticalStackLayout>
                     </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
+
+        <Button Text="Add care event"
+                Command="{Binding AddCareItemCommand}"
+                HorizontalOptions="Start"
+                FontSize="12" />
     </VerticalStackLayout>
 
 </mauiChat:ContentContextView>

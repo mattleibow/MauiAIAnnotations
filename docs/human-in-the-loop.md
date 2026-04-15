@@ -202,7 +202,7 @@ Order matters — more specific mappings must come first:
 <mauiChat:ToolApprovalTemplate ViewType="{x:Type mauiChat:ToolApprovalView}" />
 ```
 
-The custom approval view shows review-only plant details:
+The custom approval view can show and edit plant details before approval:
 
 | Windows | Android |
 | --- | --- |
@@ -210,9 +210,8 @@ The custom approval view shows review-only plant details:
 
 ## After Approval
 
-When the user taps **Approve**, the tool executes with the proposed values and the
-approval card stays in chat with a resolved status. If something should change,
-the user rejects and asks again instead of mutating arguments inside the approval UI.
+When the user taps **Approve**, the tool executes with the current values shown in the
+approval card and the card stays in chat with a resolved status.
 
 | Windows | Android |
 | --- | --- |
@@ -234,9 +233,9 @@ When the user taps **Reject**, the buttons are replaced with
 
 ## Batch Approval with Checkboxes
 
-For tools that accept arrays (e.g. logging multiple care events at once), prefer
-a review-only approval card. If the proposed set should change, reject it and let
-the model issue a new tool call or a separate planning step.
+For tools that accept arrays (e.g. logging multiple care events at once), a custom
+approval card can expose editable rows so the user can adjust the final set before
+the tool runs.
 
 | Windows | Android |
 | --- | --- |
@@ -264,14 +263,16 @@ Register the checkbox view via `ToolApprovalTemplate.ViewType`:
 - **`ApprovalRequired = true`** is the only change needed in your service code.
 - **No `MauiProgram.cs` changes** — the discovery pipeline wraps the function
   automatically.
-- **Library owns the Approve/Reject buttons** — app views only provide the
-  read-only review content for the request.
+- **Library owns the Approve/Reject buttons** — app views provide the request
+  content, and can optionally support edit-before-approve by implementing
+  `IToolApprovalResponseFactory`.
 - **Cards stay after resolution** — the review details remain visible and the
   buttons are replaced with a status message.
 - **`ToolApprovalTemplate.ViewType`** — declare custom content per tool name. The library still wraps it in the built-in approval shell.
-- **Approve/reject only** — if the proposed details need to change, reject and
-  let the model issue a new tool call rather than mutating arguments in the card.
+- **Editability is opt-in** — if your custom view needs to mutate the pending
+  arguments, return an edited `ToolApprovalResponseContent` from
+  `IToolApprovalResponseFactory`.
 
-> **Full sample code:** See `samples/MauiSampleApp/Chat/Contents/PlantApproval/` for
-> the review-only plant approval and `samples/MauiSampleApp/Chat/Contents/BatchCareApproval/`
-> for the review-only batch approval.
+> **Full sample code:** See `samples/MauiSampleApp/Chat/Contents/PlantApproval/` and
+> `samples/MauiSampleApp/Chat/Contents/BatchCareApproval/` for editable approval views
+> that still use the built-in approval shell.
