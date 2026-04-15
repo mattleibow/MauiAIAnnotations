@@ -1,10 +1,10 @@
-# UI Test Plan — MauiDevFlow Scenarios
+# UI Test Plan — MAUI DevFlow Scenarios
 
 Run these scenarios after every significant change. They serve the same purpose as `dotnet test` but for the running app UI.
 
 ## Prerequisites
 - App built and running: `dotnet run --project samples/MauiSampleApp/MauiSampleApp.csproj -f net10.0-windows10.0.19041.0`
-- MauiDevFlow CLI available: `maui-devflow MAUI tree` responds
+- MAUI DevFlow CLI available: `maui devflow MAUI tree` responds
 
 ---
 
@@ -12,7 +12,7 @@ Run these scenarios after every significant change. They serve the same purpose 
 
 **Steps:**
 ```bash
-maui-devflow MAUI tree
+maui devflow MAUI tree
 ```
 
 **Expected:**
@@ -31,8 +31,8 @@ maui-devflow MAUI tree
 
 **Steps:**
 ```bash
-maui-devflow MAUI tap ChatTrayToggleButton
-maui-devflow MAUI tree
+maui devflow MAUI tap ChatTrayToggleButton
+maui devflow MAUI tree
 ```
 
 **Expected:**
@@ -51,10 +51,10 @@ maui-devflow MAUI tree
 
 **Steps:**
 ```bash
-maui-devflow MAUI fill ChatInput "Hello, can you help me?"
-maui-devflow MAUI tap SendMessageButton
+maui devflow MAUI fill ChatInput "Hello, can you help me?"
+maui devflow MAUI tap SendMessageButton
 # Wait 10 seconds for AI response
-maui-devflow MAUI screenshot
+maui devflow MAUI screenshot
 ```
 
 **Expected:**
@@ -70,10 +70,10 @@ maui-devflow MAUI screenshot
 
 **Steps:**
 ```bash
-maui-devflow MAUI fill ChatInput "What time is it and what gardening advice for April in northern hemisphere?"
-maui-devflow MAUI tap SendMessageButton
+maui devflow MAUI fill ChatInput "What time is it and what gardening advice for April in northern hemisphere?"
+maui devflow MAUI tap SendMessageButton
 # Wait 15 seconds for AI + tool calls
-maui-devflow MAUI screenshot
+maui devflow MAUI screenshot
 ```
 
 **Expected:**
@@ -92,11 +92,11 @@ maui-devflow MAUI screenshot
 
 **Steps:**
 ```bash
-maui-devflow MAUI fill ChatInput "Tell me about Baby Tomatoes"
-maui-devflow MAUI tap SendMessageButton
+maui devflow MAUI fill ChatInput "Tell me about Baby Tomatoes"
+maui devflow MAUI tap SendMessageButton
 # Wait 15 seconds
-maui-devflow MAUI screenshot
-maui-devflow MAUI tree
+maui devflow MAUI screenshot
+maui devflow MAUI tree
 ```
 
 **Expected:**
@@ -113,11 +113,11 @@ maui-devflow MAUI tree
 
 **Steps:**
 ```bash
-maui-devflow MAUI tap ChatTrayToggleButton
-maui-devflow MAUI fill ChatInput "Show me all my tomato plants"
-maui-devflow MAUI tap SendMessageButton
+maui devflow MAUI tap ChatTrayToggleButton
+maui devflow MAUI fill ChatInput "Show me all my tomato plants"
+maui devflow MAUI tap SendMessageButton
 # Wait 15 seconds
-maui-devflow MAUI tree
+maui devflow MAUI tree
 ```
 
 **Expected:**
@@ -134,11 +134,11 @@ maui-devflow MAUI tree
 
 **Steps:**
 ```bash
-maui-devflow MAUI tap ChatTrayToggleButton
-maui-devflow MAUI fill ChatInput "Show me all my tomato plants"
-maui-devflow MAUI tap SendMessageButton
+maui devflow MAUI tap ChatTrayToggleButton
+maui devflow MAUI fill ChatInput "Show me all my tomato plants"
+maui devflow MAUI tap SendMessageButton
 # Wait 15 seconds
-maui-devflow MAUI tree
+maui devflow MAUI tree
 ```
 
 **Expected:**
@@ -155,8 +155,8 @@ maui-devflow MAUI tree
 
 **Steps:**
 ```bash
-maui-devflow MAUI tap ClearChatButton
-maui-devflow MAUI screenshot
+maui devflow MAUI tap ClearChatButton
+maui devflow MAUI screenshot
 ```
 
 **Expected:**
@@ -172,14 +172,14 @@ maui-devflow MAUI screenshot
 **Steps:**
 ```bash
 # Send a message first
-maui-devflow MAUI fill ChatInput "Hi"
-maui-devflow MAUI tap SendMessageButton
+maui devflow MAUI fill ChatInput "Hi"
+maui devflow MAUI tap SendMessageButton
 # Wait 5s
-maui-devflow MAUI tap ChatTrayToggleButton
+maui devflow MAUI tap ChatTrayToggleButton
 # Verify the tray is collapsed
-maui-devflow MAUI tree
-maui-devflow MAUI tap ChatTrayToggleButton
-maui-devflow MAUI screenshot
+maui devflow MAUI tree
+maui devflow MAUI tap ChatTrayToggleButton
+maui devflow MAUI screenshot
 ```
 
 **Expected:**
@@ -192,7 +192,7 @@ maui-devflow MAUI screenshot
 
 ## Scenario 8: Plant Detail Navigation
 
-**Note:** CollectionView items cannot be tapped via MauiDevFlow (virtualization bounds are -1x-1). This scenario requires manual interaction or programmatic navigation.
+**Note:** CollectionView items cannot be tapped via MAUI DevFlow (virtualization bounds are -1x-1). This scenario requires manual interaction or programmatic navigation.
 
 **Manual steps:**
 1. Click on a plant card in the list
@@ -209,15 +209,15 @@ maui-devflow MAUI screenshot
 
 **Steps:**
 ```bash
-maui-devflow MAUI tap AddPlantButton
+maui devflow MAUI tap AddPlantButton
 # Wait for navigation
-maui-devflow MAUI tree
-maui-devflow MAUI fill NicknameEntry "Test Rose"
-maui-devflow MAUI fill SpeciesEntry "rose"
-maui-devflow MAUI fill LocationEntry "Front garden"
-maui-devflow MAUI tap SavePlantButton
+maui devflow MAUI tree
+maui devflow MAUI fill NicknameEntry "Test Rose"
+maui devflow MAUI fill SpeciesEntry "rose"
+maui devflow MAUI fill LocationEntry "Front garden"
+maui devflow MAUI tap SavePlantButton
 # Wait for save + navigation back
-maui-devflow MAUI tree
+maui devflow MAUI tree
 ```
 
 **Expected:**
@@ -235,12 +235,12 @@ maui-devflow MAUI tree
 
 **Steps:**
 ```bash
-maui-devflow MAUI tap ChatTrayToggleButton
-maui-devflow MAUI fill ChatInput "Add a new plant called Sun Daisy, species daisy, balcony, outdoor"
-maui-devflow MAUI tap SendMessageButton
+maui devflow MAUI tap ChatTrayToggleButton
+maui devflow MAUI fill ChatInput "Add a new plant called Sun Daisy, species daisy, balcony, outdoor"
+maui devflow MAUI tap SendMessageButton
 # Wait 18 seconds for AI to propose the tool call
-maui-devflow MAUI screenshot
-maui-devflow MAUI tree
+maui devflow MAUI screenshot
+maui devflow MAUI tree
 ```
 
 **Expected:**
@@ -255,10 +255,10 @@ maui-devflow MAUI tree
 
 **Approve:**
 ```bash
-maui-devflow MAUI tap ApproveToolButton
+maui devflow MAUI tap ApproveToolButton
 # Wait 15 seconds for function execution + AI response
-maui-devflow MAUI screenshot
-maui-devflow MAUI tree
+maui devflow MAUI screenshot
+maui devflow MAUI tree
 ```
 
 **Expected after approve:**
@@ -278,12 +278,12 @@ maui-devflow MAUI tree
 
 **Steps:**
 ```bash
-maui-devflow MAUI tap ClearChatButton
-maui-devflow MAUI fill ChatInput "Remove the plant called Golden Daisy"
-maui-devflow MAUI tap SendMessageButton
+maui devflow MAUI tap ClearChatButton
+maui devflow MAUI fill ChatInput "Remove the plant called Golden Daisy"
+maui devflow MAUI tap SendMessageButton
 # Wait 18 seconds
-maui-devflow MAUI screenshot
-maui-devflow MAUI tree
+maui devflow MAUI screenshot
+maui devflow MAUI tree
 ```
 
 **Expected:**
@@ -296,9 +296,9 @@ maui-devflow MAUI tree
 
 **Approve:**
 ```bash
-maui-devflow MAUI tap ApproveToolButton
+maui devflow MAUI tap ApproveToolButton
 # Wait 15 seconds
-maui-devflow MAUI screenshot
+maui devflow MAUI screenshot
 ```
 
 **Expected after approve:**
@@ -315,13 +315,13 @@ maui-devflow MAUI screenshot
 
 **Steps:**
 ```bash
-maui-devflow MAUI tap ClearChatButton
-maui-devflow MAUI fill ChatInput "Remove the plant called Sunny Basil"
-maui-devflow MAUI tap SendMessageButton
+maui devflow MAUI tap ClearChatButton
+maui devflow MAUI fill ChatInput "Remove the plant called Sunny Basil"
+maui devflow MAUI tap SendMessageButton
 # Wait 18 seconds
-maui-devflow MAUI tap RejectToolButton
+maui devflow MAUI tap RejectToolButton
 # Wait 5 seconds
-maui-devflow MAUI screenshot
+maui devflow MAUI screenshot
 ```
 
 **Expected after reject:**

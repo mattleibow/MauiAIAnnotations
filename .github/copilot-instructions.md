@@ -18,24 +18,23 @@ dotnet build samples/MauiSampleApp/MauiSampleApp.csproj -f net10.0-windows10.0.1
 # Run sample app
 dotnet run --project samples/MauiSampleApp/MauiSampleApp.csproj -f net10.0-windows10.0.19041.0 --no-build
 
-# UI testing with MauiDevFlow (after app is running)
+# UI testing with MAUI DevFlow (after app is running)
 # ALL scenarios in tests/UI-TEST-PLAN.md MUST be run and confirmed passing before pushing
-maui-devflow update-skill
-maui-devflow MAUI tree
-maui-devflow MAUI screenshot
-maui-devflow MAUI tap <AutomationId>
-maui-devflow MAUI fill <AutomationId> "text"
+maui devflow MAUI tree
+maui devflow MAUI screenshot
+maui devflow MAUI tap <AutomationId>
+maui devflow MAUI fill <AutomationId> "text"
 ```
 
-### MauiDevFlow skill usage
-- For MAUI UI debugging, inspection, and automation, use the bundled `maui-ai-debugging` skill together with direct `maui-devflow` actions.
-- Prefer `maui-devflow MAUI ...` for tree inspection, screenshots, taps, fills, property checks, and logs instead of ad-hoc platform-specific workarounds when the agent is available.
-- For Android, connect through MauiDevFlow as well: use `adb reverse tcp:19223 tcp:19223` plus `adb forward tcp:<agent-port> tcp:<agent-port>` when needed, then run `maui-devflow MAUI ... -p android`.
+### MAUI DevFlow skill usage
+- For MAUI UI debugging, inspection, and automation, use the bundled `maui-ai-debugging` skill together with direct `maui devflow` actions.
+- Prefer `maui devflow MAUI ...` for tree inspection, screenshots, taps, fills, property checks, and logs instead of ad-hoc platform-specific workarounds when the agent is available.
+- For Android, connect through MAUI DevFlow as well: use `adb reverse tcp:19223 tcp:19223` plus `adb forward tcp:<agent-port> tcp:<agent-port>` when needed, then run `maui devflow MAUI ... -p android`.
 
 ### Pre-Push Checklist
 1. `dotnet build MauiAIAnnotations.slnx` — 0 warnings, 0 errors
 2. `dotnet test MauiAIAnnotations.slnx` — all tests pass
-3. Launch app and run ALL scenarios in `tests/UI-TEST-PLAN.md` (1–10c) via MauiDevFlow
+3. Launch app and run ALL scenarios in `tests/UI-TEST-PLAN.md` (1–10c) via MAUI DevFlow
 4. Every scenario must produce the expected result before code is pushed
 
 ## Architecture
@@ -68,7 +67,7 @@ builder.Services.AddSingleton<PlantDataService>();
 builder.Services.AddAITools(); // discovers [ExportAIFunction] methods automatically
 ```
 
-### AutomationIds (for MauiDevFlow)
+### AutomationIds (for MAUI DevFlow)
 - HomePage: `PageTitle`, `AddPlantButton`, `PlantList`
 - AddPlantPage: `NicknameEntry`, `SpeciesEntry`, `LocationEntry`, `IndoorSwitch`, `SavePlantButton`
 - PlantDetailPage: `CareHistoryList`, `DeletePlantButton`
@@ -82,7 +81,7 @@ builder.Services.AddAITools(); // discovers [ExportAIFunction] methods automatic
 - Use `artifacts/` output directory (`UseArtifactsOutput`)
 - XAML views in the library bind directly to `ContentContext` — no ViewModels unless doing real data transformation
 - Chat auto-scroll uses `Dispatcher.DispatchDelayed(50ms)` before `ScrollTo`
-- CollectionView items can't be tapped via MauiDevFlow (virtualization bounds are -1x-1)
+- CollectionView items can't be tapped via MAUI DevFlow (virtualization bounds are -1x-1)
 
 ## Documentation
 - `docs/README.md` — Project overview, features, quick example
@@ -90,4 +89,4 @@ builder.Services.AddAITools(); // discovers [ExportAIFunction] methods automatic
 - `docs/tool-rendering.md` — Custom content views for tool calls (PlantCardView example)
 - `docs/human-in-the-loop.md` — Approval flow with `[ExportAIFunction(ApprovalRequired = true)]`
 - `docs/images/` — Screenshots referenced by the docs
-- When adding new features, update the relevant doc page and capture new screenshots via MauiDevFlow
+- When adding new features, update the relevant doc page and capture new screenshots via MAUI DevFlow

@@ -1,7 +1,7 @@
 using System.ClientModel;
 using System.Reflection;
 using Azure.AI.OpenAI;
-using MauiDevFlow.Agent;
+using Microsoft.Maui.DevFlow.Agent;
 using Microsoft.Extensions.AI.Attributes;
 using Microsoft.Extensions.AI.Chat;
 using Microsoft.Extensions.AI;
@@ -33,7 +33,7 @@ public static class MauiProgram
         // Load user secrets embedded as resource
         builder.Configuration.AddUserSecrets();
 
-        // Register MauiDevFlow
+        // Register MAUI DevFlow
 #if DEBUG
         builder.AddMauiDevFlowAgent();
 #endif
