@@ -182,4 +182,83 @@ public class ChatSessionHeadlessTests
         var lastHistory = innerClient.ReceivedMessages[^1];
         Assert.Contains(lastHistory, static m => m.Contents.OfType<ToolApprovalResponseContent>().Any(r => !r.Approved));
     }
+
+    [Fact]
+    public async Task Follow_up_message_after_approved_tool_call_does_not_crash()
+    {
+        // Reproduces the exact crash scenario: Send → Approve → tool executes → Send again
+        // The FunctionInvokingChatClient middleware sets InformationalOnly=true on the
+        // response's FCC but not the request's FCC, causing a validation mismatch
+        // on the next turn if resolved approval content remains in the history.
+
+        var plantsDb = new List<string>();
+
+        var addPlantTool = AIFunctionFactory.Create(
+            (string nickname) => { plantsDb.Add(nickname); return $"Added {nickname}"; },
+            new AIFunctionFactoryOptions
+            {
+                Name = "add_plant",
+            });
+        var addPlantApproval = new ApprovalRequiredAIFunction(addPlantTool);
+
+        var getPlantsTool = AIFunctionFactory.Create(
+            () => plantsDb.Count > 0 ? string.Join(", ", plantsDb) : "No plants yet",
+            new AIFunctionFactoryOptions
+            {
+                Name = "get_plants",
+            });
+
+        var tools = new AITool[] { addPlantApproval, getPlantsTool };
+
+        int innerCallCount = 0;
+        var innerClient = new CallbackChatClient(updates =>
+        {
+            innerCallCount++;
+            return innerCallCount switch
+            {
+                // Turn 1: AI decides to call add_plant
+                1 => [new ChatResponseUpdate(ChatRole.Assistant, [
+                    new FunctionCallContent("call-1", "add_plant",
+                        new Dictionary<string, object?> { ["nickname"] = "Fern" })])],
+                // Turn 2 (after approval + execution): AI responds with text
+                2 => [new ChatResponseUpdate(ChatRole.Assistant, [
+                    new TextContent("Done! I've added Fern to your garden.")])],
+                // Turn 3: AI decides to call get_plants
+                3 => [new ChatResponseUpdate(ChatRole.Assistant, [
+                    new FunctionCallContent("call-2", "get_plants")])],
+                // Turn 4 (after get_plants executes): AI responds with text
+                4 => [new ChatResponseUpdate(ChatRole.Assistant, [
+                    new TextContent("You have: Fern")])],
+                _ => [new ChatResponseUpdate(ChatRole.Assistant, [
+                    new TextContent("...")])],
+            };
+        });
+
+        using var pipeline = new ChatClientBuilder(innerClient)
+            .UseFunctionInvocation()
+            .Build();
+
+        var session = new ChatSession(tools, pipeline);
+
+        // Step 1: Send initial message — middleware intercepts add_plant, yields approval request
+        await session.SendAsync("Add a fern plant");
+        Assert.True(session.HasPendingApprovals, "Should have pending approval for add_plant");
+
+        // Step 2: Approve the tool call
+        var pending = session.PendingApprovals.Single();
+        var request = (ToolApprovalRequestContent)pending.Content;
+        await session.SubmitApprovalAsync(request.CreateResponse(approved: true));
+
+        Assert.False(session.HasPendingApprovals);
+        Assert.Contains("Fern", plantsDb);
+
+        // Step 3: Send a follow-up message — THIS PREVIOUSLY CRASHED with:
+        // "ToolApprovalRequestContent found with FunctionCall.CallId(s) '...'
+        //  that have no matching ToolApprovalResponseContent"
+        await session.SendAsync("What plants do I have?");
+
+        // Verify the follow-up worked
+        Assert.Contains(session.Messages,
+            static m => m.Content is TextContent { Text: "You have: Fern" });
+    }
 }

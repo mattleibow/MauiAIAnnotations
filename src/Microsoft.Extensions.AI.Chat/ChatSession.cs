@@ -261,11 +261,68 @@ public sealed class ChatSession : IChatSession, IDisposable
 
     private List<ChatMessage> BuildHistory()
     {
+        // Collect CallIds of function results already in the history.
+        // These indicate tool calls that have been fully executed, so their
+        // approval request/response pairs are no longer needed by the middleware.
+        // Keeping stale approval content causes validation failures because the
+        // middleware mutates InformationalOnly on the response's FunctionCallContent
+        // but not on the request's, breaking the paired matching on subsequent turns.
+        var executedCallIds = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var msg in _conversationHistory)
+            foreach (var content in msg.Contents)
+                if (content is FunctionResultContent frc && !string.IsNullOrEmpty(frc.CallId))
+                    executedCallIds.Add(frc.CallId);
+
         var history = new List<ChatMessage>();
         if (!string.IsNullOrWhiteSpace(SystemPrompt))
             history.Add(new ChatMessage(ChatRole.System, SystemPrompt));
 
-        history.AddRange(_conversationHistory);
+        foreach (var msg in _conversationHistory)
+        {
+            if (executedCallIds.Count == 0)
+            {
+                history.Add(msg);
+                continue;
+            }
+
+            List<AIContent>? filtered = null;
+            for (int i = 0; i < msg.Contents.Count; i++)
+            {
+                bool isResolvedApproval = msg.Contents[i] switch
+                {
+                    ToolApprovalRequestContent { ToolCall: FunctionCallContent fcc }
+                        when executedCallIds.Contains(fcc.CallId) => true,
+                    ToolApprovalResponseContent { ToolCall: FunctionCallContent fcc }
+                        when executedCallIds.Contains(fcc.CallId) => true,
+                    _ => false,
+                };
+
+                if (isResolvedApproval)
+                {
+                    // Lazily copy preceding non-approval items
+                    filtered ??= msg.Contents.Take(i).ToList();
+                }
+                else
+                {
+                    filtered?.Add(msg.Contents[i]);
+                }
+            }
+
+            if (filtered is null)
+            {
+                // No approval content was stripped — keep original message
+                history.Add(msg);
+            }
+            else if (filtered.Count > 0)
+            {
+                // Some content remains — clone and replace contents
+                var clone = msg.Clone();
+                clone.Contents = filtered;
+                history.Add(clone);
+            }
+            // else: all content was resolved approval — skip the message entirely
+        }
+
         return history;
     }
 
