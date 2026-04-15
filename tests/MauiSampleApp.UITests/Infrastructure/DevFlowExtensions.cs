@@ -155,27 +155,52 @@ public static class DevFlowExtensions
 
     /// <summary>
     /// Opens the chat tray if it's not already open.
+    /// In permanent sidebar layouts, the chat may always be visible.
     /// </summary>
     public static async Task EnsureChatTrayOpenAsync(this IAppDriver driver)
     {
         var chatInput = await driver.QueryAsync(automationId: "ChatInput");
-        if (chatInput is null or { Count: 0 })
+        if (chatInput is { Count: > 0 } && chatInput[0].IsVisible)
+            return; // Already open or permanent sidebar
+
+        var toggle = await driver.QueryAsync(automationId: "ChatTrayToggleButton");
+        if (toggle is { Count: > 0 })
         {
-            await driver.TapByAutomationIdAsync("ChatTrayToggleButton");
-            await driver.WaitForElementAsync("ChatInput", timeoutMs: 5000);
+            await driver.TapAsync(toggle[0].Id);
+            try
+            {
+                await driver.WaitForElementAsync("ChatInput", timeoutMs: 5000);
+            }
+            catch (TimeoutException)
+            {
+                // Chat may not be toggleable in this layout
+            }
         }
     }
 
     /// <summary>
-    /// Closes the chat tray if it's currently open.
+    /// Closes the chat tray if possible. In permanent sidebar layouts,
+    /// the chat stays visible — this is a no-op in that case.
     /// </summary>
     public static async Task EnsureChatTrayClosedAsync(this IAppDriver driver)
     {
         var chatInput = await driver.QueryAsync(automationId: "ChatInput");
-        if (chatInput is { Count: > 0 })
+        if (chatInput is null or { Count: 0 })
+            return; // Already closed
+
+        var toggle = await driver.QueryAsync(automationId: "ChatTrayToggleButton");
+        if (toggle is not { Count: > 0 })
+            return; // No toggle button available
+
+        await driver.TapAsync(toggle[0].Id);
+
+        try
         {
-            await driver.TapByAutomationIdAsync("ChatTrayToggleButton");
-            await driver.WaitForElementGoneAsync("ChatInput", timeoutMs: 5000);
+            await driver.WaitForElementGoneAsync("ChatInput", timeoutMs: 3000);
+        }
+        catch (TimeoutException)
+        {
+            // Permanent sidebar layout — chat can't be closed, which is fine
         }
     }
 

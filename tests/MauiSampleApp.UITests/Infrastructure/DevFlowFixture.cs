@@ -21,7 +21,9 @@ public sealed class DevFlowFixture : IAsyncLifetime
         var host = Environment.GetEnvironmentVariable("DEVFLOW_HOST") ?? "localhost";
         var port = int.TryParse(Environment.GetEnvironmentVariable("DEVFLOW_PORT"), out var p) ? p : 9223;
 
-        Driver = AppDriverFactory.Create(Platform);
+        // Use PreConfiguredAppDriver to avoid adb reverse/forward conflicts
+        // when port mappings are already set up externally.
+        Driver = new PreConfiguredAppDriver();
         await Driver.ConnectAsync(host, port);
 
         var status = await Driver.GetStatusAsync();
@@ -36,6 +38,18 @@ public sealed class DevFlowFixture : IAsyncLifetime
         Driver?.Dispose();
         return Task.CompletedTask;
     }
+}
+
+/// <summary>
+/// A driver that skips platform-specific setup (adb reverse/forward).
+/// Use when port forwarding is already configured externally before running tests.
+/// </summary>
+internal sealed class PreConfiguredAppDriver : AppDriverBase
+{
+    public override string Platform => "preconfigured";
+
+    protected override Task SetupPlatformAsync(string host, int port) =>
+        Task.CompletedTask;
 }
 
 [CollectionDefinition("DevFlow")]
