@@ -9,7 +9,8 @@
     <Project Path="samples/MauiSampleApp/MauiSampleApp.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/MauiAIAnnotations.Tests/MauiAIAnnotations.Tests.csproj" />
+    <Project Path="tests/Microsoft.Extensions.AI.Attributes.Tests/Microsoft.Extensions.AI.Attributes.Tests.csproj" />
+    <Project Path="tests/Microsoft.Extensions.AI.Chat.Tests/Microsoft.Extensions.AI.Chat.Tests.csproj" />
     <Project Path="tests/MauiSampleApp.Core.Tests/MauiSampleApp.Core.Tests.csproj" />
   </Folder>
 </Solution>

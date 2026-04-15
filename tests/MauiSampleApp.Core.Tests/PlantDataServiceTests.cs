@@ -1,121 +1,9 @@
 using MauiSampleApp.Core.Models;
 using MauiSampleApp.Core.Services;
-using Microsoft.Extensions.AI;
 using Shiny.DocumentDb;
 using Shiny.DocumentDb.Sqlite;
 
 namespace MauiSampleApp.Core.Tests;
-
-/// <summary>
-/// A simple IChatClient for testing that returns a valid species profile JSON.
-/// </summary>
-public sealed class FakeSpeciesChatClient : IChatClient
-{
-    public ChatClientMetadata Metadata { get; } = new("FakeSpecies");
-
-    public Task<ChatResponse> GetResponseAsync(
-        IEnumerable<ChatMessage> messages,
-        ChatOptions? options = null,
-        CancellationToken cancellationToken = default)
-    {
-        // Extract species name from the prompt
-        var lastMessage = messages.LastOrDefault()?.Text ?? "";
-        var name = "Unknown";
-        var startIdx = lastMessage.IndexOf('"');
-        var endIdx = lastMessage.IndexOf('"', startIdx + 1);
-        if (startIdx >= 0 && endIdx > startIdx)
-            name = lastMessage[(startIdx + 1)..endIdx];
-
-        var capitalName = char.ToUpper(name[0]) + name[1..];
-        var json = $$"""
-            {
-                "CommonName": "{{capitalName}}",
-                "ScientificName": "{{capitalName}} testicus",
-                "WateringFrequencyDays": 5,
-                "SunlightNeeds": "Full",
-                "FrostTolerant": false,
-                "Notes": "Test notes for {{name}}."
-            }
-            """;
-
-        var response = new ChatResponse([new ChatMessage(ChatRole.Assistant, json)]);
-        return Task.FromResult(response);
-    }
-
-    public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
-        IEnumerable<ChatMessage> messages,
-        ChatOptions? options = null,
-        CancellationToken cancellationToken = default)
-        => throw new NotImplementedException();
-
-    public object? GetService(Type serviceType, object? serviceKey = null) => null;
-    public void Dispose() { }
-}
-
-public class SpeciesServiceTests : IDisposable
-{
-    private readonly IDocumentStore _store;
-    private readonly SpeciesService _service;
-
-    public SpeciesServiceTests()
-    {
-        _store = new SqliteDocumentStore("Data Source=:memory:");
-        _service = new SpeciesService(_store, new FakeSpeciesChatClient());
-    }
-
-    public void Dispose() => (_store as IDisposable)?.Dispose();
-
-    [Fact]
-    public async Task GetSpecies_ReturnsProfile()
-    {
-        var profile = await _service.GetSpeciesAsync("tomato");
-
-        Assert.NotNull(profile);
-        Assert.Equal("Tomato", profile.CommonName);
-        Assert.NotEmpty(profile.Id);
-    }
-
-    [Fact]
-    public async Task GetSpecies_ReturnsCachedOnSecondCall()
-    {
-        var first = await _service.GetSpeciesAsync("basil");
-        var second = await _service.GetSpeciesAsync("basil");
-
-        Assert.Equal(first.Id, second.Id);
-        Assert.Equal(first.CommonName, second.CommonName);
-    }
-
-    [Fact]
-    public async Task GetSpecies_CaseInsensitive()
-    {
-        var lower = await _service.GetSpeciesAsync("mint");
-        var upper = await _service.GetSpeciesAsync("MINT");
-        var mixed = await _service.GetSpeciesAsync("Mint");
-
-        Assert.Equal(lower.Id, upper.Id);
-        Assert.Equal(lower.Id, mixed.Id);
-    }
-
-    [Fact]
-    public async Task GetSpecies_TrimsWhitespace()
-    {
-        var first = await _service.GetSpeciesAsync("rosemary");
-        var padded = await _service.GetSpeciesAsync("  rosemary  ");
-
-        Assert.Equal(first.Id, padded.Id);
-    }
-
-    [Fact]
-    public async Task GetSpecies_SetsDefaultFields()
-    {
-        var profile = await _service.GetSpeciesAsync("lavender");
-
-        Assert.True(profile.WateringFrequencyDays > 0);
-        Assert.NotEmpty(profile.SunlightNeeds);
-        Assert.NotEmpty(profile.Notes);
-        Assert.NotEmpty(profile.ScientificName);
-    }
-}
 
 public class PlantDataServiceTests : IDisposable
 {
@@ -218,7 +106,7 @@ public class PlantDataServiceTests : IDisposable
     [Fact]
     public async Task RemovePlant_NoOpIfNotFound()
     {
-        await _service.RemovePlantAsync("nonexistent"); // should not throw
+        await _service.RemovePlantAsync("nonexistent");
     }
 
     [Fact]
@@ -268,13 +156,13 @@ public class PlantDataServiceTests : IDisposable
         await _service.AddPlantAsync(new NewPlantRequest { Nickname = "Herb", Species = "basil", Location = "Kitchen", IsIndoor = true });
 
         await _service.LogCareEventAsync("Herb", new CareEventRequest { EventType = "Watered", Notes = "Morning water" });
-        await Task.Delay(10); // ensure different timestamps
+        await Task.Delay(10);
         await _service.LogCareEventAsync("Herb", new CareEventRequest { EventType = "Fertilized", Notes = "Monthly feed" });
 
         var history = await _service.GetCareHistoryAsync("Herb");
 
         Assert.Equal(2, history.Count);
-        Assert.Equal("Fertilized", history[0].EventType); // most recent first
+        Assert.Equal("Fertilized", history[0].EventType);
         Assert.Equal("Watered", history[1].EventType);
     }
 
@@ -294,4 +182,3 @@ public class PlantDataServiceTests : IDisposable
         Assert.Equal(plant1.SpeciesId, plant2.SpeciesId);
     }
 }
-

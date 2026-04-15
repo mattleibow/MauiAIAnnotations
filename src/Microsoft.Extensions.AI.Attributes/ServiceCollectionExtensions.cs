@@ -1,7 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
@@ -14,6 +11,8 @@ namespace Microsoft.Extensions.AI.Attributes;
 /// </summary>
 public static class ServiceCollectionExtensions
 {
+    private static AIFunctionProvider Provider => AIFunctionProvider.Default;
+
     /// <summary>
      /// Scans the calling assembly and its referenced assemblies for types containing methods
      /// annotated with <see cref="ExportAIFunctionAttribute"/> and registers the discovered
@@ -25,9 +24,7 @@ public static class ServiceCollectionExtensions
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static IServiceCollection AddAITools(this IServiceCollection services)
     {
-        var callingAssembly = Assembly.GetCallingAssembly();
-        var assemblies = GetRelevantAssemblies(callingAssembly);
-        return services.AddAITools([.. assemblies]);
+        return Provider.AddFromCallingAssembly(services, Assembly.GetCallingAssembly());
     }
 
     /// <summary>
@@ -44,15 +41,11 @@ public static class ServiceCollectionExtensions
         params Assembly[] assemblies)
     {
         if (assemblies.Length == 0)
+        {
             assemblies = [Assembly.GetCallingAssembly()];
+        }
 
-        var types = assemblies
-            .SelectMany(a => a.GetExportedTypes())
-            .Where(t => t.IsClass && !t.IsAbstract)
-            .Where(TypeHasExportedFunctions)
-            .ToList();
-
-        return services.AddAITools([.. types]);
+        return Provider.AddAITools(services, assemblies);
     }
 
     /// <summary>
@@ -67,91 +60,6 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         params Type[] types)
     {
-        var registrations = DiscoverRegistrations(types);
-
-        foreach (var reg in registrations)
-        {
-            // Capture values for closure
-            var method = reg.Method;
-            var serviceType = reg.ServiceType;
-            var name = reg.Name;
-            var description = reg.Description;
-            var approvalRequired = reg.ApprovalRequired;
-
-            services.AddSingleton<AITool>(sp =>
-            {
-                AIFunction fn = new DependencyInjectionAIFunction(method, serviceType, sp, name, description);
-                return approvalRequired ? new ApprovalRequiredAIFunction(fn) : fn;
-            });
-        }
-
-        return services;
+        return Provider.AddAITools(services, types);
     }
-
-    private static bool TypeHasExportedFunctions(Type type)
-    {
-        return type.GetMethods(BindingFlags.Public | BindingFlags.Instance)
-            .Any(m => m.GetCustomAttribute<ExportAIFunctionAttribute>() is not null);
-    }
-
-    private static List<Assembly> GetRelevantAssemblies(Assembly root)
-    {
-        var result = new List<Assembly> { root };
-        foreach (var refName in root.GetReferencedAssemblies())
-        {
-            try
-            {
-                var asm = Assembly.Load(refName);
-                if (asm.GetExportedTypes().Any(t => t.IsClass && !t.IsAbstract && TypeHasExportedFunctions(t)))
-                    result.Add(asm);
-            }
-            catch
-            {
-                // Skip assemblies that can't be loaded
-            }
-        }
-        return result;
-    }
-
-    private static List<ToolRegistration> DiscoverRegistrations(IEnumerable<Type> types)
-    {
-        var registrations = new List<ToolRegistration>();
-
-        foreach (var type in types)
-        {
-            if (type.IsAbstract || type.IsGenericTypeDefinition || !type.IsClass)
-                continue;
-
-            var methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance);
-            foreach (var method in methods)
-            {
-                var attr = method.GetCustomAttribute<ExportAIFunctionAttribute>();
-                if (attr is null)
-                    continue;
-
-                if (method.IsGenericMethodDefinition)
-                    throw new InvalidOperationException(
-                        $"[ExportAIFunction] is not supported on generic method '{type.Name}.{method.Name}'.");
-
-                if (method.GetParameters().Any(p => p.ParameterType.IsByRef))
-                    throw new InvalidOperationException(
-                        $"[ExportAIFunction] is not supported on method '{type.Name}.{method.Name}' because it has ref/out/in parameters.");
-
-                var name = attr.Name ?? method.Name;
-                var description = attr.Description
-                    ?? method.GetCustomAttribute<DescriptionAttribute>()?.Description;
-
-                registrations.Add(new ToolRegistration(type, method, name, description, attr.ApprovalRequired));
-            }
-        }
-
-        return registrations;
-    }
-
-    private sealed record ToolRegistration(
-        Type ServiceType,
-        MethodInfo Method,
-        string Name,
-        string? Description,
-        bool ApprovalRequired);
 }
