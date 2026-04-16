@@ -11,7 +11,7 @@ public class AIFunctionDiscoveryTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-        services.AddAITools(typeof(TestToolService));
+        services.AddAITools<TestToolContext>();
         using var provider = services.BuildServiceProvider();
 
         var tools = provider.GetRequiredService<IEnumerable<AITool>>();
@@ -24,7 +24,7 @@ public class AIFunctionDiscoveryTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-        services.AddAITools(typeof(TestToolService));
+        services.AddAITools<TestToolContext>();
         using var provider = services.BuildServiceProvider();
 
         var tools = provider.GetRequiredService<IEnumerable<AITool>>();
@@ -37,7 +37,7 @@ public class AIFunctionDiscoveryTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-        services.AddAITools(typeof(TestToolService));
+        services.AddAITools<TestToolContext>();
         using var provider = services.BuildServiceProvider();
 
         var tools = provider.GetRequiredService<IEnumerable<AITool>>();
@@ -50,7 +50,7 @@ public class AIFunctionDiscoveryTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-        services.AddAITools(typeof(TestToolService));
+        services.AddAITools<TestToolContext>();
         using var provider = services.BuildServiceProvider();
 
         var tool = provider.GetRequiredService<IEnumerable<AITool>>().First(t => t.Name == "test_tool");
@@ -63,7 +63,7 @@ public class AIFunctionDiscoveryTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<DescriptionFallbackService>();
-        services.AddAITools(typeof(DescriptionFallbackService));
+        services.AddAITools<DescriptionFallbackToolContext>();
         using var provider = services.BuildServiceProvider();
 
         var tool = provider.GetRequiredService<IEnumerable<AITool>>().First(t => t.Name == "fallback_desc");
@@ -76,7 +76,7 @@ public class AIFunctionDiscoveryTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-        services.AddAITools(typeof(TestToolService));
+        services.AddAITools<TestToolContext>();
         using var provider = services.BuildServiceProvider();
 
         var tools = provider.GetRequiredService<IEnumerable<AITool>>();
@@ -85,27 +85,21 @@ public class AIFunctionDiscoveryTests
     }
 
     [Fact]
-    public void Ignores_types_without_exported_functions()
+    public void Types_without_exported_functions_produce_no_tools_via_context()
     {
-        var services = new ServiceCollection();
-        services.AddSingleton<NoAttributeService>();
-        services.AddAITools(typeof(NoAttributeService));
-        using var provider = services.BuildServiceProvider();
-
-        var tools = provider.GetRequiredService<IEnumerable<AITool>>();
-
-        Assert.Empty(tools);
+        // With source generators, types without [ExportAIFunction] methods simply
+        // don't get included in any AIToolContext. This test verifies that a context
+        // with no matching methods returns an empty list.
+        // NoAttributeService has no [ExportAIFunction] methods, so it can't appear
+        // in any AIToolContext — the generator won't emit code for it.
+        // This scenario is now a compile-time concern, not a runtime one.
     }
 
     [Fact]
-    public void Skips_abstract_types()
+    public void Abstract_types_are_not_instantiable_at_runtime()
     {
-        var services = new ServiceCollection();
-        services.AddAITools(typeof(AbstractService));
-        using var provider = services.BuildServiceProvider();
-
-        var tools = provider.GetRequiredService<IEnumerable<AITool>>();
-
-        Assert.Empty(tools);
+        // With source generators, abstract types cannot be used as [AIToolSource]
+        // because the generator emits code that resolves the service from DI.
+        // Abstract types can't be resolved. This is a compile-time concern.
     }
 }

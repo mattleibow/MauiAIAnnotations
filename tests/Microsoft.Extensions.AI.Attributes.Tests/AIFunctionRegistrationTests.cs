@@ -7,13 +7,13 @@ namespace Microsoft.Extensions.AI.Attributes.Tests;
 public class AIFunctionRegistrationTests
 {
     [Fact]
-    public void Assembly_scanning_finds_types()
+    public void Multiple_source_types_are_aggregated()
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
         services.AddSingleton<DisposableToolService>();
         services.AddSingleton<DescriptionFallbackService>();
-        services.AddAITools(typeof(TestToolService), typeof(DisposableToolService), typeof(DescriptionFallbackService));
+        services.AddAITools<RegistrationTestToolContext>();
         using var provider = services.BuildServiceProvider();
 
         var tools = provider.GetRequiredService<IEnumerable<AITool>>();
@@ -29,7 +29,7 @@ public class AIFunctionRegistrationTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-        services.AddAITools(typeof(TestToolService));
+        services.AddAITools<TestToolContext>();
         using var provider = services.BuildServiceProvider();
 
         var tools = provider.GetRequiredService<IEnumerable<AITool>>();
@@ -42,7 +42,7 @@ public class AIFunctionRegistrationTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-        services.AddAITools(typeof(TestToolService));
+        services.AddAITools<TestToolContext>();
         using var provider = services.BuildServiceProvider();
 
         var first = provider.GetRequiredService<IEnumerable<AITool>>().ToList();

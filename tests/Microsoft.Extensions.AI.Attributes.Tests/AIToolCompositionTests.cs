@@ -11,7 +11,7 @@ public class AIToolCompositionTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-        services.AddAITools(typeof(TestToolService));
+        services.AddAITools<TestToolContext>();
 
         var classicTool = AIFunctionFactory.Create(
             () => "2024-01-15",
@@ -34,7 +34,7 @@ public class AIToolCompositionTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-        services.AddAITools(typeof(TestToolService));
+        services.AddAITools<TestToolContext>();
 
         using var provider = services.BuildServiceProvider();
         var registeredTools = provider.GetRequiredService<IEnumerable<AITool>>().ToList();
@@ -62,7 +62,7 @@ public class AIToolCompositionTests
             "answer_everything",
             "The answer to everything"));
 
-        services.AddAITools(typeof(TestToolService));
+        services.AddAITools<TestToolContext>();
 
         using var provider = services.BuildServiceProvider();
         var allTools = provider.GetRequiredService<IEnumerable<AITool>>().ToList();

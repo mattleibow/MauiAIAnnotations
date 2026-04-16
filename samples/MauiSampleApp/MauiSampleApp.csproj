@@ -79,6 +79,9 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\..\src\Microsoft.Extensions.AI.Attributes\Microsoft.Extensions.AI.Attributes.csproj" />
+	  <ProjectReference Include="..\..\src\Microsoft.Extensions.AI.Attributes.Generators\Microsoft.Extensions.AI.Attributes.Generators.csproj"
+	                    OutputItemType="Analyzer"
+	                    ReferenceOutputAssembly="false" />
 	  <ProjectReference Include="..\..\src\Microsoft.Extensions.AI.Chat\Microsoft.Extensions.AI.Chat.csproj" />
 	  <ProjectReference Include="..\..\src\Microsoft.Extensions.AI.Maui\Microsoft.Extensions.AI.Maui.csproj" />
 	  <ProjectReference Include="..\MauiSampleApp.Core\MauiSampleApp.Core.csproj" />

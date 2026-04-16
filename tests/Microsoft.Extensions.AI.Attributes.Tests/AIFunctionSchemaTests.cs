@@ -11,7 +11,7 @@ public class AIFunctionSchemaTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-        services.AddAITools(typeof(TestToolService));
+        services.AddAITools<TestToolContext>();
         using var provider = services.BuildServiceProvider();
 
         var tool = provider.GetRequiredService<IEnumerable<AITool>>().First(t => t.Name == "test_tool");
@@ -25,7 +25,7 @@ public class AIFunctionSchemaTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-        services.AddAITools(typeof(TestToolService));
+        services.AddAITools<TestToolContext>();
         using var provider = services.BuildServiceProvider();
 
         var tool = Assert.IsAssignableFrom<AIFunctionDeclaration>(
@@ -39,7 +39,7 @@ public class AIFunctionSchemaTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-        services.AddAITools(typeof(TestToolService));
+        services.AddAITools<TestToolContext>();
         using var provider = services.BuildServiceProvider();
 
         var diTool = Assert.IsAssignableFrom<AIFunctionDeclaration>(
@@ -59,7 +59,7 @@ public class AIFunctionSchemaTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<ComplexSchemaService>();
-        services.AddAITools(typeof(ComplexSchemaService));
+        services.AddAITools<ComplexSchemaToolContext>();
         using var provider = services.BuildServiceProvider();
 
         var reflectedTool = provider.GetRequiredService<IEnumerable<AITool>>().Single(t => t.Name == "create_plant_profile");

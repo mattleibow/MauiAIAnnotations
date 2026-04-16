@@ -22,7 +22,7 @@ public class AIFunctionInvocationTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<InvocationCounterService>();
-        services.AddAITools(typeof(InvocationCounterService));
+        services.AddAITools<InvocationCounterToolContext>();
         using var provider = services.BuildServiceProvider();
 
         var tool = provider.GetRequiredService<IEnumerable<AITool>>().First(t => t.Name == "counter_tool") as AIFunction;
@@ -40,7 +40,7 @@ public class AIFunctionInvocationTests
     {
         var services = new ServiceCollection();
         services.AddTransient<InvocationCounterService>();
-        services.AddAITools(typeof(InvocationCounterService));
+        services.AddAITools<InvocationCounterToolContext>();
         using var provider = services.BuildServiceProvider();
 
         var tool = provider.GetRequiredService<IEnumerable<AITool>>().First(t => t.Name == "counter_tool") as AIFunction;
@@ -58,7 +58,7 @@ public class AIFunctionInvocationTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-        services.AddAITools(typeof(TestToolService));
+        services.AddAITools<TestToolContext>();
         using var provider = services.BuildServiceProvider();
 
         var tool = provider.GetRequiredService<IEnumerable<AITool>>().First(t => t.Name == "test_tool") as AIFunction;
@@ -74,7 +74,7 @@ public class AIFunctionInvocationTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-        services.AddAITools(typeof(TestToolService));
+        services.AddAITools<TestToolContext>();
         using var provider = services.BuildServiceProvider();
 
         var tool = provider.GetRequiredService<IEnumerable<AITool>>().First(t => t.Name == "async_tool") as AIFunction;
@@ -90,7 +90,7 @@ public class AIFunctionInvocationTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<MultiParamService>();
-        services.AddAITools(typeof(MultiParamService));
+        services.AddAITools<MultiParamToolContext>();
         using var provider = services.BuildServiceProvider();
 
         var tool = provider.GetRequiredService<IEnumerable<AITool>>().First(t => t.Name == "multi_param") as AIFunction;
@@ -111,7 +111,7 @@ public class AIFunctionInvocationTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<DisposableToolService>();
-        services.AddAITools(typeof(DisposableToolService));
+        services.AddAITools<DisposableToolContext>();
         using var provider = services.BuildServiceProvider();
 
         var disposableService = provider.GetRequiredService<DisposableToolService>();
@@ -127,7 +127,7 @@ public class AIFunctionInvocationTests
     public async Task Missing_service_registration_throws_on_invocation()
     {
         var services = new ServiceCollection();
-        services.AddAITools(typeof(TestToolService));
+        services.AddAITools<TestToolContext>();
         using var provider = services.BuildServiceProvider();
 
         var tool = provider.GetRequiredService<IEnumerable<AITool>>().First(t => t.Name == "test_tool") as AIFunction;

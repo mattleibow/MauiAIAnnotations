@@ -22,6 +22,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.Extensions.AI.Attributes\Microsoft.Extensions.AI.Attributes.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.Extensions.AI.Attributes.Generators\Microsoft.Extensions.AI.Attributes.Generators.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
   </ItemGroup>
 
 </Project>

@@ -11,7 +11,7 @@ public class ApprovalRequiredAIFunctionTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<AllApprovalService>();
-        services.AddAITools(typeof(AllApprovalService));
+        services.AddAITools<AllApprovalToolContext>();
         using var provider = services.BuildServiceProvider();
 
         var tools = provider.GetRequiredService<IEnumerable<AITool>>().ToList();
@@ -26,7 +26,7 @@ public class ApprovalRequiredAIFunctionTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-        services.AddAITools(typeof(TestToolService));
+        services.AddAITools<TestToolContext>();
         using var provider = services.BuildServiceProvider();
 
         foreach (var tool in provider.GetRequiredService<IEnumerable<AITool>>())
@@ -40,7 +40,7 @@ public class ApprovalRequiredAIFunctionTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<ApprovalMixedService>();
-        services.AddAITools(typeof(ApprovalMixedService));
+        services.AddAITools<ApprovalMixedToolContext>();
         using var provider = services.BuildServiceProvider();
 
         var tools = provider.GetRequiredService<IEnumerable<AITool>>().ToList();
@@ -56,7 +56,7 @@ public class ApprovalRequiredAIFunctionTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<ApprovalMixedService>();
-        services.AddAITools(typeof(ApprovalMixedService));
+        services.AddAITools<ApprovalMixedToolContext>();
         using var provider = services.BuildServiceProvider();
 
         var wrapped = provider.GetRequiredService<IEnumerable<AITool>>().Single(t => t.Name == "dangerous_write");

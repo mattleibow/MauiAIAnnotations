@@ -11,7 +11,7 @@ public class AIFunctionCancellationTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<CancellableToolService>();
-        services.AddAITools(typeof(CancellableToolService));
+        services.AddAITools<CancellableToolContext>();
         using var provider = services.BuildServiceProvider();
 
         var tool = provider.GetRequiredService<IEnumerable<AITool>>().First(t => t.Name == "cancellable_tool") as AIFunction;
@@ -29,7 +29,7 @@ public class AIFunctionCancellationTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<CancellableToolService>();
-        services.AddAITools(typeof(CancellableToolService));
+        services.AddAITools<CancellableToolContext>();
         using var provider = services.BuildServiceProvider();
 
         var tool = provider.GetRequiredService<IEnumerable<AITool>>().First(t => t.Name == "cancellable_tool") as AIFunction;

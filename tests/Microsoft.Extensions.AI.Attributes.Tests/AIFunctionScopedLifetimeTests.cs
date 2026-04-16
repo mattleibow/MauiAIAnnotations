@@ -22,7 +22,7 @@ public class AIFunctionScopedLifetimeTests
     {
         var services = new ServiceCollection();
         services.AddScoped<InvocationCounterService>();
-        services.AddAITools(typeof(InvocationCounterService));
+        services.AddAITools<InvocationCounterToolContext>();
         using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
 
         var tool = provider.GetRequiredService<IEnumerable<AITool>>().First(t => t.Name == "counter_tool") as AIFunction;
@@ -38,7 +38,7 @@ public class AIFunctionScopedLifetimeTests
     {
         var services = new ServiceCollection();
         services.AddScoped<InvocationCounterService>();
-        services.AddAITools(typeof(InvocationCounterService));
+        services.AddAITools<InvocationCounterToolContext>();
         using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
 
         var tool = provider.GetRequiredService<IEnumerable<AITool>>().First(t => t.Name == "counter_tool") as AIFunction;
@@ -59,7 +59,7 @@ public class AIFunctionScopedLifetimeTests
     {
         var services = new ServiceCollection();
         services.AddScoped<InvocationCounterService>();
-        services.AddAITools(typeof(InvocationCounterService));
+        services.AddAITools<InvocationCounterToolContext>();
         using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
 
         var tool = provider.GetRequiredService<IEnumerable<AITool>>().First(t => t.Name == "counter_tool") as AIFunction;
@@ -81,7 +81,7 @@ public class AIFunctionScopedLifetimeTests
     {
         var services = new ServiceCollection();
         services.AddScoped<InvocationCounterService>();
-        services.AddAITools(typeof(InvocationCounterService));
+        services.AddAITools<InvocationCounterToolContext>();
         using var provider = services.BuildServiceProvider();
 
         var tool = provider.GetRequiredService<IEnumerable<AITool>>().First(t => t.Name == "counter_tool") as AIFunction;

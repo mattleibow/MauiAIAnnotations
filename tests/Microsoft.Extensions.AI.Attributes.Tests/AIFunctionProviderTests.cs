@@ -4,15 +4,14 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.Extensions.AI.Attributes.Tests;
 
-public class AIFunctionProviderTests
+public class AIToolContextTests
 {
     [Fact]
-    public void Provider_can_register_tools_from_explicit_types()
+    public void Context_creates_tools_from_source_types()
     {
         var services = new ServiceCollection();
         services.AddSingleton<TestToolService>();
-
-        AIFunctionProvider.Default.AddAITools(services, typeof(TestToolService));
+        services.AddAITools<TestToolContext>();
         using var serviceProvider = services.BuildServiceProvider();
 
         var tools = serviceProvider.GetRequiredService<IEnumerable<AITool>>();
@@ -22,10 +21,26 @@ public class AIFunctionProviderTests
     }
 
     [Fact]
-    public void Provider_returns_root_assembly_when_querying_relevant_assemblies()
+    public void Default_instance_returns_same_context()
     {
-        var assemblies = AIFunctionProvider.Default.GetRelevantAssemblies(typeof(TestToolService).Assembly);
+        var first = TestToolContext.Default;
+        var second = TestToolContext.Default;
 
-        Assert.Contains(typeof(TestToolService).Assembly, assemblies);
+        Assert.Same(first, second);
+    }
+
+    [Fact]
+    public void Context_with_multiple_sources_aggregates_tools()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<TestToolService>();
+        services.AddSingleton<MultiParamService>();
+        using var serviceProvider = services.BuildServiceProvider();
+
+        var tools = CompositeToolContext.Default.GetTools(serviceProvider);
+
+        Assert.Equal(4, tools.Count); // 3 from TestToolService + 1 from MultiParamService
+        Assert.Contains(tools, t => t.Name == "test_tool");
+        Assert.Contains(tools, t => t.Name == "multi_param");
     }
 }

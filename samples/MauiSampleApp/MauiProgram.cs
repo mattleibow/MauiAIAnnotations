@@ -49,11 +49,10 @@ public static class MauiProgram
 
         // ── AI Tools ────────────────────────────────────────────────
         //
-        // 1. Attribute-discovered tools (from [ExportAIFunction] on services)
-        //    These are the "new way" using Microsoft.Extensions.AI.Attributes.
-        //    The parameterless overload scans the calling assembly and its
-        //    referenced assemblies (e.g. MauiSampleApp.Core) automatically.
-        builder.Services.AddAITools();
+        // 1. Source-generated tools (from [ExportAIFunction] on services)
+        //    GardenTools aggregates PlantDataService, SeasonsService, and
+        //    SpeciesService tools discovered at compile time.
+        builder.Services.AddAITools<GardenTools>();
 
         // 2. Classic / bespoke tools (hand-crafted with AIFunctionFactory)
         //    These demonstrate the "old school" pattern used in apps like
