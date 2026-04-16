@@ -1,4 +1,7 @@
+using Microsoft.Extensions.AI;
+using Microsoft.Extensions.AI.Attributes;
 using Microsoft.Extensions.AI.Chat;
+using Microsoft.Extensions.DependencyInjection;
 using MauiSampleApp.Core.Models;
 using MauiSampleApp.ViewModels;
 
@@ -9,14 +12,17 @@ public partial class HomePage : ContentPage
     private const double CollapsedTrayHeight = 84;
     private const string ChatTrayAnimationName = "HomeChatTrayHeight";
     private readonly HomePageViewModel _viewModel;
+    private readonly IServiceProvider _serviceProvider;
     private bool _isChatTrayOpen;
     private double _panStartHeight;
+    private string _currentToolMode = "All Tools";
 
-    public ChatSession ChatSession { get; }
+    public ChatSession ChatSession { get; private set; }
 
-    public HomePage(HomePageViewModel viewModel, ChatSession chatSession)
+    public HomePage(HomePageViewModel viewModel, ChatSession chatSession, IServiceProvider serviceProvider)
     {
         _viewModel = viewModel;
+        _serviceProvider = serviceProvider;
         ChatSession = chatSession;
         BindingContext = viewModel;
         InitializeComponent();
@@ -49,6 +55,40 @@ public partial class HomePage : ContentPage
     private void OnClearChatClicked(object? sender, EventArgs e)
     {
         ChatSession.Clear();
+    }
+
+    private void OnToolModeChanged(object? sender, EventArgs e)
+    {
+        if (sender is not Picker picker || picker.SelectedItem is not string selectedMode)
+            return;
+
+        if (selectedMode == _currentToolMode)
+            return;
+
+        _currentToolMode = selectedMode;
+
+        // Build the tool list for the selected mode
+        IEnumerable<AITool> tools = selectedMode switch
+        {
+            "Read-Only" => ReadOnlyGardenTools.Default.GetTools(_serviceProvider),
+            "Plant Management" => PlantManagementTools.Default.GetTools(_serviceProvider),
+            _ => _serviceProvider.GetServices<AITool>(), // "All Tools" = default DI set
+        };
+
+        // Create a new session with the selected tools
+        var chatClient = _serviceProvider.GetRequiredService<IChatClient>();
+        var oldSession = ChatSession;
+        ChatSession = new ChatSession(tools, chatClient);
+
+        // Update the chat panel binding (triggers UI rebuild)
+        OnPropertyChanged(nameof(ChatSession));
+
+        // Dispose the old session
+        oldSession.Dispose();
+
+        // Update the subtitle to reflect the active tool set
+        var toolCount = tools.Count();
+        ChatTraySubtitleLabel.Text = $"{selectedMode}: {toolCount} tool{(toolCount != 1 ? "s" : "")} available";
     }
 
     private void OnPageLoaded(object? sender, EventArgs e)
@@ -129,6 +169,7 @@ public partial class HomePage : ContentPage
             : (currentHeight - CollapsedTrayHeight) / (expandedHeight - CollapsedTrayHeight);
 
         ChatTrayBody.IsVisible = progress > 0.05;
+        ToolModePicker.IsVisible = progress > 0.05;
         ChatTrayScrim.IsVisible = progress > 0.01;
         ChatTrayScrim.InputTransparent = progress <= 0.01;
         ChatTrayScrim.Opacity = Math.Clamp(progress * 0.35, 0, 0.35);
@@ -147,6 +188,7 @@ public partial class HomePage : ContentPage
         if (isOpen)
         {
             ChatTrayBody.IsVisible = true;
+            ToolModePicker.IsVisible = true;
             ChatTrayScrim.IsVisible = true;
             ChatTrayScrim.InputTransparent = false;
         }
@@ -171,6 +213,7 @@ public partial class HomePage : ContentPage
         if (!isOpen)
         {
             ChatTrayBody.IsVisible = false;
+            ToolModePicker.IsVisible = false;
             ChatTrayScrim.IsVisible = false;
             ChatTrayScrim.InputTransparent = true;
         }

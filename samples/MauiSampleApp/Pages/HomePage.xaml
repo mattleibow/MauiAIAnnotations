@@ -143,7 +143,7 @@
             <Border.StrokeShape>
                 <RoundRectangle CornerRadius="24" />
             </Border.StrokeShape>
-            <Grid RowDefinitions="Auto,Auto,*" RowSpacing="0">
+            <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="0">
                 <Grid x:Name="ChatTrayHeader"
                       AutomationId="ChatTrayHeader"
                       Padding="14,10,14,12">
@@ -215,12 +215,40 @@
                     </VerticalStackLayout>
                 </Grid>
 
-                <BoxView Grid.Row="1"
+                <!-- Tool Mode Picker (visible when tray is expanded) -->
+                <Grid x:Name="ToolModePicker"
+                      Grid.Row="1"
+                      IsVisible="False"
+                      Padding="14,6,14,8"
+                      ColumnDefinitions="Auto,*"
+                      ColumnSpacing="8">
+                    <Label Text="Tools:"
+                           FontSize="13"
+                           FontAttributes="Bold"
+                           VerticalOptions="Center"
+                           TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                    <Picker Grid.Column="1"
+                            AutomationId="ToolModePicker"
+                            SelectedIndex="0"
+                            FontSize="13"
+                            SelectedIndexChanged="OnToolModeChanged"
+                            TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}">
+                        <Picker.ItemsSource>
+                            <x:Array Type="{x:Type x:String}">
+                                <x:String>All Tools</x:String>
+                                <x:String>Read-Only</x:String>
+                                <x:String>Plant Management</x:String>
+                            </x:Array>
+                        </Picker.ItemsSource>
+                    </Picker>
+                </Grid>
+
+                <BoxView Grid.Row="2"
                          HeightRequest="1"
                          BackgroundColor="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource CardBorderDark}}" />
 
                 <Grid x:Name="ChatTrayBody"
-                      Grid.Row="2"
+                      Grid.Row="3"
                       IsVisible="False"
                       Padding="12,8,12,12">
                     <maui:ChatPanelControl Session="{Binding Source={x:Reference ThisPage}, Path=ChatSession}">
