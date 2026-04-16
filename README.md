@@ -43,7 +43,20 @@ builder.Services.AddSingleton<PlantDataService>();
 builder.Services.AddAITools<GardenTools>();
 ```
 
-Tools are now available as `IEnumerable<AITool>` for any `IChatClient` pipeline.
+### 4. Use with any IChatClient
+
+```csharp
+var tools = serviceProvider.GetServices<AITool>();
+var client = chatClient.AsBuilder()
+    .UseFunctionInvocation()
+    .Build(serviceProvider);
+
+var options = new ChatOptions { Tools = [.. tools] };
+await foreach (var update in client.GetStreamingResponseAsync(messages, options))
+{
+    Console.Write(update.Text);
+}
+```
 
 ## Libraries
 
