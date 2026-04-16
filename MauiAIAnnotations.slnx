@@ -6,6 +6,7 @@
     <Project Path="src/Microsoft.Extensions.AI.Maui/Microsoft.Extensions.AI.Maui.csproj" />
   </Folder>
   <Folder Name="/samples/">
+    <Project Path="samples/AnnotationsSampleApp/AnnotationsSampleApp.csproj" />
     <Project Path="samples/MauiSampleApp.Core/MauiSampleApp.Core.csproj" />
     <Project Path="samples/MauiSampleApp/MauiSampleApp.csproj" />
   </Folder>
