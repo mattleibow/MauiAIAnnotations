@@ -39,7 +39,7 @@ public class GardenService
     }
 
     [Description("Removes a plant from the user's garden by nickname.")]
-    [ExportAIFunction("remove_from_garden")]
+    [ExportAIFunction("remove_from_garden", ApprovalRequired = true)]
     public bool RemoveFromGarden(
         [Description("The nickname of the plant to remove")] string nickname)
     {
@@ -66,5 +66,22 @@ public class GardenService
 
         _garden[index] = _garden[index] with { LastWatered = DateTime.Now };
         return $"Watered '{nickname}' at {DateTime.Now:h:mm tt}.";
+    }
+
+    [Description("Moves a plant to a new location in the garden.")]
+    [ExportAIFunction("move_plant", ApprovalRequired = true)]
+    public string MovePlant(
+        [Description("The nickname of the plant to move")] string nickname,
+        [Description("The new location (e.g., 'front porch', 'kitchen windowsill')")] string newLocation)
+    {
+        var index = _garden.FindIndex(p =>
+            string.Equals(p.Nickname, nickname, StringComparison.OrdinalIgnoreCase));
+
+        if (index < 0)
+            return $"No plant named '{nickname}' found in your garden.";
+
+        var oldLocation = _garden[index].Location;
+        _garden[index] = _garden[index] with { Location = newLocation };
+        return $"Moved '{nickname}' from '{oldLocation}' to '{newLocation}'.";
     }
 }

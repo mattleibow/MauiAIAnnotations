@@ -66,7 +66,8 @@
         </ScrollView>
 
         <!-- Input Area -->
-        <Grid Grid.Row="3"
+        <Grid x:Name="InputArea"
+              Grid.Row="3"
               Padding="12,8,12,12"
               ColumnDefinitions="*,Auto"
               ColumnSpacing="8"
@@ -82,6 +83,42 @@
                     AutomationId="SendButton"
                     Clicked="OnSendClicked"
                     BackgroundColor="#5B8C5A"
+                    TextColor="White"
+                    FontSize="14"
+                    CornerRadius="8"
+                    Padding="16,8"
+                    VerticalOptions="Center" />
+        </Grid>
+
+        <!-- Approval Area (hidden by default) -->
+        <Grid x:Name="ApprovalArea"
+              Grid.Row="3"
+              Padding="12,8,12,12"
+              ColumnDefinitions="*,Auto,Auto"
+              ColumnSpacing="8"
+              IsVisible="False"
+              BackgroundColor="{AppThemeBinding Light=#FFF8E1, Dark=#3E3520}">
+            <Label x:Name="ApprovalLabel"
+                   Text="Approve tool call?"
+                   FontSize="14"
+                   FontAttributes="Bold"
+                   VerticalOptions="Center"
+                   LineBreakMode="TailTruncation" />
+            <Button Grid.Column="1"
+                    Text="✅ Approve"
+                    AutomationId="ApproveButton"
+                    Clicked="OnApproveClicked"
+                    BackgroundColor="#5B8C5A"
+                    TextColor="White"
+                    FontSize="14"
+                    CornerRadius="8"
+                    Padding="16,8"
+                    VerticalOptions="Center" />
+            <Button Grid.Column="2"
+                    Text="❌ Reject"
+                    AutomationId="RejectButton"
+                    Clicked="OnRejectClicked"
+                    BackgroundColor="#C62828"
                     TextColor="White"
                     FontSize="14"
                     CornerRadius="8"

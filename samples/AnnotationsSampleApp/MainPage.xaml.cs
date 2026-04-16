@@ -13,6 +13,7 @@ public partial class MainPage : ContentPage
     private List<ChatMessage> _history = [];
     private string _currentToolMode = "All Tools";
     private bool _isBusy;
+    private ToolApprovalRequestContent? _pendingApproval;
 
     public MainPage(IServiceProvider rootProvider, IChatClient innerChatClient)
     {
@@ -93,54 +94,12 @@ public partial class MainPage : ContentPage
 
         try
         {
-            var responseText = string.Empty;
-            Label? responseLabel = null;
-
             // Pass tools in ChatOptions so the AI model knows about them.
             // AdditionalTools on FunctionInvokingChatClient handles invocation.
             var chatTools = GetToolsForMode(_currentToolMode);
             var options = new ChatOptions { Tools = [.. chatTools] };
-            var updates = new List<ChatResponseUpdate>();
 
-            await foreach (var update in _sessionClient.GetStreamingResponseAsync(_history, options))
-            {
-                updates.Add(update);
-
-                foreach (var content in update.Contents)
-                {
-                    switch (content)
-                    {
-                        case FunctionCallContent call:
-                            AddToolMessage($"🔧 Calling: {call.Name}");
-                            break;
-
-                        case FunctionResultContent result:
-                            var resultText = result.Result?.ToString() ?? "(no result)";
-                            if (resultText.Length > 200)
-                                resultText = resultText[..200] + "...";
-                            AddToolMessage($"✅ Result: {resultText}");
-                            break;
-
-                        case TextContent tc when tc.Text is not null:
-                            responseText += tc.Text;
-                            if (responseLabel is null)
-                            {
-                                responseLabel = AddAssistantMessage(responseText);
-                            }
-                            else
-                            {
-                                responseLabel.Text = responseText;
-                            }
-                            break;
-                    }
-                }
-            }
-
-            // Add all response messages to history (includes function calls/results)
-            _history.AddMessages(updates);
-
-            if (responseLabel is null && string.IsNullOrEmpty(responseText))
-                AddAssistantMessage("(no response)");
+            await SendAndProcessResponseAsync(options);
         }
         catch (Exception ex)
         {
@@ -156,6 +115,138 @@ public partial class MainPage : ContentPage
     {
         _isBusy = busy;
         ChatInput.IsEnabled = !busy;
+    }
+
+    private async Task SendAndProcessResponseAsync(ChatOptions options)
+    {
+        var responseText = string.Empty;
+        Label? responseLabel = null;
+        var updates = new List<ChatResponseUpdate>();
+
+        await foreach (var update in _sessionClient!.GetStreamingResponseAsync(_history, options))
+        {
+            updates.Add(update);
+
+            foreach (var content in update.Contents)
+            {
+                switch (content)
+                {
+                    case ToolApprovalRequestContent approval:
+                        var toolName = approval.ToolCall is FunctionCallContent fcc ? fcc.Name : "unknown";
+                        var args = approval.ToolCall is FunctionCallContent fc && fc.Arguments is not null
+                            ? string.Join(", ", fc.Arguments.Select(kv => $"{kv.Key}: {kv.Value}"))
+                            : "";
+                        AddToolMessage($"⚠️ Approval required: {toolName}({args})");
+                        _pendingApproval = approval;
+                        break;
+
+                    case FunctionCallContent call:
+                        AddToolMessage($"🔧 Calling: {call.Name}");
+                        break;
+
+                    case FunctionResultContent result:
+                        var resultText = result.Result?.ToString() ?? "(no result)";
+                        if (resultText.Length > 200)
+                            resultText = resultText[..200] + "...";
+                        AddToolMessage($"✅ Result: {resultText}");
+                        break;
+
+                    case TextContent tc when tc.Text is not null:
+                        responseText += tc.Text;
+                        if (responseLabel is null)
+                            responseLabel = AddAssistantMessage(responseText);
+                        else
+                            responseLabel.Text = responseText;
+                        break;
+                }
+            }
+        }
+
+        // Add all response messages to history
+        _history.AddMessages(updates);
+
+        // If there's a pending approval, show the approval UI
+        if (_pendingApproval is not null)
+        {
+            var name = _pendingApproval.ToolCall is FunctionCallContent fc2 ? fc2.Name : "tool";
+            ShowApprovalUI(name);
+            return;
+        }
+
+        if (responseLabel is null && string.IsNullOrEmpty(responseText))
+            AddAssistantMessage("(no response)");
+    }
+
+    private void ShowApprovalUI(string toolName)
+    {
+        ApprovalLabel.Text = $"🔒 {toolName} — approve?";
+        InputArea.IsVisible = false;
+        ApprovalArea.IsVisible = true;
+    }
+
+    private void HideApprovalUI()
+    {
+        ApprovalArea.IsVisible = false;
+        InputArea.IsVisible = true;
+        _pendingApproval = null;
+    }
+
+    private async void OnApproveClicked(object? sender, EventArgs e)
+    {
+        if (_pendingApproval is null || _sessionClient is null)
+            return;
+
+        var approval = _pendingApproval;
+        HideApprovalUI();
+        SetBusy(true);
+
+        try
+        {
+            var response = approval.CreateResponse(approved: true);
+            _history.Add(new ChatMessage(ChatRole.User, [response]));
+            AddToolMessage("✅ Approved");
+
+            var chatTools = GetToolsForMode(_currentToolMode);
+            var options = new ChatOptions { Tools = [.. chatTools] };
+            await SendAndProcessResponseAsync(options);
+        }
+        catch (Exception ex)
+        {
+            AddErrorMessage(ex.Message);
+        }
+        finally
+        {
+            SetBusy(false);
+        }
+    }
+
+    private async void OnRejectClicked(object? sender, EventArgs e)
+    {
+        if (_pendingApproval is null || _sessionClient is null)
+            return;
+
+        var approval = _pendingApproval;
+        HideApprovalUI();
+        SetBusy(true);
+
+        try
+        {
+            var response = approval.CreateResponse(approved: false, "User rejected");
+            _history.Add(new ChatMessage(ChatRole.User, [response]));
+            AddToolMessage("❌ Rejected");
+
+            var chatTools = GetToolsForMode(_currentToolMode);
+            var options = new ChatOptions { Tools = [.. chatTools] };
+            await SendAndProcessResponseAsync(options);
+        }
+        catch (Exception ex)
+        {
+            AddErrorMessage(ex.Message);
+        }
+        finally
+        {
+            SetBusy(false);
+        }
     }
 
     private void AddUserMessage(string text)
