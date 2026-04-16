@@ -35,16 +35,13 @@ public partial class MainPage : ContentPage
         // Build the tool list based on current mode
         var tools = GetToolsForMode(_currentToolMode);
 
-        // Build a chat client pipeline with function invocation.
-        // ConfigureOptions injects tools into every request's ChatOptions.Tools
-        // so callers don't need to pass them on each call.
+        // Build a chat client pipeline with tools set as AdditionalTools
+        // on FunctionInvokingChatClient directly. This ensures the function
+        // invoker can find and execute our tools.
         _sessionClient = new ChatClientBuilder(_innerChatClient)
-            .UseFunctionInvocation()
-            .ConfigureOptions(opts =>
+            .UseFunctionInvocation(configure: fic =>
             {
-                opts.Tools ??= [];
-                foreach (var tool in tools)
-                    opts.Tools.Add(tool);
+                fic.AdditionalTools = [.. tools];
             })
             .Build(_sessionScope.ServiceProvider);
 
@@ -95,8 +92,11 @@ public partial class MainPage : ContentPage
             var responseText = string.Empty;
             Label? responseLabel = null;
 
-            // No need to pass ChatOptions.Tools — UseTools() handles it in the pipeline
-            await foreach (var update in _sessionClient.GetStreamingResponseAsync(_history))
+            // Pass tools in ChatOptions so the AI model knows about them.
+            // AdditionalTools on FunctionInvokingChatClient handles invocation.
+            var chatTools = GetToolsForMode(_currentToolMode);
+            var options = new ChatOptions { Tools = [.. chatTools] };
+            await foreach (var update in _sessionClient.GetStreamingResponseAsync(_history, options))
             {
                 foreach (var content in update.Contents)
                 {
