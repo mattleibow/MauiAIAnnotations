@@ -35,17 +35,22 @@ public partial class MainPage : ContentPage
         // Build the tool list based on current mode
         var tools = GetToolsForMode(_currentToolMode);
 
-        // Build a chat client pipeline with tools injected automatically.
-        // UseTools() merges the tools into every request's ChatOptions.Tools,
-        // so callers don't need to pass ChatOptions { Tools = [...] } manually.
+        // Build a chat client pipeline with function invocation.
+        // ConfigureOptions injects tools into every request's ChatOptions.Tools
+        // so callers don't need to pass them on each call.
         _sessionClient = new ChatClientBuilder(_innerChatClient)
             .UseFunctionInvocation()
-            .UseTools(tools)
+            .ConfigureOptions(opts =>
+            {
+                opts.Tools ??= [];
+                foreach (var tool in tools)
+                    opts.Tools.Add(tool);
+            })
             .Build(_sessionScope.ServiceProvider);
 
         // Clear the UI
         MessagesStack.Children.Clear();
-        AddSystemMessage($"🌱 New chat session started — {_currentToolMode} ({tools.Count} tools)");
+        AddSystemMessage($"🌱 New chat session — {_currentToolMode} ({tools.Count} tools)");
     }
 
     private IReadOnlyList<AITool> GetToolsForMode(string mode) => mode switch

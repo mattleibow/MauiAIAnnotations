@@ -6,6 +6,7 @@ using Microsoft.Extensions.AI.Attributes;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.DevFlow.Agent;
 using AnnotationsSampleApp.Services;
 
 namespace AnnotationsSampleApp;
@@ -25,6 +26,10 @@ public static class MauiProgram
 
         // Load user secrets embedded as resource
         builder.Configuration.AddUserSecrets();
+
+#if DEBUG
+        builder.AddMauiDevFlowAgent();
+#endif
 
         // ── Services ────────────────────────────────────────────────
         //

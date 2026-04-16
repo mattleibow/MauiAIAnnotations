@@ -74,7 +74,7 @@
 		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.5" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.31" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
-		<PackageReference Include="Microsoft.Maui.DevFlow.Agent" Version="0.1.0-preview.4.26214.2" />
+		<PackageReference Include="Microsoft.Maui.DevFlow.Agent" Version="0.1.0-preview.4.26216.7" />
 	</ItemGroup>
 
 	<ItemGroup>
