@@ -35,9 +35,12 @@ public partial class MainPage : ContentPage
         // Build the tool list based on current mode
         var tools = GetToolsForMode(_currentToolMode);
 
-        // Build a chat client pipeline with function invocation for this session's tools
+        // Build a chat client pipeline with tools injected automatically.
+        // UseTools() merges the tools into every request's ChatOptions.Tools,
+        // so callers don't need to pass ChatOptions { Tools = [...] } manually.
         _sessionClient = new ChatClientBuilder(_innerChatClient)
             .UseFunctionInvocation()
+            .UseTools(tools)
             .Build(_sessionScope.ServiceProvider);
 
         // Clear the UI
@@ -84,13 +87,11 @@ public partial class MainPage : ContentPage
 
         try
         {
-            var tools = GetToolsForMode(_currentToolMode);
-            var options = new ChatOptions { Tools = [.. tools] };
-
             var responseText = string.Empty;
             Label? responseLabel = null;
 
-            await foreach (var update in _sessionClient.GetStreamingResponseAsync(_history, options))
+            // No need to pass ChatOptions.Tools — UseTools() handles it in the pipeline
+            await foreach (var update in _sessionClient.GetStreamingResponseAsync(_history))
             {
                 foreach (var content in update.Contents)
                 {

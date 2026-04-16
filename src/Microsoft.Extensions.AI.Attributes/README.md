@@ -71,6 +71,29 @@ var tools = CatalogTools.Default.GetTools(serviceProvider);
 // Use with any IChatClient directly
 ```
 
+### 5. Inject tools into an IChatClient pipeline
+
+```csharp
+// Auto-inject all tools from DI
+var client = chatClient.AsBuilder()
+    .UseFunctionInvocation()
+    .UseTools()
+    .Build(serviceProvider);
+
+// Or inject a specific tool context
+var tools = CatalogTools.Default.GetTools(serviceProvider);
+var client = chatClient.AsBuilder()
+    .UseFunctionInvocation()
+    .UseTools(tools)
+    .Build(serviceProvider);
+
+// No need to pass ChatOptions.Tools on each request — just call:
+await foreach (var update in client.GetStreamingResponseAsync(messages))
+{
+    Console.Write(update.Text);
+}
+```
+
 ## Service Lifetimes
 
 Tools are DI singletons, but the **underlying service** is resolved per-invocation via `DependencyInjectionAIFunction`. Register your services with the lifetime that fits:
@@ -103,4 +126,5 @@ This library ships as two projects:
 | `AIToolSourceAttribute` | Declares which service contributes tools to a context |
 | `AIToolContext` | Base class for source-generated tool contexts |
 | `AddAITools<T>()` | Extension method to register tools from a context |
+| `UseTools()` | Injects tools into an `IChatClient` pipeline |
 | `DependencyInjectionAIFunction` | Internal — resolves service from DI per invocation |

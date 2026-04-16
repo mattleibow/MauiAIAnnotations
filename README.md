@@ -46,13 +46,14 @@ builder.Services.AddAITools<GardenTools>();
 ### 4. Use with any IChatClient
 
 ```csharp
-var tools = serviceProvider.GetServices<AITool>();
+// Build a pipeline that auto-injects tools from DI
 var client = chatClient.AsBuilder()
     .UseFunctionInvocation()
+    .UseTools()
     .Build(serviceProvider);
 
-var options = new ChatOptions { Tools = [.. tools] };
-await foreach (var update in client.GetStreamingResponseAsync(messages, options))
+// Just chat — tools are injected automatically
+await foreach (var update in client.GetStreamingResponseAsync(messages))
 {
     Console.Write(update.Text);
 }
