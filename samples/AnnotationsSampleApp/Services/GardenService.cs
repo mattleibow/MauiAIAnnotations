@@ -21,7 +21,7 @@ public class GardenService
     }
 
     [Description("Adds a new plant to the user's garden.")]
-    [ExportAIFunction("add_to_garden", ApprovalRequired = true)]
+    [ExportAIFunction("add_to_garden")]
     public PlantEntry AddToGarden(
         [Description("A friendly nickname for the plant (e.g., 'Kitchen Basil')")] string nickname,
         [Description("The species of the plant (e.g., 'basil', 'tomato')")] string species,
@@ -39,7 +39,7 @@ public class GardenService
     }
 
     [Description("Removes a plant from the user's garden by nickname.")]
-    [ExportAIFunction("remove_from_garden", ApprovalRequired = true)]
+    [ExportAIFunction("remove_from_garden")]
     public bool RemoveFromGarden(
         [Description("The nickname of the plant to remove")] string nickname)
     {

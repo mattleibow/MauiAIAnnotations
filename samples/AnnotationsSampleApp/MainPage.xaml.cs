@@ -52,9 +52,13 @@ public partial class MainPage : ContentPage
 
     private IReadOnlyList<AITool> GetToolsForMode(string mode) => mode switch
     {
-        "Catalog Only" => CatalogTools.Default.GetTools(_sessionScope!.ServiceProvider),
-        "Garden Management" => GardenManagementTools.Default.GetTools(_sessionScope!.ServiceProvider),
-        _ => AllGardenTools.Default.GetTools(_sessionScope!.ServiceProvider),
+        // Pass the ROOT provider for tool creation (schema/metadata only).
+        // FunctionInvokingChatClient passes the session scope's provider at
+        // invocation time via AIFunctionArguments.Services, so scoped services
+        // like GardenService resolve from the session scope (not a new one).
+        "Catalog Only" => CatalogTools.Default.GetTools(_rootProvider),
+        "Garden Management" => GardenManagementTools.Default.GetTools(_rootProvider),
+        _ => AllGardenTools.Default.GetTools(_rootProvider),
     };
 
     private void OnNewChatClicked(object? sender, EventArgs e)
@@ -96,8 +100,12 @@ public partial class MainPage : ContentPage
             // AdditionalTools on FunctionInvokingChatClient handles invocation.
             var chatTools = GetToolsForMode(_currentToolMode);
             var options = new ChatOptions { Tools = [.. chatTools] };
+            var updates = new List<ChatResponseUpdate>();
+
             await foreach (var update in _sessionClient.GetStreamingResponseAsync(_history, options))
             {
+                updates.Add(update);
+
                 foreach (var content in update.Contents)
                 {
                     switch (content)
@@ -128,9 +136,8 @@ public partial class MainPage : ContentPage
                 }
             }
 
-            // Add the full response to history
-            if (!string.IsNullOrEmpty(responseText))
-                _history.Add(new ChatMessage(ChatRole.Assistant, responseText));
+            // Add all response messages to history (includes function calls/results)
+            _history.AddMessages(updates);
 
             if (responseLabel is null && string.IsNullOrEmpty(responseText))
                 AddAssistantMessage("(no response)");
