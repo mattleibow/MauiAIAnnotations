@@ -49,20 +49,40 @@ public static class MauiProgram
 
         // ── AI Tools ────────────────────────────────────────────────
         //
-        // 1. Source-generated tools (from [ExportAIFunction] on services)
-        //    GardenTools aggregates PlantDataService, SeasonsService, and
-        //    SpeciesService tools discovered at compile time.
+        // Tool contexts declare which service types contribute AI tools.
+        // The source generator discovers [ExportAIFunction] methods at
+        // compile time and emits DI registrations -- no reflection needed.
+        //
+        // Multiple contexts can coexist: default (non-keyed) tools are
+        // aggregated into IEnumerable<AITool> alongside any hand-crafted
+        // tools. Keyed tool sets live in their own namespace.
+
+        // 1. Default tool set: all garden tools (queries + writes + seasonal)
+        //    ChatSession resolves these automatically via IEnumerable<AITool>.
         builder.Services.AddAITools<GardenTools>();
 
-        // 2. Classic / bespoke tools (hand-crafted with AIFunctionFactory)
-        //    These demonstrate the "old school" pattern used in apps like
-        //    BaristaNotes — AIFunctionFactory.Create with a delegate.
-        //    Both styles coexist: DI aggregates them all into IEnumerable<AITool>.
+        // 2. Keyed tool set: plant management only (focused CRUD subset)
+        //    Resolve with: sp.GetKeyedService<IEnumerable<AITool>>("plant-management")
+        //    Useful for building specialized chat sessions with limited capabilities.
+        builder.Services.AddAITools<PlantManagementTools>("plant-management");
+
+        // 3. Classic / hand-crafted tools (no source generator needed)
+        //    AIFunctionFactory.Create works alongside source-generated tools.
+        //    DI aggregates both into the same IEnumerable<AITool>.
         builder.Services.AddSingleton<AITool>(
             AIFunctionFactory.Create(
                 () => DateTime.Now.ToString("dddd, MMMM d yyyy, h:mm tt"),
                 "get_current_datetime",
                 "Gets the current date and time. Useful for checking when a plant was last watered relative to now."));
+
+        // 4. Read-only tool set (not registered here, but available on demand)
+        //    ReadOnlyGardenTools can be used to create a safe browsing session:
+        //
+        //    var readOnlyTools = ReadOnlyGardenTools.Default.GetTools(serviceProvider);
+        //    var session = new ChatSession(readOnlyTools, chatClient);
+        //
+        //    This session can look up species and seasonal advice but can't
+        //    add, remove, or modify plants.
 
         // ── End AI Tools ────────────────────────────────────────────
 
