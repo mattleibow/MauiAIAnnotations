@@ -1,16 +1,10 @@
 # Microsoft.Extensions.AI Attributes / Chat / Maui
 
-Turn regular .NET services into AI-callable tools and host them in a reusable MAUI chat experience — no hand-written JSON schemas, tool adapters, or runtime reflection.
+Turn regular .NET services into AI-callable tools — no hand-written JSON schemas, tool adapters, or runtime reflection.
 
-`Microsoft.Extensions.AI.Attributes` handles **source-generated tool discovery** and DI registration.  
-`Microsoft.Extensions.AI.Chat` adds the **headless `ChatSession` engine** and approval-aware conversation flow.  
-`Microsoft.Extensions.AI.Maui` adds the **thin MAUI chat panel, content templates, and approval UI** on top.
+> **Status:** Work in progress. The Chat and Maui libraries are not yet ready for use.
 
-| Windows | Android |
-| --- | --- |
-| <img src="docs/images/home-page.png" alt="Garden Helper App on Windows" width="300" /> | <img src="docs/images/home-page-android.png" alt="Garden Helper App on Android" width="300" /> |
-
-## Quick start
+## Quick start: Annotations
 
 ### 1. Annotate your service methods
 
@@ -42,43 +36,26 @@ public partial class GardenTools : AIToolContext { }
 
 The source generator emits the registration code at compile time — no reflection.
 
-### 3. Register tools and chat
+### 3. Register in DI
 
 ```csharp
 builder.Services.AddSingleton<PlantDataService>();
 builder.Services.AddAITools<GardenTools>();
-builder.Services.AddChatSession(ServiceLifetime.Transient);
 ```
 
-### 4. Add the MAUI panel
+Tools are now available as `IEnumerable<AITool>` for any `IChatClient` pipeline.
 
-```xml
-<maui:ChatPanelControl Session="{Binding ChatSession}">
-    <maui:ChatPanelControl.ContentTemplates>
-        <mauiChat:TextContentTemplate Role="User" />
-        <mauiChat:TextContentTemplate Role="Assistant" />
-        <mauiChat:FunctionCallTemplate />
-        <mauiChat:FunctionResultTemplate />
-        <mauiChat:ToolApprovalTemplate />
-        <mauiChat:ErrorContentTemplate />
-        <mauiChat:DefaultContentTemplate />
-    </maui:ChatPanelControl.ContentTemplates>
-</maui:ChatPanelControl>
-```
+## Libraries
 
-## Packages
-
-| Package | Description |
-| --- | --- |
-| `Microsoft.Extensions.AI.Attributes` | Source-generated AI tool discovery with `[ExportAIFunction]` and `AddAITools<T>()` |
-| `Microsoft.Extensions.AI.Chat` | Headless `ChatSession`, transcript types, and approval-aware chat flow |
-| `Microsoft.Extensions.AI.Maui` | Reusable MAUI chat UI, content templates, and approval dialogs |
+| Library | Status | README |
+| --- | --- | --- |
+| [Microsoft.Extensions.AI.Attributes](src/Microsoft.Extensions.AI.Attributes/) | ✅ Ready | [README](src/Microsoft.Extensions.AI.Attributes/README.md) |
+| [Microsoft.Extensions.AI.Chat](src/Microsoft.Extensions.AI.Chat/) | 🚧 WIP | [README](src/Microsoft.Extensions.AI.Chat/README.md) |
+| [Microsoft.Extensions.AI.Maui](src/Microsoft.Extensions.AI.Maui/) | 🚧 WIP | [README](src/Microsoft.Extensions.AI.Maui/README.md) |
 
 ## Sample apps
 
 | App | Description |
 | --- | --- |
-| `MauiSampleApp` | Full garden helper with custom approval views, tool rendering, and DevFlow |
-| `AnnotationsSampleApp` | Focused demo of annotations, tool contexts, and DI lifetimes (no Chat/Maui libs) |
-
-See each `src/*/README.md` for library-specific usage documentation.
+| `AnnotationsSampleApp` | Focused demo of annotations, tool contexts, and DI lifetimes |
+| `MauiSampleApp` | Full garden helper with chat UI, approval views, and DevFlow |
